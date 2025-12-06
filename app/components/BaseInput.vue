@@ -31,7 +31,7 @@
       <input
         :id="inputId"
         ref="inputRef"
-        :type="type"
+        :type="actualType"
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
@@ -47,12 +47,25 @@
 
       <!-- Icon Right -->
       <div
-        v-if="$slots.iconRight || iconRight || error"
+        v-if="$slots.iconRight || iconRight || error || showPasswordToggle"
         class="absolute right-3 top-1/2 -translate-y-1/2"
         :class="error ? 'text-error' : 'text-text-muted'"
       >
         <slot name="iconRight">
-          <span v-if="error">⚠️</span>
+          <!-- Password Toggle -->
+          <button
+            v-if="showPasswordToggle"
+            type="button"
+            @click="togglePasswordVisibility"
+            class="hover:text-text-primary transition-colors duration-200 focus:outline-none"
+            :title="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+          >
+            <span v-if="showPassword">👁️</span>
+            <span v-else>👁️‍🗨️</span>
+          </button>
+          <!-- Error Icon -->
+          <span v-else-if="error">⚠️</span>
+          <!-- Custom Icon -->
           <span v-else-if="iconRight">{{ iconRight }}</span>
         </slot>
       </div>
@@ -113,6 +126,20 @@ const inputRef = ref<HTMLInputElement>()
 const isFocused = ref(false)
 const inputId = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
 
+// Password visibility
+const showPassword = ref(false)
+const showPasswordToggle = computed(() => props.type === 'password')
+const actualType = computed(() => {
+  if (props.type === 'password' && showPassword.value) {
+    return 'text'
+  }
+  return props.type
+})
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
+}
+
 // Classes dinâmicas
 const inputClasses = computed(() => {
   const base = [
@@ -141,7 +168,7 @@ const inputClasses = computed(() => {
   if (props.iconLeft || slots.iconLeft) {
     iconPadding.push('pl-10')
   }
-  if (props.iconRight || slots.iconRight || props.error || props.loading) {
+  if (props.iconRight || slots.iconRight || props.error || props.loading || showPasswordToggle.value) {
     iconPadding.push('pr-10')
   }
 

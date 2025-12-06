@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware((to: any, from: any) => {
   }
 
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/login', '/register', '/']
+  const publicRoutes = ['/login', '/register', '/', '/terms', '/privacy']
   
   // Se a rota é pública, permite acesso
   if (publicRoutes.includes(to.path)) {

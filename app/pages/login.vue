@@ -5,7 +5,7 @@
       <!-- Header com branding -->
       <div class="text-center space-y-4">
         <h1 class="text-2xl font-bold text-red-500 font-cinzel mb-2">
-          VAMPIRE: THE MASQUERADE
+          VAMPIRE: THE MASQUERADE Campaign Manager
         </h1>
         <h2 class="text-xl font-semibold text-text-secondary mb-2">
           Bem-vindo de volta
@@ -30,42 +30,28 @@
       <!-- Formulário de Login -->
       <form @submit.prevent="handleLogin" class="space-y-6">
         <!-- Email -->
-        <div class="space-y-2">
-          <label for="email" class="block text-sm font-medium text-text-secondary">
-            Email *
-          </label>
-          <input
-            id="email"
-            v-model="formData.email"
-            type="email"
-            placeholder="seu@email.com"
-            :disabled="loading"
-            required
-            autocomplete="email"
-            class="w-full px-4 py-3 bg-surface-card border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="{ 'border-red-400 focus:border-red-400 focus:ring-red-400/20': errors.email }"
-          />
-          <p v-if="errors.email" class="text-red-400 text-xs mt-1">{{ errors.email }}</p>
-        </div>
+        <BaseInput
+          v-model="formData.email"
+          type="email"
+          label="Email"
+          placeholder="seu@email.com"
+          :error="errors.email"
+          :disabled="loading"
+          required
+          autocomplete="email"
+        />
 
         <!-- Senha -->
-        <div class="space-y-2">
-          <label for="password" class="block text-sm font-medium text-text-secondary">
-            Senha *
-          </label>
-          <input
-            id="password"
-            v-model="formData.password"
-            type="password"
-            placeholder="••••••••••"
-            :disabled="loading"
-            required
-            autocomplete="current-password"
-            class="w-full px-4 py-3 bg-surface-card border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            :class="{ 'border-red-400 focus:border-red-400 focus:ring-red-400/20': errors.password }"
-          />
-          <p v-if="errors.password" class="text-red-400 text-xs mt-1">{{ errors.password }}</p>
-        </div>
+        <BaseInput
+          v-model="formData.password"
+          type="password"
+          label="Senha"
+          placeholder="••••••••••"
+          :error="errors.password"
+          :disabled="loading"
+          required
+          autocomplete="current-password"
+        />
 
         <!-- Lembrar-me e Esqueceu senha -->
         <div class="flex items-center justify-between">
@@ -150,8 +136,11 @@
           <p class="text-xs text-text-muted/80 mb-2">
             Vampire: The Masquerade © 2025 World of Darkness Entertainment
           </p>
-          <p class="text-xs text-text-muted/60">
-            Criado por fã
+          <p class="text-xs text-text-muted/60 mb-1">
+            Created by fan for fans.
+          </p>
+          <p class="text-xs text-text-muted/50">
+            Not affiliated with Paradox Interactive or World of Darkness Entertainment.
           </p>
         </div>
       </div>

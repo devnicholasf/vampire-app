@@ -7,8 +7,8 @@
     title="Visite o site oficial do World of Darkness"
   >
     <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center relative overflow-hidden">
-      <span class="text-white font-bold text-xl tracking-wider font-serif relative z-10">
-        W<sub class="text-sm">o</sub>D
+      <span class="text-white font-bold text-lg tracking-wide font-serif relative z-10 flex items-center">
+        W<sub class="text-xs -ml-0.5">o</sub>D
       </span>
       <div class="absolute inset-0 bg-gradient-to-br from-transparent via-red-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
     </div>

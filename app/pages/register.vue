@@ -4,7 +4,7 @@
       <!-- Título -->
       <div class="text-center">
         <h2 class="text-2xl font-bold text-text-primary mb-2">
-          Junte-se à Camarilla
+          Junte-se à Sociedade Noturna
         </h2>
         <p class="text-text-secondary text-sm">
           Crie sua conta e comece suas crônicas
@@ -100,11 +100,11 @@
           />
           <span class="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
             Aceito os
-            <NuxtLink to="/terms" class="text-secondary hover:text-secondary-light">
+            <NuxtLink to="/terms" class="text-secondary hover:text-accent transition-colors duration-200">
               Termos de Uso
             </NuxtLink>
             e
-            <NuxtLink to="/privacy" class="text-secondary hover:text-secondary-light">
+            <NuxtLink to="/privacy" class="text-secondary hover:text-accent transition-colors duration-200">
               Política de Privacidade
             </NuxtLink>
           </span>
@@ -139,7 +139,7 @@
           Já tem uma conta?
           <NuxtLink
             to="/login"
-            class="text-secondary hover:text-secondary-light font-semibold transition-colors"
+            class="text-secondary hover:text-accent font-semibold transition-colors duration-200 ml-1"
           >
             Fazer login
           </NuxtLink>
