@@ -56,7 +56,7 @@ export const useAuth = () => {
           localStorage.setItem('user', JSON.stringify(response.data.user))
         }
 
-        return { success: true }
+        return { success: true, data: response.data }
       } else {
         error.value = response.error || 'Login falhou'
         return { success: false, error: error.value }

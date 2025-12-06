@@ -1,9 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gradient-vampire">
+  <div class="min-h-screen bg-gradient-atmospheric relative overflow-hidden">
+    <!-- Background decorations -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute top-20 left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-3xl"></div>
+    </div>
+
     <!-- Header -->
-    <header class="bg-surface border-b border-border">
+    <header class="bg-surface border-b border-border relative z-10">
       <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-primary">🧛 Vampire RPG</h1>
+        <h1 class="text-2xl font-bold text-red-400">🧛 Vampire RPG</h1>
         <div class="flex items-center gap-4">
           <span class="text-text-secondary">{{ user?.username }}</span>
           <BaseButton variant="ghost" @click="handleLogout" size="sm">
@@ -14,7 +21,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 py-8 relative z-10">
       <!-- Título e botão -->
       <div class="flex justify-between items-center mb-8">
         <div>
@@ -28,7 +35,7 @@
 
       <!-- Loading -->
       <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
         <p class="text-text-muted mt-4">Carregando campanhas...</p>
       </div>
 
@@ -37,7 +44,7 @@
         <div
           v-for="campaign in campaigns"
           :key="campaign.id"
-          class="bg-surface p-6 rounded-lg border border-border hover:border-border-focus hover:shadow-card-hover transition-all duration-300 cursor-pointer"
+          class="bg-surface p-6 rounded-vampire border border-border hover:border-red-500 hover:shadow-lg transition-all duration-300 cursor-pointer group"
           @click="goToCampaign(campaign.id)"
         >
           <!-- Badge de Mestre/Jogador -->
@@ -46,8 +53,8 @@
               :class="[
                 'px-3 py-1 rounded-full text-xs font-semibold',
                 isMaster(campaign) 
-                  ? 'bg-primary text-primary-contrast' 
-                  : 'bg-transparent text-primary border border-primary'
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-transparent text-red-400 border border-red-400'
               ]"
             >
               {{ isMaster(campaign) ? '👑 Mestre' : '🎭 Jogador' }}
@@ -60,9 +67,7 @@
 
           <!-- Info -->
           <div class="flex items-center gap-4 text-xs text-text-muted">
-            <span>{{ campaign.players.length }} jogadores</span>
-            <span>•</span>
-            <span>{{ formatDate(campaign.createdAt) }}</span>
+            <span>Criada em {{ formatDate(campaign.createdAt) }}</span>
           </div>
         </div>
       </div>
@@ -85,8 +90,8 @@
         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4"
         @click.self="showCreateModal = false"
       >
-        <div class="bg-surface-dark border border-border rounded-lg p-8 max-w-md w-full">
-          <h3 class="text-2xl font-bold text-primary mb-6">Nova Campanha</h3>
+        <div class="bg-surface border border-border rounded-vampire p-8 max-w-md w-full">
+          <h3 class="text-2xl font-bold text-red-400 mb-6">Nova Campanha</h3>
 
           <form @submit.prevent="handleCreateCampaign" class="space-y-4">
             <!-- Nome -->
@@ -96,7 +101,7 @@
                 v-model="newCampaign.name"
                 type="text"
                 required
-                class="w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary focus:outline-none focus:border-border-focus"
+                class="w-full px-4 py-3 bg-surface border border-border rounded-vampire text-text-primary focus:outline-none focus:border-red-500"
                 placeholder="Ex: Crônicas de Chicago"
               />
             </div>
@@ -108,7 +113,7 @@
                 v-model="newCampaign.description"
                 required
                 rows="4"
-                class="w-full px-4 py-3 bg-surface border border-border rounded-lg text-text-primary focus:outline-none focus:border-border-focus"
+                class="w-full px-4 py-3 bg-surface border border-border rounded-vampire text-text-primary focus:outline-none focus:border-red-500"
                 placeholder="Descreva a ambientação e o tema da campanha..."
               ></textarea>
             </div>
@@ -140,31 +145,54 @@
 </template>
 
 <script setup lang="ts">
-// @ts-ignore - Auto-importado pelo Nuxt
-import type { Campaign, CreateCampaignData } from '~/types'
+interface Campaign {
+  id: string
+  name: string
+  description: string
+  masterId: string
+  createdAt: Date
+}
 
-definePageMeta({
-  // @ts-ignore - Middleware auto-importado pelo Nuxt
-  middleware: 'auth'
-})
+interface CreateCampaignData {
+  name: string
+  description: string
+}
 
-// @ts-ignore - Auto-importado pelo Nuxt
 const { user, logout } = useAuth()
-// @ts-ignore - Auto-importado pelo Nuxt
-const { campaigns, loading, fetchUserCampaigns, createCampaign } = useCampaign()
 const router = useRouter()
+
+// Debug
+onMounted(() => {
+  console.log('Dashboard montado!')
+  console.log('Usuário:', user.value)
+  console.log('Token:', localStorage.getItem('auth_token'))
+})
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
+const loading = ref(false)
 const newCampaign = ref<CreateCampaignData>({
   name: '',
   description: ''
 })
 
-// Buscar campanhas ao montar
-onMounted(() => {
-  fetchUserCampaigns()
-})
+// Dados mock de campanhas
+const campaigns = ref<Campaign[]>([
+  {
+    id: '1',
+    name: 'Crônicas de Chicago',
+    description: 'Uma campanha sombria nas ruas de Chicago onde os Ventrue dominam a política vampírica local.',
+    masterId: user.value?.id || 'user-1',
+    createdAt: new Date('2024-12-01')
+  },
+  {
+    id: '2',
+    name: 'Noites de Berlin',
+    description: 'Explore os segredos da cidade dividida durante a Guerra Fria vampírica.',
+    masterId: 'other-user',
+    createdAt: new Date('2024-11-15')
+  }
+])
 
 // Verificar se usuário é mestre
 const isMaster = (campaign: Campaign) => {
@@ -188,19 +216,28 @@ const goToCampaign = (id: string) => {
 // Criar campanha
 const handleCreateCampaign = async () => {
   createLoading.value = true
-  const result = await createCampaign(newCampaign.value)
-  createLoading.value = false
-
-  if (result.success && result.data) {
-    showCreateModal.value = false
-    newCampaign.value = { name: '', description: '' }
-    router.push(`/campaign/${result.data.id}`)
+  
+  // Simular criação
+  const newId = Date.now().toString()
+  const newCamp: Campaign = {
+    id: newId,
+    name: newCampaign.value.name,
+    description: newCampaign.value.description,
+    masterId: user.value?.id || 'user-1',
+    createdAt: new Date()
   }
+  
+  campaigns.value.push(newCamp)
+  
+  createLoading.value = false
+  showCreateModal.value = false
+  newCampaign.value = { name: '', description: '' }
 }
 
 // Logout
 const handleLogout = async () => {
   await logout()
+  await navigateTo('/login')
 }
 </script>
 

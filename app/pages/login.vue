@@ -179,48 +179,8 @@ interface ApiResponse<T = any> {
   message?: string
 }
 
-// Composable simplificado inline
-const useAuthSimple = () => {
-  const loading = ref(false)
-  const error = ref<string | null>(null)
-
-  const login = async (credentials: LoginCredentials) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await $fetch<ApiResponse<{ user: User; token: string }>>('/api/auth/login', {
-        method: 'POST',
-        body: credentials
-      })
-
-      if (response.success && response.data) {
-        // Salvar no localStorage
-        if (process.client) {
-          localStorage.setItem('auth_token', response.data.token)
-          localStorage.setItem('user', JSON.stringify(response.data.user))
-        }
-        return { success: true }
-      } else {
-        error.value = response.error || 'Login falhou'
-        return { success: false, error: error.value }
-      }
-    } catch (e: any) {
-      error.value = e.message || 'Erro ao fazer login'
-      return { success: false, error: error.value }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  return {
-    login,
-    loading,
-    error
-  }
-}
-
-const { login, loading, error: authError } = useAuthSimple()
+// Composable global de autenticação
+const { login, loading, error: authError } = useAuth()
 const router = useRouter()
 
 // Form state
@@ -273,10 +233,22 @@ const handleLogin = async () => {
     password: formData.password
   }
 
-  const result = await login(credentials)
+  console.log('Tentando login com:', credentials)
   
-  if (result.success) {
-    await router.push('/dashboard')
+  try {
+    const result = await login(credentials)
+    console.log('Resultado do login:', result)
+    
+    if (result.success) {
+      console.log('Login bem-sucedido, redirecionando...')
+      
+      // Usar navigateTo do Nuxt para redirecionamento
+      await navigateTo('/dashboard')
+    } else {
+      console.log('Login falhou:', result.error)
+    }
+  } catch (e: any) {
+    console.error('Erro durante login:', e)
   }
 }
 </script>
