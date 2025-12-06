@@ -150,6 +150,12 @@
 </template>
 
 <script setup lang="ts">
+// ============================================
+// Imports explícitos dos componentes
+// ============================================
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseInput from '~/components/ui/BaseInput.vue'
+
 // @ts-ignore - Auto-importado pelo Nuxt
 import type { RegisterData } from '~/types'
 

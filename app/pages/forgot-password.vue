@@ -42,6 +42,12 @@
 </template>
 
 <script setup lang="ts">
+// ============================================
+// Imports explícitos dos componentes
+// ============================================
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseInput from '~/components/ui/BaseInput.vue'
+
 definePageMeta({
   layout: 'auth'
 })

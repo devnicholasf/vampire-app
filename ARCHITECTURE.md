@@ -12,33 +12,31 @@ Sistema completo de gerenciamento de campanhas de **Vampire: The Masquerade** de
 vampire-app/
 ├── app/
 │   ├── components/
-│   │   ├── auth/              # Componentes de autenticação
-│   │   ├── campaign/          # Componentes da tela de campanha
-│   │   │   ├── PlayerAvatar.vue
-│   │   │   ├── Timeline.vue
-│   │   │   ├── TimelineItem.vue
-│   │   │   ├── MediaPlayer.vue
-│   │   │   ├── MapViewer.vue
-│   │   │   └── PartyTeam.vue
-│   │   ├── master/            # Componentes do dashboard do mestre
-│   │   │   ├── NPCManager.vue
-│   │   │   ├── CombatTracker.vue
-│   │   │   ├── MasterNotes.vue
-│   │   │   └── PlayerStats.vue
-│   │   ├── ui/                # Componentes UI reutilizáveis
-│   │   └── BaseButton.vue
+│   │   ├── auth/              # ✅ Componentes de autenticação
+│   │   │   ├── AuthForm.vue       # ✅ Container de formulários auth
+│   │   │   ├── AuthHeader.vue     # ✅ Cabeçalho auth
+│   │   │   └── LoginForm.vue      # ✅ Formulário de login
+│   │   ├── campaign/          # ✅ Componentes da tela de campanha
+│   │   │   └── PlayerAvatar.vue   # ✅ Avatar do jogador
+│   │   ├── ui/                # ✅ Componentes UI reutilizáveis
+│   │   │   ├── BaseButton.vue     # ✅ Botão genérico
+│   │   │   ├── BaseCard.vue       # ✅ Card genérico
+│   │   │   └── BaseInput.vue      # ✅ Input genérico
+│   │   └── WodButton.vue      # ✅ Botão World of Darkness
 │   ├── layouts/
-│   │   ├── default.vue        # Layout padrão
-│   │   └── campaign.vue       # Layout da campanha
+│   │   └── auth.vue           # ✅ Layout de autenticação
 │   ├── pages/
-│   │   ├── index.vue          # Página inicial (template)
+│   │   ├── index.vue          # ✅ Página inicial
 │   │   ├── login.vue          # ✅ Login
 │   │   ├── register.vue       # ✅ Registro
 │   │   ├── dashboard.vue      # ✅ Dashboard do usuário
-│   │   └── campaign/
-│   │       ├── [id].vue       # Tela de campanha compartilhada
+│   │   ├── forgot-password.vue# ✅ Recuperar senha
+│   │   ├── terms.vue          # ✅ Termos de uso
+│   │   ├── privacy.vue        # ✅ Política de privacidade
+│   │   └── campaign/          # 🔥 Pasta criada
+│   │       ├── [id].vue       # ⚪ Tela de campanha compartilhada
 │   │       └── [id]/
-│   │           └── master.vue # Dashboard do mestre
+│   │           └── master.vue # ⚪ Dashboard do mestre
 │   └── app.vue
 ├── composables/
 │   ├── useAuth.ts             # ✅ Autenticação
@@ -112,10 +110,11 @@ vampire-app/
 
 #### Criar Campanha
 1. Usuário clica em "Nova Campanha" no `/dashboard`
-2. Modal de criação aparece
+2. Modal de criação aparece com nome e descrição
 3. POST `/api/campaigns/create`
-4. Usuário automaticamente vira **mestre** da campanha
-5. Redirecionado para `/campaign/[id]`
+4. **Criador automaticamente vira MESTRE da campanha**
+5. Redirecionado para `/campaign/[id]` (tela compartilhada)
+6. **Mestre tem acesso adicional ao `/campaign/[id]/master` (dashboard exclusivo)**
 
 #### Entrar em Campanha (como jogador)
 1. Usuário recebe link/convite
@@ -123,11 +122,18 @@ vampire-app/
 3. Adicionado como jogador
 4. Acesso à tela de campanha
 
-#### Permissões
-- **Mestre**: Acesso total à campanha + dashboard especial
-- **Jogador**: Acesso à tela de campanha compartilhada
-- Middleware `isMaster.ts` protege rotas do mestre
-- Middleware `isPlayer.ts` protege a tela de campanha
+#### Permissões e Dashboards
+- **Mestre**: 
+  - Acesso total à campanha compartilhada (`/campaign/[id]`)
+  - Dashboard exclusivo do mestre (`/campaign/[id]/master`)
+  - Pode editar, adicionar eventos, fazer uploads
+  - Controla mídia (músicas, imagens, mapas)
+- **Jogador**: 
+  - Apenas acesso à tela de campanha compartilhada (`/campaign/[id]`)
+  - Pode ver timeline, party team, mídia atual
+  - Não pode editar ou controlar mídia
+- Middleware `isMaster.ts` protege rotas exclusivas do mestre
+- Middleware `isPlayer.ts` protege a tela de campanha compartilhada
 
 ---
 
@@ -221,21 +227,36 @@ vampire-app/
 
 ---
 
-## 🧩 Componentes Principais a Criar
+## 🧩 Componentes Implementados
 
-### Campaign (Tela Compartilhada)
+### ✅ **Já Criados e Funcionais**
 
-#### `PlayerAvatar.vue`
-```vue
-Props: character, editable, compact
-Exibe avatar, nome, clã, atributos
-Upload de imagem local
-```
+#### `/app/components/ui/` - UI Reutilizáveis
+- **BaseButton.vue** - Botão genérico com variantes (primary, secondary, ghost)
+- **BaseCard.vue** - Card genérico com estilo vampire
+- **BaseInput.vue** - Input com toggle de senha, detecção CAPS LOCK
+
+#### `/app/components/auth/` - Autenticação
+- **AuthForm.vue** - Container para formulários de auth
+- **AuthHeader.vue** - Cabeçalho com título e subtítulo
+- **LoginForm.vue** - Formulário de login (não usado atualmente)
+
+#### `/app/components/campaign/` - Campanha
+- **PlayerAvatar.vue** - Avatar do jogador com atributos VtM
+
+#### `/app/components/` - Especiais
+- **WodButton.vue** - Botão flutuante World of Darkness
+
+---
+
+## 🔥 Componentes a Criar
+
+### ⚪ **Pendentes - Tela Compartilhada**
 
 #### `Timeline.vue`
 ```vue
 Props: campaignId, canEdit
-Lista de eventos
+Lista de eventos cronológicos
 Botão "Adicionar evento" (mestre)
 Filtros por tipo e sessão
 ```
@@ -272,7 +293,7 @@ Grid horizontal de avatares
 Cada jogador com nome e stats
 ```
 
-### Master (Dashboard do Mestre)
+### ⚪ **Pendentes - Dashboard do Mestre**
 
 #### `NPCManager.vue`
 ```vue
@@ -404,27 +425,43 @@ master_notes
 
 ## 🚀 Próximos Passos
 
-### Fase 1: Core ✅
-- [x] Estrutura de pastas
-- [x] Types TypeScript
-- [x] Composables
-- [x] Middleware
-- [x] Páginas de autenticação
-- [x] Dashboard principal
+### Fase 1: Base do Sistema ✅ **COMPLETA**
+- [x] Estrutura de pastas (reorganizada seguindo Nuxt 4)
+- [x] Types TypeScript completos
+- [x] Composables completos (auth, campaign, timeline, upload)
+- [x] Middleware completo (auth.global, isMaster, isPlayer)
+- [x] Páginas de autenticação (login, register, forgot-password)
+- [x] Dashboard principal funcional
+- [x] Componentes UI básicos (BaseButton, BaseInput, BaseCard)
+- [x] Sistema de cores vampire completo
+- [x] Middleware de proteção de rotas
 
-### Fase 2: Componentes 🔄
-- [ ] Componentes da tela de campanha
-- [ ] Componentes do dashboard do mestre
-- [ ] Layouts
+### Fase 2: Páginas de Campanha 🔥 **EM ANDAMENTO**
+- [ ] `/campaign/[id].vue` - Tela compartilhada (mestre + jogadores)
+- [ ] `/campaign/[id]/master.vue` - Dashboard exclusivo do mestre
+- [ ] Layout específico para campanhas
 
-### Fase 3: API 🔜
+### Fase 3: Componentes da Campanha ⚪ **PENDENTE**
+- [x] PlayerAvatar.vue (já criado)
+- [ ] Timeline.vue e TimelineItem.vue
+- [ ] MediaPlayer.vue
+- [ ] MapViewer.vue
+- [ ] PartyTeam.vue
+
+### Fase 4: Componentes do Mestre ⚪ **PENDENTE**
+- [ ] NPCManager.vue e NPCCard.vue
+- [ ] CombatTracker.vue
+- [ ] MasterNotes.vue
+- [ ] PlayerStats.vue
+
+### Fase 5: Backend (APIs) ⚪ **PENDENTE**
 - [ ] Endpoints de autenticação
 - [ ] Endpoints de campanhas
 - [ ] Endpoints de timeline
 - [ ] Endpoints de upload
 - [ ] Integração com banco de dados
 
-### Fase 4: Features Avançadas 🔜
+### Fase 6: Features Avançadas ⚪ **FUTURO**
 - [ ] Realtime com WebSockets
 - [ ] Sistema de notificações
 - [ ] Chat entre jogadores

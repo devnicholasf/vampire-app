@@ -153,6 +153,13 @@
 </template>
 
 <script setup lang="ts">
+// ============================================
+// Imports explícitos dos componentes
+// ============================================
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseInput from '~/components/ui/BaseInput.vue'
+import WodButton from '~/components/ui/WodButton.vue'
+
 definePageMeta({
   middleware: []
 })

@@ -13,6 +13,8 @@
 </template>
 
 <script setup lang="ts">
+// Vue 3 imports
+import { computed } from 'vue'
 interface Props {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
   type?: 'button' | 'submit' | 'reset'

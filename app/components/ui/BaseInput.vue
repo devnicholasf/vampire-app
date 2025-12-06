@@ -101,6 +101,9 @@
 </template>
 
 <script setup lang="ts">
+// Vue 3 imports
+import { ref, computed, useSlots } from 'vue'
+
 interface Props {
   modelValue?: string | number
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url'

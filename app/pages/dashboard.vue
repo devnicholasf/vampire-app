@@ -49,16 +49,13 @@
         >
           <!-- Badge de Mestre/Jogador -->
           <div class="flex justify-between items-start mb-4">
-            <span
-              :class="[
-                'px-3 py-1 rounded-full text-xs font-semibold',
-                isMaster(campaign) 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-transparent text-red-400 border border-red-400'
-              ]"
+            <BaseBadge
+              :variant="isMaster(campaign) ? 'primary' : 'outline'"
+              :iconLeft="isMaster(campaign) ? '👑' : '🎭'"
+              size="sm"
             >
-              {{ isMaster(campaign) ? '👑 Mestre' : '🎭 Jogador' }}
-            </span>
+              {{ isMaster(campaign) ? 'Mestre' : 'Jogador' }}
+            </BaseBadge>
           </div>
 
           <!-- Nome e Descrição -->
@@ -145,6 +142,12 @@
 </template>
 
 <script setup lang="ts">
+// ============================================
+// Imports explícitos dos componentes
+// ============================================
+import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseBadge from '~/components/ui/BaseBadge.vue'
+
 interface Campaign {
   id: string
   name: string
@@ -158,8 +161,11 @@ interface CreateCampaignData {
   description: string
 }
 
+definePageMeta({
+  middleware: []
+})
+
 const { user, logout } = useAuth()
-const router = useRouter()
 
 // Debug
 onMounted(() => {
@@ -209,8 +215,9 @@ const formatDate = (date: Date) => {
 }
 
 // Ir para campanha
-const goToCampaign = (id: string) => {
-  router.push(`/campaign/${id}`)
+const goToCampaign = async (id: string) => {
+  console.log('Navegando para campanha:', id)
+  await navigateTo(`/campaign/${id}`)
 }
 
 // Criar campanha

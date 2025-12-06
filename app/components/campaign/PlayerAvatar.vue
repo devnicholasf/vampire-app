@@ -30,8 +30,14 @@
       </div>
 
       <!-- Badge de clã -->
-      <div class="absolute top-0 right-0 bg-brand-primary text-black px-2 py-1 rounded text-xs font-bold">
-        {{ character.clan }}
+      <div class="absolute top-0 right-0">
+        <BaseBadge
+          variant="warning"
+          size="xs"
+          rounded="sm"
+        >
+          {{ character.clan }}
+        </BaseBadge>
       </div>
     </div>
 
@@ -111,13 +117,14 @@
     <div v-if="!compact && character.disciplines && character.disciplines.length > 0" class="mt-4 pt-4 border-t border-border-secondary">
       <p class="text-xs text-text-secondary mb-2">Disciplinas:</p>
       <div class="flex flex-wrap gap-2">
-        <span
+        <BaseBadge
           v-for="discipline in character.disciplines"
           :key="discipline"
-          class="px-2 py-1 bg-surface-medium text-brand-primary text-xs rounded border border-brand-primary"
+          variant="outline"
+          size="xs"
         >
           {{ discipline }}
-        </span>
+        </BaseBadge>
       </div>
     </div>
   </div>
