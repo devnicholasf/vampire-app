@@ -80,47 +80,64 @@ export default {
           }
         },
         
-        // Cores semânticas usando a paleta vampire
+        // Cores semânticas usando azul escuro profissional
         primary: {
-          DEFAULT: '#8B0000', // vermelho sangue
-          50: '#FFF5F5',
-          100: '#FED7D7',
-          200: '#FEB2B2',
-          300: '#FC8181',
-          400: '#F56565',
-          500: '#E53E3E',
-          600: '#C53030',
-          700: '#9B2C2C',
-          800: '#8B0000',
-          900: '#742A2A',
-          950: '#2D0A0A',
+          DEFAULT: '#020618', // azul escuro profissional
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
+          950: '#020618',
+        },
+        
+        // Vermelho elegante para botões
+        red: {
+          DEFAULT: '#DC2626',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
+          200: '#FECACA',
+          300: '#FCA5A5',
+          400: '#F87171',
+          500: '#EF4444',
+          600: '#DC2626',
+          700: '#B91C1C',
+          800: '#991B1B',
+          900: '#7F1D1D',
+          950: '#450A0A',
         },
         
         secondary: {
-          DEFAULT: '#2D1B69', // roxo profundo
+          DEFAULT: '#4C2B85', // roxo mais claro e visível
           50: '#F8F6FF',
           100: '#EFEBFF',
           200: '#DDD4FF', 
           300: '#C4B1FF',
           400: '#A688FF',
-          500: '#2D1B69',
-          600: '#1A0F3D',
-          700: '#120B2E',
-          800: '#0A061F',
-          900: '#050310',
+          500: '#855CFF',
+          600: '#7C3AED',
+          700: '#6D28D9',
+          800: '#4C2B85',
+          900: '#2D1B69',
+          950: '#1A0F3D',
         },
         
         accent: {
-          DEFAULT: '#FF1744', // rosa neon
-          50: '#FFF0F3',
-          100: '#FFDDDD',
-          200: '#FFC0CB',
-          300: '#FF94A3', 
-          400: '#FF5722',
-          500: '#FF1744',
-          600: '#E00025',
-          700: '#C1001D',
-          800: '#A3001A',
+          DEFAULT: '#E91E63', // magenta para destaques
+          50: '#FDF2F8',
+          100: '#FCE7F3',
+          200: '#FBCFE8',
+          300: '#F9A8D4', 
+          400: '#F472B6',
+          500: '#E91E63',
+          600: '#BE185D',
+          700: '#9D174D',
+          800: '#831843',
           900: '#4A0009',
         },
         
@@ -148,32 +165,34 @@ export default {
           dark: '#1A0F3D', // roxo escuro para bordas sutis
         },
         
-        // Sistema de texto
+        // Sistema de texto com melhor contraste
         text: {
           primary: '#FFFFFF',
-          secondary: '#E0E0E0', 
-          muted: '#9E9E9E',
+          secondary: '#CBD5E1', // mais claro para melhor visibilidade
+          muted: '#94A3B8', // mais claro que antes
           accent: '#E91E63',
         },
       },
       
       // Gradientes baseados na nova paleta
       backgroundImage: {
-        'gradient-vampire': 'linear-gradient(135deg, #000000 0%, #0A061F 30%, #8B0000 100%)',
-        'gradient-blood': 'linear-gradient(135deg, #8B0000 0%, #E91E63 100%)',
+        'gradient-vampire': 'linear-gradient(135deg, #000000 0%, #020618 50%, #4C2B85 100%)',
+        'gradient-professional': 'linear-gradient(135deg, #020618 0%, #0F172A 100%)',
         'gradient-purple': 'linear-gradient(135deg, #000000 0%, #2D1B69 100%)',
-        'gradient-neon': 'linear-gradient(135deg, #E91E63 0%, #FF1744 100%)',
-        'gradient-dark': 'linear-gradient(135deg, #000000 0%, #0A061F 50%, #120B2E 100%)',
-        'gradient-atmospheric': 'linear-gradient(180deg, #000000 0%, #0A061F 50%, #120B2E 100%)',
+        'gradient-accent': 'linear-gradient(135deg, #E91E63 0%, #4C2B85 100%)',
+        'gradient-dark': 'linear-gradient(135deg, #000000 0%, #020618 50%, #0F172A 100%)',
+        'gradient-atmospheric': 'linear-gradient(180deg, #000000 0%, #020618 50%, #0F172A 100%)',
       },
       
       // Sombras com as novas cores
       boxShadow: {
-        'glow-magenta': '0 0 20px rgba(233, 30, 99, 0.5)',
-        'glow-purple': '0 0 20px rgba(45, 27, 105, 0.5)', 
-        'glow-blood': '0 0 20px rgba(139, 0, 0, 0.5)',
-        'glow-neon': '0 0 30px rgba(255, 23, 68, 0.6)',
-        'card-vampire': '0 4px 20px rgba(45, 27, 105, 0.3)',
+        'glow-primary': '0 0 20px rgba(2, 6, 24, 0.6)',
+        'glow-purple': '0 0 20px rgba(76, 43, 133, 0.5)', 
+        'glow-accent': '0 0 20px rgba(233, 30, 99, 0.5)',
+        'glow-blue': '0 0 30px rgba(2, 6, 24, 0.7)',
+        'glow-red': '0 0 25px rgba(220, 38, 38, 0.6)',
+        'glow-red-hover': '0 0 35px rgba(239, 68, 68, 0.8)',
+        'card-vampire': '0 4px 20px rgba(76, 43, 133, 0.3)',
         'card-hover': '0 8px 30px rgba(233, 30, 99, 0.4)',
       },
       

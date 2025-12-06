@@ -1,25 +1,23 @@
 <template>
-  <div class="min-h-screen bg-gradient-vampire flex items-center justify-center p-4 relative overflow-hidden">
+  <div class="min-h-screen bg-gradient-atmospheric flex items-center justify-center p-6 relative overflow-hidden">
     <!-- Background decorations -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+      <div class="absolute top-20 left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Content -->
-    <div class="relative z-10 w-full max-w-md">
-      <!-- Logo/Header -->
-      <AuthHeader />
-
+    <div class="relative z-10 w-full max-w-lg">
       <!-- Main Content Card -->
-      <BaseCard variant="glass" class="animate-slide-up backdrop-blur-xl">
+      <div class="bg-surface-card/80 backdrop-blur-xl border border-border-primary rounded-2xl p-8 shadow-card-vampire animate-fade-in">
         <slot />
-      </BaseCard>
+      </div>
 
       <!-- Footer -->
-      <div class="text-center mt-6 text-text-muted text-sm">
+      <div class="text-center mt-6 text-text-muted text-xs">
         <slot name="footer">
-          <p> Vampire: The Masquerade é uma propriedade da World of Darkness Entertainment. Conteúdo não oficial {{ new Date().getFullYear() }}&copy;</p>
+          <p>Vampire: The Masquerade &copy; {{ new Date().getFullYear() }} World of Darkness Entertainment</p>
         </slot>
       </div>
     </div>
