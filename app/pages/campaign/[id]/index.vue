@@ -20,7 +20,7 @@ const route = useRoute()
 const campaignId = route.params.id as string
 
 definePageMeta({
-  // middleware: ['auth', 'campaign-redirect'] // Removido temporariamente
+  middleware: ['campaign-redirect']
 })
 
 // Esta página serve apenas como ponto de redirecionamento

@@ -112,8 +112,8 @@ const handleClick = (event: MouseEvent) => {
   emit('click', event)
   
   // Analytics tracking (optional)
-  if (typeof gtag !== 'undefined') {
-    gtag('event', 'click', {
+  if (typeof (window as any).gtag !== 'undefined') {
+    (window as any).gtag('event', 'click', {
       event_category: 'external_link',
       event_label: 'world_of_darkness_official',
       value: 1

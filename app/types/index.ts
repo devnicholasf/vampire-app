@@ -89,9 +89,13 @@ export interface NPC {
   id: string
   campaignId: string
   name: string
-  image?: string
-  clan?: VampireClan
-  description: string
+  clan?: VampireClan | string // Permitir string para mais flexibilidade
+  generation?: number
+  bio?: string // Biografia completa
+  keyPoints?: string[] // Pontos chave na história
+  photo?: string // URL da foto (futuramente arquivo)
+  image?: string // Manter retrocompatibilidade
+  description?: string // Manter retrocompatibilidade
   stats?: {
     health?: number
     willpower?: number
@@ -99,6 +103,7 @@ export interface NPC {
   }
   notes?: string // Notas privadas do mestre
   createdAt: Date
+  updatedAt?: Date
 }
 
 export interface MediaFile {
