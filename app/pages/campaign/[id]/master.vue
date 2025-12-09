@@ -1,466 +1,375 @@
 <template>
-  <div class="min-h-screen bg-gradient-atmospheric text-text-primary">
-    <!-- Master Header -->
-    <header class="bg-surface border-b border-border-primary sticky top-0 z-40">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <!-- Navigation -->
-          <div class="flex items-center gap-4">
-            <BaseButton 
-              variant="ghost" 
-              size="sm" 
-              @click="navigateTo(`/campaign/${campaignId}`)"
-              iconLeft="←"
+  <div class="min-h-screen bg-background text-text-primary">
+    <!-- Header -->
+    <header class="bg-surface-card border-b border-border">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <BaseButton
+              variant="ghost"
+              size="sm"
+              @click="goBackToDashboard"
+              class="mr-4"
             >
-              Campanha
+              ← Voltar ao Dashboard
             </BaseButton>
-            <div>
-              <h1 class="text-2xl font-bold text-red-400 flex items-center gap-2">
-                <span>👑</span>
-                Dashboard do Mestre
-              </h1>
-              <p class="text-text-muted text-sm">{{ campaign?.name }}</p>
-            </div>
+            <h1 class="text-xl font-bold">{{ campaign?.name || 'Carregando...' }} - Dashboard do Mestre</h1>
           </div>
-
-          <!-- Master Actions -->
-          <div class="flex items-center gap-2">
-            <BaseButton 
-              variant="ghost" 
-              size="sm" 
-              @click="showQuickActionsModal = true"
-              iconLeft="⚡"
-            >
-              Ações Rápidas
-            </BaseButton>
-            <BaseButton 
-              variant="primary" 
-              size="sm" 
-              @click="navigateTo(`/campaign/${campaignId}`)"
-              iconLeft="👁️"
-            >
-              Ver Campanha
+          <div class="flex items-center space-x-4">
+            <BaseButton variant="primary" size="sm" @click="goToLiveGame">
+              🎲 Entrar no Jogo
             </BaseButton>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-6">
-      <!-- Loading State -->
-      <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
-        <p class="text-text-muted mt-4">Carregando dashboard...</p>
-      </div>
+    <!-- Loading State -->
+    <div v-if="!campaign && !error" class="flex items-center justify-center min-h-96">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
 
-      <!-- Access Denied -->
-      <div v-else-if="error" class="text-center py-12">
-        <div class="text-6xl mb-4">🚫</div>
-        <h2 class="text-xl font-semibold text-text-primary mb-2">Acesso Negado</h2>
+    <!-- Error State -->
+    <div v-else-if="error" class="text-center py-12">
+      <div class="max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-red-400 mb-4">Erro ao carregar campanha</h2>
         <p class="text-text-muted mb-6">{{ error }}</p>
-        <BaseButton variant="primary" @click="navigateTo('/dashboard')">
+        <BaseButton variant="primary" @click="goBackToDashboard">
           Voltar ao Dashboard
         </BaseButton>
       </div>
+    </div>
 
-      <!-- Master Dashboard -->
-      <div v-else-if="campaign" class="space-y-6">
-        <!-- Quick Stats -->
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Players Count -->
-          <div class="bg-surface-card rounded-lg border border-border-primary p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-text-muted text-sm">Jogadores</p>
-                <p class="text-2xl font-bold text-text-primary">{{ campaign.players?.length || 0 }}</p>
+    <!-- Main Content -->
+    <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Campaign Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-surface-card rounded-lg p-6 border border-border">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">👥</span>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-text-muted">Jogadores</p>
+              <div class="flex items-baseline">
+                <p class="text-2xl font-bold text-text-primary">{{ playersCount }}</p>
               </div>
-              <div class="text-3xl">🎭</div>
             </div>
           </div>
-
-          <!-- Sessions Count -->
-          <div class="bg-surface-card rounded-lg border border-border-primary p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-text-muted text-sm">Sessões</p>
+        </div>
+        
+        <div class="bg-surface-card rounded-lg p-6 border border-border">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">📖</span>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-text-muted">Sessões</p>
+              <div class="flex items-baseline">
                 <p class="text-2xl font-bold text-text-primary">{{ sessionCount }}</p>
               </div>
-              <div class="text-3xl">📅</div>
             </div>
           </div>
-
-          <!-- Events Count -->
-          <div class="bg-surface-card rounded-lg border border-border-primary p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-text-muted text-sm">Eventos</p>
+        </div>
+        
+        <div class="bg-surface-card rounded-lg p-6 border border-border">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">⚡</span>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-text-muted">Eventos</p>
+              <div class="flex items-baseline">
                 <p class="text-2xl font-bold text-text-primary">{{ eventsCount }}</p>
               </div>
-              <div class="text-3xl">📜</div>
             </div>
           </div>
-
-          <!-- NPCs Count -->
-          <div class="bg-surface-card rounded-lg border border-border-primary p-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-text-muted text-sm">NPCs</p>
+        </div>
+        
+        <div class="bg-surface-card rounded-lg p-6 border border-border">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <span class="text-2xl">🎭</span>
+            </div>
+            <div class="ml-4">
+              <p class="text-sm font-medium text-text-muted">NPCs</p>
+              <div class="flex items-baseline">
                 <p class="text-2xl font-bold text-text-primary">{{ npcsCount }}</p>
               </div>
-              <div class="text-3xl">👤</div>
             </div>
           </div>
-        </section>
-
-        <!-- Tabs Navigation -->
-        <section class="bg-surface-card rounded-lg border border-border-primary">
-          <div class="border-b border-border-primary">
-            <nav class="flex space-x-8 px-6">
-              <button
-                v-for="tab in tabs"
-                :key="tab.id"
-                :class="[
-                  'py-4 px-2 border-b-2 font-medium text-sm transition-all duration-200',
-                  currentTab === tab.id
-                    ? 'border-red-500 text-red-400'
-                    : 'border-transparent text-text-muted hover:text-text-secondary hover:border-border-primary'
-                ]"
-                @click="currentTab = tab.id"
-              >
-                <span class="mr-2">{{ tab.icon }}</span>
-                {{ tab.name }}
-              </button>
-            </nav>
-          </div>
-
-          <!-- Tab Content -->
-          <div class="p-6">
-            <!-- Players Stats -->
-            <div v-if="currentTab === 'players'" class="space-y-6">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-text-primary">Estatísticas dos Jogadores</h3>
-                <BaseButton variant="ghost" size="sm" @click="refreshPlayerStats">
-                  🔄 Atualizar
-                </BaseButton>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <PlayerAvatar
-                  v-for="player in campaign.players"
-                  :key="player.userId"
-                  :character="player.character"
-                  :editable="false"
-                  :compact="false"
-                />
-              </div>
-            </div>
-
-            <!-- NPCs Management -->
-            <div v-if="currentTab === 'npcs'" class="space-y-6">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-text-primary">Gerenciador de NPCs</h3>
-                <BaseButton variant="primary" size="sm" @click="showCreateNPCModal = true">
-                  + Criar NPC
-                </BaseButton>
-              </div>
-
-              <NPCManager 
-                :campaign-id="campaignId"
-                @npc-created="handleNPCCreated"
-                @npc-updated="handleNPCUpdated"
-              />
-            </div>
-
-            <!-- Master Notes -->
-            <div v-if="currentTab === 'notes'" class="space-y-6">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-text-primary">Anotações Privadas</h3>
-                <BaseButton variant="primary" size="sm" @click="showCreateNoteModal = true">
-                  + Nova Nota
-                </BaseButton>
-              </div>
-
-              <MasterNotes 
-                :campaign-id="campaignId"
-                @note-created="handleNoteCreated"
-                @note-updated="handleNoteUpdated"
-              />
-            </div>
-
-            <!-- Combat Tracker -->
-            <div v-if="currentTab === 'combat'" class="space-y-6">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-text-primary">Rastreador de Combate</h3>
-                <div class="flex gap-2">
-                  <BaseButton variant="ghost" size="sm" @click="resetCombat">
-                    🔄 Resetar
-                  </BaseButton>
-                  <BaseButton variant="primary" size="sm" @click="startCombat">
-                    ⚔️ Iniciar Combate
-                  </BaseButton>
-                </div>
-              </div>
-
-              <CombatTracker 
-                :campaign-id="campaignId"
-                @combat-started="handleCombatStarted"
-                @combat-ended="handleCombatEnded"
-              />
-            </div>
-
-            <!-- Campaign Settings -->
-            <div v-if="currentTab === 'settings'" class="space-y-6">
-              <h3 class="text-lg font-semibold text-text-primary">Configurações da Campanha</h3>
-              
-              <CampaignSettings 
-                :campaign="campaign"
-                @updated="handleCampaignUpdated"
-              />
-            </div>
-
-            <!-- Media Library -->
-            <div v-if="currentTab === 'media'" class="space-y-6">
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-text-primary">Biblioteca de Mídia</h3>
-                <BaseButton variant="primary" size="sm" @click="showUploadMediaModal = true">
-                  📁 Upload
-                </BaseButton>
-              </div>
-
-              <MediaLibrary 
-                :campaign-id="campaignId"
-                @media-uploaded="handleMediaUploaded"
-                @media-selected="handleMediaSelected"
-              />
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
-    </main>
 
-    <!-- Modals -->
-    <CreateNPCModal
-      v-if="showCreateNPCModal"
-      :campaign-id="campaignId"
-      @close="showCreateNPCModal = false"
-      @created="handleNPCCreated"
-    />
+      <!-- Tabs Navigation -->
+      <div class="border-b border-border mb-8">
+        <nav class="-mb-px flex space-x-8">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            :class="[
+              'py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+              currentTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-text-muted hover:text-text-primary hover:border-text-muted'
+            ]"
+            @click="currentTab = tab.id"
+          >
+            <span class="mr-2">{{ tab.icon }}</span>
+            {{ tab.label }}
+          </button>
+        </nav>
+      </div>
 
-    <CreateNoteModal
-      v-if="showCreateNoteModal"
-      :campaign-id="campaignId"
-      @close="showCreateNoteModal = false"
-      @created="handleNoteCreated"
-    />
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Players Tab -->
+        <div v-if="currentTab === 'players'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Gerenciar Jogadores</h3>
+            <BaseButton variant="ghost" size="sm" @click="refreshPlayerStats">
+              🔄 Atualizar
+            </BaseButton>
+          </div>
+          
+          <div class="grid gap-4">
+            <div 
+              v-for="player in mockPlayers" 
+              :key="player.id"
+              class="bg-surface-card p-4 rounded-lg border border-border"
+            >
+              <p class="font-medium">{{ player.name }}</p>
+              <p class="text-text-muted text-sm">{{ player.email }}</p>
+            </div>
+          </div>
+        </div>
 
-    <UploadMediaModal
-      v-if="showUploadMediaModal"
-      :campaign-id="campaignId"
-      @close="showUploadMediaModal = false"
-      @uploaded="handleMediaUploaded"
-    />
+        <!-- NPCs Tab -->
+        <div v-if="currentTab === 'npcs'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">NPCs da Campanha</h3>
+            <BaseButton variant="primary" size="sm" @click="createNewNPC">
+              + Criar NPC
+            </BaseButton>
+          </div>
+          
+          <div class="grid gap-4">
+            <div 
+              v-for="npc in npcs" 
+              :key="npc.id"
+              class="bg-surface-card p-4 rounded-lg border border-border"
+            >
+              <p class="font-medium">{{ npc.name }}</p>
+              <p class="text-text-muted text-sm">{{ npc.description }}</p>
+            </div>
+          </div>
+        </div>
 
-    <QuickActionsModal
-      v-if="showQuickActionsModal"
-      :campaign-id="campaignId"
-      @close="showQuickActionsModal = false"
-      @action="handleQuickAction"
-    />
+        <!-- Notes Tab -->
+        <div v-if="currentTab === 'notes'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Anotações da Campanha</h3>
+            <BaseButton variant="primary" size="sm" @click="createNewNote">
+              + Nova Anotação
+            </BaseButton>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="bg-surface-card p-4 rounded-lg border border-border">
+              <p class="text-sm text-text-muted">Nenhuma anotação criada ainda.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combat Tab -->
+        <div v-if="currentTab === 'combat'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Sistema de Combate</h3>
+            <div class="space-x-2">
+              <BaseButton variant="ghost" size="sm" @click="resetCombat">
+                🔄 Resetar
+              </BaseButton>
+              <BaseButton variant="primary" size="sm" @click="startCombat">
+                ⚔️ Iniciar Combate
+              </BaseButton>
+            </div>
+          </div>
+          
+          <div class="bg-surface-card p-4 rounded-lg border border-border">
+            <p class="text-sm text-text-muted">Sistema de combate será implementado em breve.</p>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div v-if="currentTab === 'settings'" class="space-y-6">
+          <h3 class="text-lg font-semibold">Configurações da Campanha</h3>
+          
+          <div class="bg-surface-card p-6 rounded-lg border border-border">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-text-primary mb-2">
+                  Nome da Campanha
+                </label>
+                <input
+                  type="text"
+                  :value="campaign?.name"
+                  class="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary"
+                  readonly
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-text-primary mb-2">
+                  Descrição
+                </label>
+                <textarea
+                  :value="campaign?.description"
+                  class="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary h-32"
+                  readonly
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Media Tab -->
+        <div v-if="currentTab === 'media'" class="space-y-6">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Mídia da Campanha</h3>
+            <BaseButton variant="primary" size="sm" @click="uploadMedia">
+              📁 Upload de Arquivo
+            </BaseButton>
+          </div>
+          
+          <div class="bg-surface-card p-4 rounded-lg border border-border">
+            <p class="text-sm text-text-muted">Sistema de mídia será implementado em breve.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// ============================================
-// Master Dashboard - Dashboard exclusivo do mestre
-// Acesso: Apenas mestre da campanha
-// ============================================
-
-// ============================================
-// Imports explícitos dos componentes
-// ============================================
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import type { Campaign, NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
-import PlayerAvatar from '~/components/campaign/PlayerAvatar.vue'
 
-// Nuxt 4 auto-imports
+// Define the middleware for this page
 definePageMeta({
-  layout: 'campaign',
-  middleware: 'is-master'
+  layout: false
 })
 
-// Route params
+// Reactive data
 const route = useRoute()
-const campaignId = route.params.id as string
+const router = useRouter()
 
-// Composables (protected by isMaster middleware)
-const campaign = ref<any>(null)
-const loading = ref(true)
+const campaign = ref<Campaign | null>(null)
 const error = ref<string | null>(null)
-
-// Tab system
 const currentTab = ref('players')
-const tabs = [
-  { id: 'players', name: 'Jogadores', icon: '🎭' },
-  { id: 'npcs', name: 'NPCs', icon: '👤' },
-  { id: 'notes', name: 'Notas', icon: '📝' },
-  { id: 'combat', name: 'Combate', icon: '⚔️' },
-  { id: 'media', name: 'Mídia', icon: '📁' },
-  { id: 'settings', name: 'Configurações', icon: '⚙️' }
-]
 
-// Modal states
-const showCreateNPCModal = ref(false)
-const showCreateNoteModal = ref(false)
-const showUploadMediaModal = ref(false)
-const showQuickActionsModal = ref(false)
+// Mock data for now
+const sessions = ref<any[]>([])
+const events = ref<any[]>([])
+const npcs = ref<NPC[]>([])
+const mockPlayers = ref([
+  { id: '1', name: 'João Silva', email: 'joao@example.com' },
+  { id: '2', name: 'Maria Santos', email: 'maria@example.com' }
+])
 
-// Mock stats (will be calculated from real data)
-const sessionCount = ref(5)
-const eventsCount = ref(23)
-const npcsCount = ref(8)
+// Computed properties
+const playersCount = computed(() => mockPlayers.value.length)
+const sessionCount = computed(() => sessions.value.length)
+const eventsCount = computed(() => events.value.length)
+const npcsCount = computed(() => npcs.value.length)
 
-// ============================================
-// Lifecycle
-// ============================================
-onMounted(async () => {
-  try {
-    // Mock campaign data for now
-    await simulateLoadCampaign()
-  } catch (e: any) {
-    console.error('Erro ao carregar dashboard:', e)
-    error.value = e.message || 'Erro ao carregar dashboard do mestre'
-  } finally {
-    loading.value = false
-  }
-})
+// Tabs configuration
+const tabs = ref([
+  { id: 'players', label: 'Jogadores', icon: '👥' },
+  { id: 'npcs', label: 'NPCs', icon: '🎭' },
+  { id: 'notes', label: 'Anotações', icon: '📝' },
+  { id: 'combat', label: 'Combate', icon: '⚔️' },
+  { id: 'settings', label: 'Configurações', icon: '⚙️' },
+  { id: 'media', label: 'Mídia', icon: '📁' }
+])
 
-// ============================================
-// Mock Methods (replace with real API calls)
-// ============================================
-const simulateLoadCampaign = async () => {
-  // Simulate API delay
+// Mock getCampaign function
+const getCampaign = async (campaignId: string): Promise<Campaign> => {
+  // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 1000))
   
-  // Mock campaign data
-  campaign.value = {
+  return {
     id: campaignId,
-    name: 'Crônicas de Chicago',
-    description: 'Uma história sombria nas ruas de Chicago...',
-    players: [
-      {
-        userId: '1',
-        character: {
-          name: 'Marcus Ventrue',
-          clan: 'Ventrue',
-          generation: 10,
-          avatar: '/images/marcus.jpg',
-          attributes: {
-            hunger: 2,
-            humanity: 7,
-            willpower: 8,
-            health: 10
-          },
-          disciplines: ['Dominação', 'Presença', 'Fortitude']
-        }
-      },
-      {
-        userId: '2', 
-        character: {
-          name: 'Selene Toreador',
-          clan: 'Toreador',
-          generation: 9,
-          avatar: '/images/selene.jpg',
-          attributes: {
-            hunger: 1,
-            humanity: 8,
-            willpower: 7,
-            health: 9
-          },
-          disciplines: ['Presença', 'Celeridade', 'Auspícios']
-        }
-      }
-    ]
+    name: 'Sombras de Lisboa',
+    description: 'Uma campanha de vampiro ambientada na Lisboa do século XXI, onde antigas linhagens se enfrentam.',
+    masterId: 'current-user-id',
+    players: [],
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-15'),
+    isPremium: false
   }
 }
 
-// ============================================
-// Event Handlers
-// ============================================
+// Methods
+const goBackToDashboard = () => {
+  router.push('/dashboard')
+}
+
+const goToLiveGame = () => {
+  router.push(`/campaign/${route.params.id}/live`)
+}
+
 const refreshPlayerStats = () => {
-  console.log('Refreshing player stats...')
-  // Implement refresh logic
+  console.log('Atualizando estatísticas dos jogadores...')
 }
 
-const handleNPCCreated = (npc: any) => {
-  console.log('NPC created:', npc)
-  showCreateNPCModal.value = false
-  npcsCount.value++
+const createNewNPC = () => {
+  console.log('Criando novo NPC...')
 }
 
-const handleNPCUpdated = (npc: any) => {
-  console.log('NPC updated:', npc)
-}
-
-const handleNoteCreated = (note: any) => {
-  console.log('Note created:', note)
-  showCreateNoteModal.value = false
-}
-
-const handleNoteUpdated = (note: any) => {
-  console.log('Note updated:', note)
-}
-
-const handleCombatStarted = () => {
-  console.log('Combat started')
-}
-
-const handleCombatEnded = () => {
-  console.log('Combat ended')
-}
-
-const handleCampaignUpdated = (updatedCampaign: any) => {
-  console.log('Campaign updated:', updatedCampaign)
-  campaign.value = updatedCampaign
-}
-
-const handleMediaUploaded = (media: any) => {
-  console.log('Media uploaded:', media)
-  showUploadMediaModal.value = false
-}
-
-const handleMediaSelected = (media: any) => {
-  console.log('Media selected:', media)
-}
-
-const handleQuickAction = (action: string) => {
-  console.log('Quick action:', action)
-  showQuickActionsModal.value = false
-}
-
-const resetCombat = () => {
-  console.log('Resetting combat...')
+const createNewNote = () => {
+  console.log('Criando nova anotação...')
 }
 
 const startCombat = () => {
-  console.log('Starting combat...')
+  console.log('Iniciando combate...')
 }
 
-// ============================================
-// SEO
-// ============================================
-useHead({
-  title: computed(() => `Dashboard - ${campaign.value?.name || 'Mestre'}`),
-  meta: [
-    {
-      name: 'description',
-      content: 'Dashboard exclusivo do mestre para gerenciar a campanha de Vampire: The Masquerade'
-    }
-  ]
+const resetCombat = () => {
+  console.log('Resetando combate...')
+}
+
+const uploadMedia = () => {
+  console.log('Fazendo upload de mídia...')
+}
+
+const formatDate = (date: Date | string) => {
+  const d = new Date(date)
+  return d.toLocaleDateString('pt-BR')
+}
+
+// Initialize campaign data
+onMounted(async () => {
+  try {
+    const campaignId = route.params.id as string
+    campaign.value = await getCampaign(campaignId)
+    
+    // Mock data initialization
+    sessions.value = [
+      {
+        id: '1',
+        campaignId: campaignId,
+        name: 'Sessão 1 - O Despertar',
+        date: new Date('2024-01-15'),
+        duration: 180,
+        notes: 'Primeira sessão da campanha',
+        playersPresent: []
+      }
+    ]
+    
+  } catch (err) {
+    error.value = 'Não foi possível carregar a campanha'
+    console.error('Error loading campaign:', err)
+  }
 })
 </script>
-
-<style scoped>
-.bg-gradient-atmospheric {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #1a1a2e 100%);
-}
-</style>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" fill="currentColor">
+  <!-- Parte superior circular do ankh -->
+  <path d="M100 20 C130 20 150 40 150 70 C150 100 130 120 100 120 C70 120 50 100 50 70 C50 40 70 20 100 20 Z" fill="none" stroke="currentColor" stroke-width="12"/>
+  
+  <!-- Haste vertical -->
+  <rect x="94" y="120" width="12" height="160" fill="currentColor"/>
+  
+  <!-- Braço horizontal -->
+  <rect x="40" y="154" width="120" height="12" fill="currentColor"/>
+</svg>

@@ -286,6 +286,8 @@ const showAddEventModal = ref(false)
 // Lifecycle
 // ============================================
 onMounted(async () => {
+  console.log('Campanha: Página montada, ID:', campaignId)
+  
   try {
     await fetchCampaignData(campaignId)
     
