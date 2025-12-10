@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-semibold">NPCs da Campanha</h3>
-      <BaseButton variant="primary" size="sm" @click="showCreateModal = true">
+      <BaseButton variant="primary" size="sm" @click="createNPC">
         + Criar NPC
       </BaseButton>
     </div>
@@ -86,7 +86,7 @@
       <div class="text-6xl mb-4">🎭</div>
       <h4 class="text-lg font-semibold text-text-primary mb-2">Nenhum NPC criado</h4>
       <p class="text-text-muted mb-6">Crie seu primeiro NPC para começar a popular sua campanha</p>
-      <BaseButton variant="primary" @click="showCreateModal = true">
+      <BaseButton variant="primary" @click="createNPC">
         + Criar Primeiro NPC
       </BaseButton>
     </div>
@@ -111,7 +111,11 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { NPC } from '~/types'
+import BaseButton from '~/components/ui/BaseButton.vue'
+import NPCModal from '~/components/campaign/master/NPCModal.vue'
+import NPCDetailsModal from '~/components/campaign/master/NPCDetailsModal.vue'
 
 // Props
 interface Props {
@@ -122,11 +126,16 @@ const props = defineProps<Props>()
 
 // Reactive data
 const npcs = ref<NPC[]>([])
+
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
 
 // Methods
+const createNPC = () => {
+  showCreateModal.value = true
+}
+
 const editNPC = (npc: NPC) => {
   editingNPC.value = npc
   showCreateModal.value = true

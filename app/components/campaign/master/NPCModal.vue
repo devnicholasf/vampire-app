@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
     @click.self="$emit('close')"
   >
     <div class="bg-surface-card rounded-lg border border-primary p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -143,6 +143,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watchEffect } from 'vue'
 import type { NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 
@@ -229,20 +230,20 @@ const handleSave = () => {
 
 <style scoped>
 /* Custom scrollbar */
-.max-h-[90vh]::-webkit-scrollbar {
+.max-h-\[90vh\]::-webkit-scrollbar {
   width: 6px;
 }
 
-.max-h-[90vh]::-webkit-scrollbar-track {
+.max-h-\[90vh\]::-webkit-scrollbar-track {
   background: #120B2E;
 }
 
-.max-h-[90vh]::-webkit-scrollbar-thumb {
+.max-h-\[90vh\]::-webkit-scrollbar-thumb {
   background: #2D1B69;
   border-radius: 3px;
 }
 
-.max-h-[90vh]::-webkit-scrollbar-thumb:hover {
+.max-h-\[90vh\]::-webkit-scrollbar-thumb:hover {
   background: #4C2B85;
 }
 </style>

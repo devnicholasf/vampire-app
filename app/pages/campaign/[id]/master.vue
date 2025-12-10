@@ -144,12 +144,6 @@
           ref="notesTabRef"
         />
 
-        <!-- Combat Tab -->
-        <CombatTab 
-          v-if="currentTab === 'combat'" 
-          :campaign-id="campaignId"
-        />
-
         <!-- Settings Tab -->
         <SettingsTab 
           v-if="currentTab === 'settings'" 
@@ -177,7 +171,6 @@ import BaseButton from '~/components/ui/BaseButton.vue'
 import PlayersTab from '~/components/campaign/master/PlayersTab.vue'
 import NPCsTab from '~/components/campaign/master/NPCsTab.vue'
 import NotesTab from '~/components/campaign/master/NotesTab.vue'
-import CombatTab from '~/components/campaign/master/CombatTab.vue'
 import SettingsTab from '~/components/campaign/master/SettingsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
 
@@ -215,7 +208,6 @@ const tabs = ref([
   { id: 'players', label: 'Jogadores', icon: '👥' },
   { id: 'npcs', label: 'NPCs', icon: '🎭' },
   { id: 'notes', label: 'Anotações', icon: '📝' },
-  { id: 'combat', label: 'Combate', icon: '⚔️' },
   { id: 'settings', label: 'Configurações', icon: '⚙️' },
   { id: 'media', label: 'Mídia', icon: '📁' }
 ])
