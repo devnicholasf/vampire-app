@@ -1,5 +1,18 @@
 <template>
   <div class="timeline-container">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-semibold text-text-primary">Timeline da Campanha</h3>
+      <BaseButton
+        v-if="canEdit"
+        variant="primary"
+        size="sm"
+        @click="showAddEvent = true"
+      >
+        + Adicionar Evento
+      </BaseButton>
+    </div>
+
     <!-- Filters -->
     <div class="mb-6 flex flex-wrap gap-2">
       <BaseBadge
@@ -72,6 +85,13 @@
       <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
       <p class="text-text-muted mt-2">Carregando mais eventos...</p>
     </div>
+
+    <!-- Add Event Modal -->
+    <AddEventModal
+      v-model:show="showAddEvent"
+      :campaignId="campaignId"
+      @eventCreated="handleEventCreated"
+    />
   </div>
 </template>
 
@@ -84,6 +104,7 @@ import type { TimelineEvent, TimelineEventType } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
 import TimelineItem from '~/components/campaign/TimelineItem.vue'
+import AddEventModal from '~/components/campaign/AddEventModal.vue'
 
 // ============================================
 // Timeline Component - Lista de eventos da campanha
@@ -100,6 +121,7 @@ const props = defineProps<Props>()
 const events = ref<TimelineEvent[]>([])
 const loading = ref(false)
 const loadingMore = ref(false)
+const showAddEvent = ref(false)
 
 // Mock methods
 const fetchEvents = async () => {
@@ -185,6 +207,11 @@ const handleDeleteEvent = async (eventId: string) => {
       console.error('Erro ao deletar evento:', error)
     }
   }
+}
+
+const handleEventCreated = (event: TimelineEvent) => {
+  events.value.unshift(event) // Add to beginning of array
+  showAddEvent.value = false
 }
 
 // ============================================

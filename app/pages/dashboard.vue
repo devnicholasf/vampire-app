@@ -295,11 +295,11 @@ const formatDate = (date: Date) => {
 const goToCampaign = async (id: string) => {
   console.log('Dashboard: Clique na campanha detectado')
   console.log('Dashboard: Navegando para campanha:', id)
-  console.log('Dashboard: URL de destino:', `/campaign/${id}`)
   
   try {
-    // O middleware campaignRedirect vai direcionar para o dashboard correto
-    await navigateTo(`/campaign/${id}`)
+    // Usar router.push em vez de navigateTo
+    const router = useRouter()
+    await router.push(`/campaign/${id}/master`)
     console.log('Dashboard: Navegação concluída')
   } catch (error) {
     console.error('Dashboard: Erro na navegação:', error)
