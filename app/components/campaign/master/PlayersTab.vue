@@ -45,11 +45,46 @@
         </BaseButton>
       </div>
     </div>
+
+    <!-- Kick Player Confirmation Modal -->
+    <div
+      v-if="showKickModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeKickModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-text-primary">Remover Jogador</h3>
+        <p class="text-text-muted mb-6">
+          Tem certeza que deseja remover <strong>{{ playerToKick?.name }}</strong> da campanha?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeKickModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" @click="confirmKickPlayer">
+            Remover
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -66,22 +101,46 @@ const players = ref([
 
 const inviteEmail = ref('')
 
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
+
+// Confirmation modal states
+const showKickModal = ref(false)
+const playerToKick = ref<{ id: string; name: string } | null>(null)
+
 // Methods
 const refreshStats = () => {
   console.log('Atualizando estatísticas dos jogadores...')
 }
 
 const kickPlayer = (playerId: string) => {
-  if (confirm('Tem certeza que deseja remover este jogador?')) {
-    players.value = players.value.filter(p => p.id !== playerId)
+  const player = players.value.find(p => p.id === playerId)
+  if (player) {
+    playerToKick.value = { id: playerId, name: player.name }
+    showKickModal.value = true
   }
+}
+
+const confirmKickPlayer = () => {
+  if (playerToKick.value) {
+    players.value = players.value.filter(p => p.id !== playerToKick.value!.id)
+    showToastMessage(`${playerToKick.value.name} foi removido da campanha`, 'success')
+  }
+  closeKickModal()
+}
+
+const closeKickModal = () => {
+  showKickModal.value = false
+  playerToKick.value = null
 }
 
 const invitePlayer = () => {
   if (inviteEmail.value) {
     console.log('Convidando jogador:', inviteEmail.value)
     // Future: Send invitation
-    alert(`Convite enviado para ${inviteEmail.value}`)
+    showToastMessage(`Convite enviado para ${inviteEmail.value}`, 'success')
     inviteEmail.value = ''
   }
 }
@@ -90,4 +149,18 @@ const invitePlayer = () => {
 defineExpose({
   count: computed(() => players.value.length)
 })
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
+}
 </script>

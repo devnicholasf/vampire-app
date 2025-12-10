@@ -201,12 +201,76 @@
         </div>
       </div>
     </div>
+
+    <!-- Archive Campaign Confirmation Modal -->
+    <div
+      v-if="showArchiveModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeArchiveModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-text-primary">Arquivar Campanha</h3>
+        <p class="text-text-muted mb-6">
+          Tem certeza que deseja arquivar esta campanha? Ela ficará invisível mas não será deletada.
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeArchiveModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="outline" @click="confirmArchiveCampaign">
+            Arquivar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Campaign Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeDeleteModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-red-600 max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-red-400">⚠️ DELETAR CAMPANHA</h3>
+        <p class="text-text-muted mb-2">
+          Tem certeza que deseja <strong class="text-red-400">DELETAR PERMANENTEMENTE</strong>
+        </p>
+        <p class="text-text-muted mb-6">
+          "<strong>{{ campaign?.name || 'esta campanha' }}</strong>"?
+        </p>
+        <p class="text-xs text-red-400 mb-6">Esta ação não pode ser desfeita!</p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeDeleteModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" @click="confirmDeleteCampaign">
+            DELETAR
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Campaign } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -218,6 +282,15 @@ const props = defineProps<Props>()
 
 // Reactive data
 const editMode = ref(false)
+
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
+
+// Confirmation modal states
+const showArchiveModal = ref(false)
+const showDeleteModal = ref(false)
 const settings = ref({
   name: '',
   description: '',
@@ -250,7 +323,7 @@ const saveCampaignSettings = () => {
   console.log('Salvando configurações:', settings.value)
   // Future: Save to database
   editMode.value = false
-  alert('Configurações salvas com sucesso!')
+  showToastMessage('Configurações salvas com sucesso!', 'success')
 }
 
 const cancelEdit = () => {
@@ -271,18 +344,47 @@ const cancelEdit = () => {
 }
 
 const archiveCampaign = () => {
-  if (confirm('Tem certeza que deseja arquivar esta campanha?')) {
-    console.log('Arquivando campanha...')
-    // Future: Archive campaign
-  }
+  showArchiveModal.value = true
+}
+
+const confirmArchiveCampaign = () => {
+  console.log('Arquivando campanha...')
+  // Future: Archive campaign
+  showToastMessage('Campanha arquivada com sucesso', 'info')
+  showArchiveModal.value = false
 }
 
 const deleteCampaign = () => {
-  const campaignName = props.campaign?.name || 'esta campanha'
-  if (confirm(`Tem certeza que deseja DELETAR PERMANENTEMENTE "${campaignName}"? Esta ação não pode ser desfeita.`)) {
-    console.log('Deletando campanha...')
-    // Future: Delete campaign
-  }
+  showDeleteModal.value = true
+}
+
+const confirmDeleteCampaign = () => {
+  console.log('Deletando campanha...')
+  // Future: Delete campaign
+  showToastMessage('Campanha deletada permanentemente', 'warning')
+  showDeleteModal.value = false
+}
+
+const closeArchiveModal = () => {
+  showArchiveModal.value = false
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+}
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 
 const formatDate = (date: Date | string | undefined) => {

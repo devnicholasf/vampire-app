@@ -20,7 +20,7 @@
             <BaseButton variant="ghost" size="sm" @click="editNote(note)">
               ✏️
             </BaseButton>
-            <BaseButton variant="ghost" size="sm" @click="deleteNote(note.id)">
+            <BaseButton variant="ghost" size="sm" @click="confirmDeleteNote(note)">
               🗑️
             </BaseButton>
           </div>
@@ -116,6 +116,40 @@
         </form>
       </div>
     </div>
+
+    <!-- Delete Note Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeDeleteModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-text-primary">Deletar Anotação</h3>
+        <p class="text-text-muted mb-6">
+          Tem certeza que deseja deletar <strong>"{{ deletingNote?.title }}"</strong>?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeDeleteModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" @click="executeDeleteNote">
+            Deletar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
@@ -141,6 +175,15 @@ interface Note {
 const notes = ref<Note[]>([])
 const showCreateModal = ref(false)
 const editingNote = ref<Note | null>(null)
+
+// Delete confirmation states
+const showDeleteModal = ref(false)
+const deletingNote = ref<Note | null>(null)
+
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
 const noteForm = ref({
   title: '',
   content: ''
@@ -158,10 +201,22 @@ const editNote = (note: Note) => {
   showCreateModal.value = true
 }
 
-const deleteNote = (noteId: string) => {
-  if (confirm('Tem certeza que deseja deletar esta anotação?')) {
-    notes.value = notes.value.filter(n => n.id !== noteId)
+const confirmDeleteNote = (note: Note) => {
+  deletingNote.value = note
+  showDeleteModal.value = true
+}
+
+const executeDeleteNote = () => {
+  if (deletingNote.value) {
+    notes.value = notes.value.filter(n => n.id !== deletingNote.value!.id)
+    showToastMessage(`Anotação "${deletingNote.value.title}" foi removida`, 'success')
   }
+  closeDeleteModal()
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  deletingNote.value = null
 }
 
 const closeModal = () => {
@@ -202,6 +257,20 @@ const formatDate = (date: Date) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 
 // Expose count for parent

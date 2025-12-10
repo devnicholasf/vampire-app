@@ -12,8 +12,18 @@
       <div 
         v-for="npc in npcs" 
         :key="npc.id"
-        class="bg-surface-card p-6 rounded-lg border border-primary hover:border-accent transition-colors"
+        class="bg-surface-card p-6 rounded-lg border border-primary hover:border-accent transition-colors relative group"
       >
+        <!-- Delete Button -->
+        <BaseButton 
+          variant="ghost" 
+          size="sm" 
+          @click="confirmDeleteNPC(npc)"
+          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:bg-red-600 hover:text-white"
+        >
+          🗑️
+        </BaseButton>
+        
         <!-- NPC Avatar/Photo -->
         <div class="flex items-center mb-4">
           <div class="w-16 h-16 rounded-full bg-surface flex items-center justify-center mr-4">
@@ -107,6 +117,40 @@
       @edit="editNPC"
       @add-to-game="addToGame"
     />
+
+    <!-- Delete NPC Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeDeleteModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-text-primary">Deletar NPC</h3>
+        <p class="text-text-muted mb-6">
+          Tem certeza que deseja deletar <strong>{{ npcToDelete?.name }}</strong>?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeDeleteModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" @click="executeDeleteNPC">
+            Deletar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
@@ -116,6 +160,7 @@ import type { NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import NPCModal from '~/components/campaign/master/NPCModal.vue'
 import NPCDetailsModal from '~/components/campaign/master/NPCDetailsModal.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -170,6 +215,15 @@ const npcs = ref<NPC[]>([
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
+
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
+
+// Delete confirmation states
+const showDeleteModal = ref(false)
+const npcToDelete = ref<NPC | null>(null)
 
 // Methods
 const createNPC = () => {
@@ -229,13 +283,45 @@ const addToGame = (npc: NPC) => {
   })
   
   // Simular adição ao jogo live - apenas mostrar nome e foto aos jogadores
-  alert(`${npc.name} foi adicionado ao jogo live!\n\nOs jogadores verão:\n- Nome: ${npc.name}\n- Foto: ${npc.photo ? 'Sim' : 'Avatar padrão'}\n\nDetalhes completos ficam visíveis apenas para o mestre.`)
+  showToastMessage(`${npc.name} foi adicionado ao jogo live! Os jogadores verão apenas nome e foto.`, 'success')
+}
+
+const confirmDeleteNPC = (npc: NPC) => {
+  npcToDelete.value = npc
+  showDeleteModal.value = true
+}
+
+const executeDeleteNPC = () => {
+  if (npcToDelete.value) {
+    npcs.value = npcs.value.filter(n => n.id !== npcToDelete.value!.id)
+    showToastMessage(`${npcToDelete.value.name} foi removido`, 'success')
+  }
+  closeDeleteModal()
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  npcToDelete.value = null
 }
 
 // Expose data to parent if needed
 defineExpose({
   npcs
 })
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
+}
 </script>
 
 <style scoped>

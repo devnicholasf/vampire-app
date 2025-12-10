@@ -112,20 +112,89 @@
           </div>
         </div>
 
-        <!-- Photo URL -->
+        <!-- Avatar Upload -->
         <div>
           <label class="block text-sm font-medium text-text-primary mb-2">
-            URL da Foto (temporário)
+            Avatar do Personagem
           </label>
-          <input
-            v-model="form.photo"
-            type="url"
-            class="w-full px-3 py-2 border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none"
-            placeholder="https://example.com/npc-photo.jpg"
-          >
-          <p class="text-xs text-text-muted mt-1">
-            Futuramente será possível fazer upload de arquivo
-          </p>
+          
+          <!-- Preview da imagem -->
+          <div v-if="form.photo || previewImage" class="mb-4">
+            <div class="flex items-center gap-4">
+              <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-primary bg-surface">
+                <img 
+                  v-if="previewImage || form.photo" 
+                  :src="previewImage || form.photo" 
+                  :alt="form.name || 'Preview'" 
+                  class="w-full h-full object-cover"
+                  @error="handleImageError"
+                >
+                <div v-else class="w-full h-full flex items-center justify-center text-text-muted text-2xl">
+                  🎭
+                </div>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-text-primary font-medium">Preview do Avatar</p>
+                <p class="text-xs text-text-muted">{{ form.name || 'Nome do NPC' }}</p>
+              </div>
+              <BaseButton 
+                v-if="form.photo || previewImage"
+                variant="ghost" 
+                size="sm" 
+                @click="removePhoto"
+                type="button"
+              >
+                🗑️
+              </BaseButton>
+            </div>
+          </div>
+
+          <!-- Upload de arquivo -->
+          <div class="space-y-3">
+            <div class="flex gap-3">
+              <BaseButton 
+                variant="primary" 
+                size="sm" 
+                @click="triggerFileUpload"
+                type="button"
+                class="flex items-center gap-2"
+              >
+                📁 Upload de Foto
+              </BaseButton>
+              <BaseButton 
+                variant="ghost" 
+                size="sm" 
+                @click="toggleUrlInput"
+                type="button"
+                class="!bg-purple-600 !border-purple-600 !text-white transition-all duration-200 hover:!bg-purple-700 hover:!border-purple-700 hover:!text-white hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95"
+              >
+                🌐 URL da Imagem
+              </BaseButton>
+            </div>
+
+            <!-- Input de arquivo escondido -->
+            <input
+              ref="fileInput"
+              type="file"
+              accept="image/*"
+              @change="handleFileUpload"
+              class="hidden"
+            >
+
+            <!-- Input de URL (opcional) -->
+            <div v-if="showUrlInput" class="space-y-2">
+              <input
+                v-model="form.photo"
+                type="url"
+                class="w-full px-3 py-2 border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none"
+                placeholder="https://example.com/npc-photo.jpg"
+                @input="previewImage = null"
+              >
+              <p class="text-xs text-text-muted">
+                Cole a URL de uma imagem online
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- Actions -->
@@ -139,6 +208,15 @@
         </div>
       </form>
     </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
@@ -146,6 +224,7 @@
 import { ref, watchEffect } from 'vue'
 import type { NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -177,6 +256,16 @@ const form = ref({
   photo: ''
 })
 
+// Upload states
+const fileInput = ref<HTMLInputElement | null>(null)
+const previewImage = ref<string | null>(null)
+const showUrlInput = ref(false)
+
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
+
 // Initialize form with existing NPC data
 watchEffect(() => {
   if (props.npc) {
@@ -188,6 +277,9 @@ watchEffect(() => {
       keyPoints: (props.npc.keyPoints && props.npc.keyPoints.length > 0) ? [...props.npc.keyPoints] : [''],
       photo: props.npc.photo || ''
     }
+    // Limpar preview quando carregando NPC existente
+    previewImage.value = null
+    showUrlInput.value = false
   } else {
     // Reset form for new NPC
     form.value = {
@@ -197,6 +289,12 @@ watchEffect(() => {
       bio: '',
       keyPoints: [''],
       photo: ''
+    }
+    // Limpar estados de upload
+    previewImage.value = null
+    showUrlInput.value = false
+    if (fileInput.value) {
+      fileInput.value.value = ''
     }
   }
 })
@@ -222,9 +320,77 @@ const handleSave = () => {
     generation: form.value.generation,
     bio: form.value.bio,
     keyPoints: filteredKeyPoints,
-    photo: form.value.photo,
+    photo: previewImage.value || form.value.photo,
     updatedAt: new Date()
   })
+}
+
+// Upload methods
+const triggerFileUpload = () => {
+  fileInput.value?.click()
+}
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (file) {
+    // Verificar se é uma imagem
+    if (!file.type.startsWith('image/')) {
+      showToastMessage('Por favor, selecione apenas arquivos de imagem.', 'error')
+      return
+    }
+    
+    // Verificar tamanho do arquivo (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToastMessage('A imagem deve ter no máximo 5MB.', 'error')
+      return
+    }
+    
+    // Criar preview da imagem
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      previewImage.value = e.target?.result as string
+      form.value.photo = '' // Limpar URL se houver
+      showToastMessage('Imagem carregada com sucesso!', 'success')
+    }
+    reader.readAsDataURL(file)
+  }
+}
+
+const removePhoto = () => {
+  previewImage.value = null
+  form.value.photo = ''
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+const toggleUrlInput = () => {
+  showUrlInput.value = !showUrlInput.value
+  if (showUrlInput.value) {
+    previewImage.value = null // Limpar preview quando trocar para URL
+  }
+}
+
+const handleImageError = () => {
+  // Se a imagem falhar ao carregar, mostrar placeholder
+  showToastMessage('Erro ao carregar a imagem. Verifique a URL.', 'error')
+}
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  // Auto-hide após 4 segundos
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 </script>
 

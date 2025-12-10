@@ -109,11 +109,46 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete Media Confirmation Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      @click="closeDeleteModal"
+    >
+      <div
+        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
+        @click.stop
+      >
+        <h3 class="text-lg font-semibold mb-4 text-text-primary">Deletar Arquivo</h3>
+        <p class="text-text-muted mb-6">
+          Tem certeza que deseja deletar <strong>{{ mediaToDelete?.name }}</strong>?
+        </p>
+        <div class="flex justify-end space-x-3">
+          <BaseButton variant="ghost" @click="closeDeleteModal">
+            Cancelar
+          </BaseButton>
+          <BaseButton variant="danger" @click="confirmDeleteMedia">
+            Deletar
+          </BaseButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <BaseToast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import BaseButton from '~/components/ui/BaseButton.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -135,6 +170,15 @@ interface MediaFile {
 // Reactive data
 const showUploadModal = ref(false)
 const activeCategory = ref('all')
+
+// Toast states
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
+const showToast = ref(false)
+
+// Confirmation modal states
+const showDeleteModal = ref(false)
+const mediaToDelete = ref<MediaFile | null>(null)
 
 // Mock data
 const mediaFiles = ref<MediaFile[]>([
@@ -198,17 +242,47 @@ const formatFileSize = (bytes: number) => {
 
 const useInGame = (media: MediaFile) => {
   console.log('Usando mídia no jogo:', media.name)
-  alert(`${media.name} foi adicionado à sessão atual!`)
+  showToastMessage(`${media.name} foi adicionado à sessão atual!`, 'success')
 }
 
 const downloadMedia = (media: MediaFile) => {
   console.log('Download:', media.name)
   // Future: Implement download
+  showToastMessage('Download iniciado', 'info')
 }
 
 const deleteMedia = (mediaId: string) => {
-  if (confirm('Tem certeza que deseja deletar este arquivo?')) {
-    mediaFiles.value = mediaFiles.value.filter(m => m.id !== mediaId)
+  const media = mediaFiles.value.find(m => m.id === mediaId)
+  if (media) {
+    mediaToDelete.value = media
+    showDeleteModal.value = true
   }
+}
+
+const confirmDeleteMedia = () => {
+  if (mediaToDelete.value) {
+    mediaFiles.value = mediaFiles.value.filter(m => m.id !== mediaToDelete.value!.id)
+    showToastMessage(`${mediaToDelete.value.name} foi removido`, 'success')
+  }
+  closeDeleteModal()
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  mediaToDelete.value = null
+}
+
+const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  
+  setTimeout(() => {
+    showToast.value = false
+  }, 4000)
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 </script>
