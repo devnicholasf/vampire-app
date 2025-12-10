@@ -97,72 +97,96 @@ export default defineEventHandler(async (event) => {
 // campaign/[campaignId].get.ts - Listar arquivos
 ```
 
+#### NPCs (`/server/api/npcs/`) - NOVO
+```typescript
+// [campaignId].get.ts - Buscar NPCs da campanha
+// [campaignId]/create.post.ts - Criar NPC
+// [campaignId]/[npcId].get.ts - Buscar NPC específico
+// [campaignId]/[npcId].patch.ts - Editar NPC
+// [campaignId]/[npcId].delete.ts - Deletar NPC
+// [campaignId]/[npcId]/avatar.patch.ts - Upload avatar
+```
+
 ---
 
-### **Etapa 2: Criar Componentes da Campanha**
+### **ATUALIZAÇÃO: Sistema de Campanhas Implementado ✅**
 
-#### `/app/components/campaign/`
+> **📋 Status:** As páginas de campanha e o sistema de NPCs já foram implementados!
+> O próximo passo é implementar o backend (APIs) para persistência de dados.
 
-**PlayerAvatar.vue**
-```vue
-<template>
-  <div class="player-avatar">
-    <img :src="character.avatar || '/default-avatar.png'" />
-    <div class="info">
-      <h3>{{ character.name }}</h3>
-      <span>{{ character.clan }}</span>
-    </div>
-    <div class="stats">
-      <div>🩸 Fome: {{ character.attributes.hunger }}</div>
-      <div>❤️ Humanidade: {{ character.attributes.humanity }}</div>
-    </div>
-  </div>
-</template>
+#### ✅ **Já Implementado:**
+- `/app/pages/campaign/[id]/index.vue` - Tela compartilhada da campanha
+- `/app/pages/campaign/[id]/master.vue` - Dashboard completo do mestre
+- `/app/pages/campaign/[id]/player.vue` - Tela específica do jogador
+- `/app/layouts/campaign.vue` - Layout para campanhas
+- Sistema completo de NPCs com modais funcionais
+- Timeline interativa de eventos
+- Media Player para música ambiente
+- Sistema de abas do mestre (NPCs, Players, Media, Notes, Settings)
 
-<script setup lang="ts">
-import type { Character } from '~/types'
-defineProps<{ character: Character }>()
-</script>
-```
+#### 🔥 **Funcionalidades Testadas:**
+- Criação e edição de NPCs via modal
+- Sistema de clãs Vampire implementado
+- Atributos VtM (Fome, Humanidade, Força de Vontade, Saúde)
+- Timeline com tipos de eventos
+- Upload simulado de avatares
+- Navegação entre abas do dashboard
 
-**Timeline.vue**
-```vue
-<template>
-  <div class="timeline">
-    <button v-if="canEdit" @click="showAddModal = true">
-      + Adicionar Evento
-    </button>
-    <TimelineItem 
-      v-for="event in events" 
-      :key="event.id"
-      :event="event"
-      :canEdit="canEdit"
-    />
-  </div>
-</template>
+---
 
-<script setup lang="ts">
-const props = defineProps<{
-  campaignId: string
-  canEdit: boolean
-}>()
+### **Etapa 2: Componentes da Campanha ✅ IMPLEMENTADOS**
 
-const { events, fetchEvents, addEvent } = useTimeline(props.campaignId)
+#### `/app/components/campaign/` - ✅ **CONCLUÍDOS**
 
-onMounted(() => fetchEvents())
-</script>
-```
+**PlayerAvatar.vue** ✅ **IMPLEMENTADO**
+- Avatar do personagem com upload
+- Nome, clã, geração
+- Barras de atributos VtM
+- Modo compacto e editável
+- Lista de disciplinas
 
-**MediaPlayer.vue**
-```vue
-<template>
-  <div class="media-player">
-    <audio ref="audioRef" :src="currentMusic"></audio>
-    <div class="controls">
-      <button @click="play">▶️</button>
-      <button @click="pause">⏸️</button>
-      <input type="range" v-model="volume" @input="updateVolume" />
-    </div>
+**Timeline.vue** ✅ **IMPLEMENTADO**
+- Timeline interativa de eventos
+- Filtros por tipo e sessão
+- Adição de eventos (mestres)
+- Integração com composable useTimeline
+
+**TimelineItem.vue** ✅ **IMPLEMENTADO**
+- Item individual da timeline
+- Ícones por tipo de evento
+- Ações de edição/exclusão
+- Design responsivo
+
+**MediaPlayer.vue** ✅ **IMPLEMENTADO**
+- Player de música ambiente
+- Controles de play/pause/volume
+- Upload de música (mestres)
+- Integração com composable useUpload
+
+#### `/app/components/campaign/master/` - ✅ **NOVOS IMPLEMENTADOS**
+
+**NPCsTab.vue** ✅ **IMPLEMENTADO**
+- Gerenciador completo de NPCs
+- Botão de criar NPC funcional
+- Lista de NPCs existentes
+- Integração com modais
+
+**NPCModal.vue** ✅ **IMPLEMENTADO**
+- Modal de criação/edição
+- Formulário com validação
+- Seleção de clã vampire
+- Atributos VtM customizáveis
+- Upload de avatar
+
+**NPCDetailsModal.vue** ✅ **IMPLEMENTADO**
+- Modal de detalhes do NPC
+- Ações (editar, adicionar ao jogo, deletar)
+- Design consistente com tema vampire
+
+**PlayersTab.vue, MediaTab.vue, NotesTab.vue, SettingsTab.vue** ✅ **IMPLEMENTADOS**
+- Estrutura base para gestão do mestre
+- Design consistente com sistema de abas
+- Prontos para expansão de funcionalidades
     <button v-if="isMaster" @click="uploadMusic">
       Upload Música
     </button>

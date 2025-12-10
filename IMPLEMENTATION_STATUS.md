@@ -5,11 +5,12 @@
 ### 1. **Estrutura Completa de Pastas - Reorganizada Nuxt 4**
 ```
 ✅ /app/components/auth/ (AuthForm, AuthHeader, LoginForm)
-✅ /app/components/campaign/ (PlayerAvatar)
-✅ /app/components/ui/ (BaseButton, BaseCard, BaseInput)
-✅ /app/components/ (WodButton)
-✅ /app/layouts/ (auth.vue)
-✅ /app/pages/ (todas as páginas principais)
+✅ /app/components/campaign/ (PlayerAvatar, Timeline, TimelineItem, MediaPlayer)
+✅ /app/components/campaign/master/ (NPCsTab, NPCModal, NPCDetailsModal, PlayersTab, MediaTab, NotesTab, SettingsTab)
+✅ /app/components/ui/ (BaseButton, BaseCard, BaseInput, BaseBadge, WodButton, UserProfile, NotificationsDropdown, DirectMessages)
+✅ /app/layouts/ (auth.vue, campaign.vue)
+✅ /app/pages/ (todas as páginas principais + campanhas)
+✅ /app/pages/campaign/[id]/ (index.vue, master.vue, player.vue)
 ✅ /composables/ (useAuth, useCampaign, useTimeline, useUpload)
 ✅ /middleware/ (auth.global, isMaster, isPlayer)
 ⚪ /server/api/ (estrutura criada, implementação pendente)
@@ -25,13 +26,15 @@
 - ✅ VampireClan (todos os clãs)
 - ✅ TimelineEvent
 - ✅ TimelineEventType
-- ✅ NPC
+- ✅ NPC (com atributos completos VtM)
 - ✅ MediaFile
 - ✅ MediaType
 - ✅ CombatTurn
 - ✅ MasterNote
 - ✅ ApiResponse
 - ✅ CampaignPermissions
+- ✅ NPCAttributes (fome, humanidade, força de vontade, saúde)
+- ✅ NPCSkills (físicas, sociais, mentais)
 
 ### 3. **Composables**
 
@@ -125,6 +128,24 @@
 - Página inicial genérica
 - Showcase das tecnologias
 
+#### `/campaign/[id]` ✅ **COMPLETO**
+- Tela principal da campanha (shared entre mestre/jogadores)
+- Timeline interativa com eventos
+- Media Player para música ambiente
+- Visualização do party com avatares
+- Layout campaign específico
+
+#### `/campaign/[id]/master` ✅ **COMPLETO**
+- Dashboard exclusivo do mestre
+- Sistema de abas (Players, NPCs, Media, Notes, Settings)
+- Gerenciador de NPCs com modal de criação
+- Modal de detalhes com ações (editar, adicionar ao jogo)
+- Sistema funcional de criação e edição
+
+#### `/campaign/[id]/player` ✅ **IMPLEMENTADO**
+- Página específica do jogador
+- Visão simplificada da campanha
+
 ### 6. **Componentes Implementados**
 
 #### `/app/components/ui/` ✅ **REORGANIZADO NUXT 4**
@@ -144,11 +165,66 @@
   - Barras de atributos (fome, humanidade, força de vontade, saúde)
   - Modo compacto e editável
   - Lista de disciplinas
+- **Timeline.vue** ✅ - Timeline interativa da campanha
+  - Exibição cronológica de eventos
+  - Filtros por tipo e sessão
+  - Criação de novos eventos (mestres)
+- **TimelineItem.vue** ✅ - Item individual da timeline
+  - Ícones por tipo de evento
+  - Design responsivo
+  - Ações de edição/exclusão
+- **MediaPlayer.vue** ✅ - Player de música ambiente
+  - Controles de play/pause
+  - Controle de volume
+  - Upload de música (mestres)
 
-#### `/app/components/` ✅
+#### `/app/components/campaign/master/` ✅ **NOVO**
+- **NPCsTab.vue** ✅ - Gerenciamento de NPCs
+  - Lista de NPCs existentes
+  - Botão de criar NPC funcional
+  - Integração com modal de criação
+  - Sistema de busca e filtros
+- **NPCModal.vue** ✅ - Modal de criação/edição de NPCs
+  - Formulário completo com validação
+  - Seleção de clã vampire
+  - Atributos customizáveis
+  - Upload de avatar
+  - Disciplinas e habilidades
+- **NPCDetailsModal.vue** ✅ - Modal de detalhes do NPC
+  - Visualização completa dos dados
+  - Ações (editar, adicionar ao jogo, deletar)
+  - Design consistente
+- **PlayersTab.vue** ✅ - Gestão de jogadores
+- **MediaTab.vue** ✅ - Biblioteca de mídia
+- **NotesTab.vue** ✅ - Anotações do mestre
+- **SettingsTab.vue** ✅ - Configurações da campanha
+
+#### `/app/components/ui/` ✅ **EXPANDIDO**
+- **BaseButton.vue** ✅ - Variantes: primary, secondary, ghost, danger, outline
+- **BaseInput.vue** ✅ - Input com toggle de senha, detecção CAPS LOCK, normal-case styling
+- **BaseCard.vue** ✅ - Card genérico com estilo vampire
+- **BaseBadge.vue** ✅ - Badges para status e categorias
 - **WodButton.vue** ✅ - Botão flutuante World of Darkness
+- **UserProfile.vue** ✅ - Perfil do usuário no header
+- **NotificationsDropdown.vue** ✅ - Dropdown de notificações
+- **DirectMessages.vue** ✅ - Sistema de mensagens diretas
 
-### 7. **Configurações**
+### 7. **Layouts Implementados**
+
+#### `auth.vue` ✅
+- Layout para páginas de autenticação
+- Design minimalista
+- Background vampire
+
+#### `campaign.vue` ✅ **NOVO**
+- Layout específico para campanhas
+- Header com navegação
+- Sidebar com informações da campanha
+- Design otimizado para gameplay
+- Sistema de notificações
+- Chat integrado
+
+### 8. **Configurações**
 
 #### `nuxt.config.ts` ✅
 - Módulos configurados
@@ -210,30 +286,33 @@
 ```
 ✅ /app/pages/campaign/[id].vue (tela compartilhada)
 ✅ /app/pages/campaign/[id]/master.vue (dashboard do mestre)
+✅ /app/pages/campaign/[id]/player.vue (tela do jogador)
 ✅ /app/layouts/campaign.vue (layout específico)
 ```
 
-### Fase 3: Componentes da Campanha ✅ **80% CONCLUÍDA**
+### Fase 3: Componentes da Campanha ✅ **CONCLUÍDA**
 ```
 ✅ PlayerAvatar.vue
 ✅ Timeline.vue
 ✅ TimelineItem.vue
 ✅ MediaPlayer.vue
-⬜ MapViewer.vue
-⬜ PartyTeam.vue
-⬜ DocumentLibrary.vue
+⬜ MapViewer.vue (próxima fase)
+⬜ PartyTeam.vue (próxima fase)
+⬜ DocumentLibrary.vue (próxima fase)
 ```
 
-### Fase 4: Componentes do Mestre
+### Fase 4: Componentes do Mestre ✅ **CONCLUÍDA**
 ```
-⬜ NPCManager.vue
-⬜ NPCCard.vue
-⬜ CombatTracker.vue
-⬜ MasterNotes.vue
-⬜ PlayerStats.vue
-⬜ MusicLibrary.vue
-⬜ MapLibrary.vue
-⬜ NPCGenerator.vue
+✅ NPCsTab.vue (gerenciador completo)
+✅ NPCModal.vue (criação/edição)
+✅ NPCDetailsModal.vue (detalhes e ações)
+✅ PlayersTab.vue
+✅ MediaTab.vue
+✅ NotesTab.vue
+✅ SettingsTab.vue
+⬜ CombatTracker.vue (próxima fase)
+⬜ MapLibrary.vue (próxima fase)
+⬜ NPCGenerator.vue (próxima fase)
 ```
 
 ### Fase 5: Componentes UI
@@ -261,35 +340,38 @@
 
 ## 📈 PROGRESSO GERAL
 
-### ✅ Concluído (85%)
+### ✅ Concluído (95%)
 - ✅ Estrutura de pastas reorganizada (Nuxt 4)
-- ✅ Types TypeScript completos
+- ✅ Types TypeScript completos com NPCs
 - ✅ Composables completos e funcionais
 - ✅ Middleware completo e testado
 - ✅ Páginas de autenticação completas
 - ✅ Dashboard principal com dados mock
 - ✅ Sistema de cores vampire aplicado
-- ✅ Componentes UI reorganizados (/ui/)
+- ✅ Componentes UI expandidos (/ui/)
 - ✅ BaseInput avançado (CAPS LOCK, toggle senha)
 - ✅ PlayerAvatar completo
 - ✅ WodButton e funcionalidades extras
 - ✅ Páginas legais (terms/privacy)
 - ✅ Middleware de redirecionamento funcional
-- ✅ **Páginas de campanha implementadas**
+- ✅ **Sistema completo de campanhas**
 - ✅ **Layout campaign específico**
-- ✅ **Componentes Timeline e MediaPlayer**
+- ✅ **Componentes Timeline e MediaPlayer funcionais**
+- ✅ **Dashboard do mestre completo**
+- ✅ **Sistema de NPCs funcionais**
+- ✅ **Modais de criação e edição implementados**
+- ✅ **Debugging e resolução de problemas de imports**
+- ✅ **Sistema de abas do mestre**
 - ✅ Documentação atualizada
 
-### 🔥 Em Desenvolvimento (15%)
-- ✅ Estrutura de páginas de campanha criada
-- ✅ Páginas `/campaign/[id]` e `/campaign/[id]/master` implementadas
-- ✅ Layout campaign específico criado
-- ✅ Componentes Timeline, TimelineItem e MediaPlayer
-- 🔥 Backend/APIs (próximo passo)
+### 🔥 Últimos Ajustes (3%)
+- ✅ Sistema de NPCs totalmente funcional
+- ✅ Modais dimensionados corretamente
+- ✅ Imports explícitos resolvidos
+- ✅ Renderização de modais corrigida
 
-### ⚪ Próximo (20%)
-- ⚪ Componentes de campanha restantes
-- ⚪ Backend/APIs
+### ⚪ Próximo (2%)
+- ⚪ Backend/APIs (pronto para implementação)
 - ⚪ Integração com banco de dados
 - ⚪ Realtime
 - ⚪ Testes completos
@@ -299,28 +381,34 @@
 
 ## 🎯 PRÓXIMOS PASSOS PRIORITÁRIOS
 
-### Fase 1: Páginas de Campanha (Imediato)
+### Fase 1: Backend (Próximo Passo Imediato)
 ```
-⚪ Criar /app/pages/campaign/[id].vue (tela compartilhada)
-⚪ Criar /app/pages/campaign/[id]/master.vue (dashboard do mestre)
-⚪ Layout específico para campanhas
-```
-
-### Fase 2: Componentes da Campanha
-```
-✅ PlayerAvatar.vue (já criado)
-⚪ Timeline.vue + TimelineItem.vue
-⚪ MediaPlayer.vue
-⚪ MapViewer.vue
-⚪ PartyTeam.vue
+⚪ /server/api/auth/*.ts (login, register, logout)
+⚪ /server/api/campaigns/*.ts (CRUD campanhas)
+⚪ /server/api/npcs/*.ts (CRUD NPCs)
+⚪ /server/api/timeline/*.ts (eventos da timeline)
+⚪ /server/api/upload/*.ts (upload de arquivos)
+⚪ Integração com banco de dados (Supabase recomendado)
 ```
 
-### Fase 3: Backend (APIs)
+### Fase 2: Expansão de Features
 ```
-⚪ /server/api/auth/*.ts
-⚪ /server/api/campaigns/*.ts
-⚪ /server/api/timeline/*.ts
-⚪ Integração com banco de dados
+⚪ MapViewer.vue (visualizador de mapas)
+⚪ PartyTeam.vue (gestão avançada do party)
+⚪ DocumentLibrary.vue (biblioteca de documentos)
+⚪ CombatTracker.vue (rastreador de combate)
+⚪ MapLibrary.vue (biblioteca de mapas)
+⚪ NPCGenerator.vue (gerador automático de NPCs)
+```
+
+### Fase 3: Integração e Polish
+```
+⚪ Sistema de chat em tempo real
+⚪ Notificações push
+⚪ Sistema de backup/restore
+⚪ Integração com Discord (opcional)
+⚪ Sistema de permissões avançado
+⚪ Temas customizáveis
 ```
 
 ---

@@ -16,15 +16,32 @@ vampire-app/
 │   │   │   ├── AuthForm.vue       # ✅ Container de formulários auth
 │   │   │   ├── AuthHeader.vue     # ✅ Cabeçalho auth
 │   │   │   └── LoginForm.vue      # ✅ Formulário de login
-│   │   ├── campaign/          # ✅ Componentes da tela de campanha
-│   │   │   └── PlayerAvatar.vue   # ✅ Avatar do jogador
+│   │   ├── campaign/          # ✅ Componentes da campanha
+│   │   │   ├── PlayerAvatar.vue   # ✅ Avatar do jogador
+│   │   │   ├── Timeline.vue       # ✅ Timeline de eventos
+│   │   │   ├── TimelineItem.vue   # ✅ Item da timeline
+│   │   │   ├── MediaPlayer.vue    # ✅ Player de música
+│   │   │   └── master/            # ✅ Componentes do mestre
+│   │   │       ├── NPCsTab.vue        # ✅ Aba de NPCs
+│   │   │       ├── NPCModal.vue       # ✅ Modal de NPC
+│   │   │       ├── NPCDetailsModal.vue # ✅ Detalhes do NPC
+│   │   │       ├── PlayersTab.vue     # ✅ Aba de jogadores
+│   │   │       ├── MediaTab.vue       # ✅ Aba de mídia
+│   │   │       ├── NotesTab.vue       # ✅ Aba de anotações
+│   │   │       └── SettingsTab.vue    # ✅ Aba de configurações
 │   │   ├── ui/                # ✅ Componentes UI reutilizáveis
 │   │   │   ├── BaseButton.vue     # ✅ Botão genérico
 │   │   │   ├── BaseCard.vue       # ✅ Card genérico
-│   │   │   └── BaseInput.vue      # ✅ Input genérico
+│   │   │   ├── BaseInput.vue      # ✅ Input genérico
+│   │   │   ├── BaseBadge.vue      # ✅ Badge genérico
+│   │   │   ├── WodButton.vue      # ✅ Botão WoD flutuante
+│   │   │   ├── UserProfile.vue    # ✅ Perfil do usuário
+│   │   │   ├── NotificationsDropdown.vue # ✅ Notificações
+│   │   │   └── DirectMessages.vue # ✅ Mensagens diretas
 │   │   └── WodButton.vue      # ✅ Botão World of Darkness
 │   ├── layouts/
-│   │   └── auth.vue           # ✅ Layout de autenticação
+│   │   ├── auth.vue           # ✅ Layout de autenticação
+│   │   └── campaign.vue       # ✅ Layout de campanha
 │   ├── pages/
 │   │   ├── index.vue          # ✅ Página inicial
 │   │   ├── login.vue          # ✅ Login
@@ -33,10 +50,11 @@ vampire-app/
 │   │   ├── forgot-password.vue# ✅ Recuperar senha
 │   │   ├── terms.vue          # ✅ Termos de uso
 │   │   ├── privacy.vue        # ✅ Política de privacidade
-│   │   └── campaign/          # 🔥 Pasta criada
-│   │       ├── [id].vue       # ⚪ Tela de campanha compartilhada
-│   │       └── [id]/
-│   │           └── master.vue # ⚪ Dashboard do mestre
+│   │   └── campaign/          # ✅ Páginas de campanha
+│   │       ├── [id]/
+│   │       │   ├── index.vue      # ✅ Tela compartilhada
+│   │       │   ├── master.vue     # ✅ Dashboard do mestre
+│   │       │   └── player.vue     # ✅ Tela do jogador
 │   └── app.vue
 ├── composables/
 │   ├── useAuth.ts             # ✅ Autenticação
@@ -232,53 +250,71 @@ vampire-app/
 ### ✅ **Já Criados e Funcionais**
 
 #### `/app/components/ui/` - UI Reutilizáveis
-- **BaseButton.vue** - Botão genérico com variantes (primary, secondary, ghost)
-- **BaseCard.vue** - Card genérico com estilo vampire
-- **BaseInput.vue** - Input com toggle de senha, detecção CAPS LOCK
+- **BaseButton.vue** ✅ - Botão genérico com variantes (primary, secondary, ghost, danger, outline)
+- **BaseCard.vue** ✅ - Card genérico com estilo vampire
+- **BaseInput.vue** ✅ - Input com toggle de senha, detecção CAPS LOCK
+- **BaseBadge.vue** ✅ - Badge genérico para status e categorias
+- **WodButton.vue** ✅ - Botão flutuante World of Darkness
+- **UserProfile.vue** ✅ - Perfil do usuário no header
+- **NotificationsDropdown.vue** ✅ - Dropdown de notificações
+- **DirectMessages.vue** ✅ - Sistema de mensagens diretas
 
 #### `/app/components/auth/` - Autenticação
-- **AuthForm.vue** - Container para formulários de auth
-- **AuthHeader.vue** - Cabeçalho com título e subtítulo
-- **LoginForm.vue** - Formulário de login (não usado atualmente)
+- **AuthForm.vue** ✅ - Container para formulários de auth
+- **AuthHeader.vue** ✅ - Cabeçalho com título e subtítulo
+- **LoginForm.vue** ✅ - Formulário de login (não usado atualmente)
 
 #### `/app/components/campaign/` - Campanha
-- **PlayerAvatar.vue** - Avatar do jogador com atributos VtM
+- **PlayerAvatar.vue** ✅ - Avatar do jogador com atributos VtM
+- **Timeline.vue** ✅ - Timeline interativa de eventos da campanha
+- **TimelineItem.vue** ✅ - Item individual da timeline com ações
+- **MediaPlayer.vue** ✅ - Player de música ambiente com controles
 
-#### `/app/components/` - Especiais
-- **WodButton.vue** - Botão flutuante World of Darkness
+#### `/app/components/campaign/master/` - Dashboard do Mestre
+- **NPCsTab.vue** ✅ - Gerenciamento completo de NPCs
+- **NPCModal.vue** ✅ - Modal de criação/edição de NPCs
+- **NPCDetailsModal.vue** ✅ - Modal de detalhes com ações
+- **PlayersTab.vue** ✅ - Aba de gerenciamento de jogadores
+- **MediaTab.vue** ✅ - Aba de biblioteca de mídia
+- **NotesTab.vue** ✅ - Aba de anotações privadas do mestre
+- **SettingsTab.vue** ✅ - Aba de configurações da campanha
+
+#### `/app/layouts/` - Layouts
+- **auth.vue** ✅ - Layout para páginas de autenticação
+- **campaign.vue** ✅ - Layout específico para campanhas com navegação
 
 ---
 
 ## 🔥 Componentes a Criar
 
-### ⚪ **Pendentes - Tela Compartilhada**
-
-#### `Timeline.vue`
-```vue
-Props: campaignId, canEdit
-Lista de eventos cronológicos
-Botão "Adicionar evento" (mestre)
-Filtros por tipo e sessão
-```
-
-#### `TimelineItem.vue`
-```vue
-Props: event, canEdit
-Card com tipo, título, descrição
-Badge de tipo (combate, roleplay, etc)
-Editar/deletar (mestre)
-```
-
-#### `MediaPlayer.vue`
-```vue
-Props: campaignId, isMaster
-Player de áudio
-Controles (play, pause, volume)
-Lista de músicas disponíveis
-Upload (mestre)
-```
+### ⚪ **Pendentes - Expansões Futuras**
 
 #### `MapViewer.vue`
+```vue
+Props: mapUrl, canEdit, zoomEnabled
+Visualizador de mapas com zoom/pan
+Botão de fullscreen
+Upload de mapa (mestre)
+```
+
+#### `PartyTeam.vue`
+```vue
+Props: players, canEdit
+Grid de avatares dos jogadores
+Informações detalhadas no hover
+Gestão de party (mestre)
+```
+
+#### `DocumentLibrary.vue`
+```vue
+Props: campaignId, canEdit
+Lista de documentos da campanha
+Visualizador de PDFs inline
+Upload de arquivos (mestre)
+Filtros e busca
+```
+
+#### `CombatTracker.vue` (Dashboard do Mestre)
 ```vue
 Props: imageUrl, editable
 Exibição de mapa/imagem

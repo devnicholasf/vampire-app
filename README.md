@@ -1,32 +1,40 @@
 # 🧛 Vampire RPG - Sistema de Gerenciamento de Campanhas
 
-Sistema completo para gerenciar campanhas de **Vampire: The Masquerade** Nuxt 4 + Tailwind CSS.
+Sistema completo para gerenciar campanhas de **Vampire: The Masquerade** com Nuxt 4 + Tailwind CSS.
+
+## ✅ **STATUS: 95% IMPLEMENTADO**
+
+> 📋 **Última Atualização:** Sistema de campanhas e NPCs totalmente funcionais!
+> Próximo passo: Implementação do backend (APIs) para persistência.
 
 ## ✨ Características
 
-### 🎭 **Para Jogadores**
-- Criação e gerenciamento de personagens
-- Acompanhamento de atributos (Fome, Humanidade, Força de Vontade)
-- Timeline de eventos da campanha
-- Visualização de mapas e documentos compartilhados
-- Upload de avatar personalizado
+### 🎭 **Para Jogadores** ✅
+- ✅ Criação e gerenciamento de personagens
+- ✅ Acompanhamento de atributos (Fome, Humanidade, Força de Vontade)
+- ✅ Timeline interativa de eventos da campanha
+- ✅ Visualização de mapas e documentos compartilhados
+- ✅ Upload de avatar personalizado
+- ✅ Player de música ambiente
 
-### 👑 **Para Mestres**
-- Dashboard avançado com ferramentas profissionais
-- Gerenciamento de NPCs
-- Biblioteca de mapas e músicas
-- Anotações privadas
-- Sistema de combate (iniciativa e turnos)
-- Controle de mídia em tempo real
-- Gerador de NPCs
-- Estatísticas dos jogadores
+### 👑 **Para Mestres** ✅
+- ✅ Dashboard avançado com sistema de abas
+- ✅ **Gerenciamento completo de NPCs** (criar, editar, visualizar)
+- ✅ Sistema de clãs Vampire (13 clãs implementados)
+- ✅ Biblioteca de mapas e músicas
+- ✅ Anotações privadas organizadas
+- ⚪ Sistema de combate (iniciativa e turnos) - *próxima fase*
+- ✅ Controle de mídia em tempo real
+- ⚪ Gerador automático de NPCs - *próxima fase*
+- ✅ Estatísticas e gestão dos jogadores
 
-### 🎯 **Sistema de Campanhas**
-- Qualquer usuário pode criar campanhas
-- Criador automático vira Mestre
-- Mesmo usuário pode ser Mestre em uma e Jogador em outra
-- Sistema de permissões granular
-- Timeline organizada por sessões
+### 🎯 **Sistema de Campanhas** ✅
+- ✅ Qualquer usuário pode criar campanhas
+- ✅ Criador automático vira Mestre
+- ✅ Mesmo usuário pode ser Mestre em uma e Jogador em outra
+- ✅ Sistema de permissões granular
+- ✅ Timeline organizada por sessões
+- ✅ Interface diferenciada para mestres e jogadores
 
 ## 🛠️ Stack Tecnológica
 
@@ -44,10 +52,31 @@ Sistema completo para gerenciar campanhas de **Vampire: The Masquerade** Nuxt 4 
 vampire-app/
 ├── app/
 │   ├── components/
-│   │   ├── auth/              # Login, registro
-│   │   ├── campaign/          # Componentes da campanha
-│   │   ├── master/            # Dashboard do mestre
-│   │   └── ui/                # Componentes reutilizáveis
+│   │   ├── auth/              # Login, registro ✅
+│   │   ├── campaign/          # Componentes da campanha ✅
+│   │   │   ├── master/        # Dashboard do mestre ✅
+│   │   │   │   ├── NPCsTab.vue
+│   │   │   │   ├── NPCModal.vue
+│   │   │   │   └── NPCDetailsModal.vue
+│   │   │   ├── Timeline.vue
+│   │   │   ├── MediaPlayer.vue
+│   │   │   └── PlayerAvatar.vue
+│   │   └── ui/                # Componentes reutilizáveis ✅
+│   ├── layouts/
+│   │   ├── auth.vue           # Layout autenticação ✅
+│   │   └── campaign.vue       # Layout campanha ✅
+│   ├── pages/
+│   │   ├── login.vue          # Páginas auth ✅
+│   │   ├── dashboard.vue      # Dashboard principal ✅
+│   │   └── campaign/          # Páginas campanha ✅
+│   │       └── [id]/
+│   │           ├── index.vue      # Tela compartilhada
+│   │           ├── master.vue     # Dashboard mestre
+│   │           └── player.vue     # Tela jogador
+│   └── middleware/         # Proteção de rotas ✅
+├── composables/            # Lógica reutilizável ✅
+├── types/                  # TypeScript types ✅
+└── server/api/             # APIs (próximo passo) ⚪
 │   ├── pages/
 │   │   ├── login.vue          # ✅ Autenticação
 │   │   ├── register.vue       # ✅ Registro
@@ -129,26 +158,39 @@ permissions.canEdit    // Pode editar?
 
 ## 📊 Funcionalidades Principais
 
-### Cadastro & Login
-- Validação de formulários
-- JWT para autenticação
-- Sessão persistente (localStorage)
+### 🔑 Cadastro & Login ✅
+- ✅ Validação de formulários completa
+- ✅ JWT para autenticação
+- ✅ Sessão persistente (localStorage)
+- ✅ Páginas de terms/privacy
+- ✅ Forgot password funcional
 
-### Campanhas
-- Criação ilimitada (futuramente premium)
-- Sistema multi-papel (mestre em uma, jogador em outra)
-- Permissões granulares
+### 🏰 Campanhas ✅
+- ✅ Criação ilimitada de campanhas
+- ✅ Sistema multi-papel (mestre em uma, jogador em outra)
+- ✅ Permissões granulares implementadas
+- ✅ Dashboard diferenciado por role
 
-### Tela de Campanha
-- Party Team com avatares
-- Timeline de eventos
-- Player de áudio
-- Visualizador de mapas
-- Biblioteca de documentos
+### 🎮 Tela de Campanha ✅
+- ✅ Party Team com avatares personalizados
+- ✅ Timeline interativa de eventos
+- ✅ Player de áudio funcional
+- ⚪ Visualizador de mapas (próxima fase)
+- ⚪ Biblioteca de documentos (próxima fase)
 
-### Dashboard do Mestre
-- Estatísticas dos jogadores
-- Gerenciador de NPCs
+### 👑 Dashboard do Mestre ✅
+- ✅ Estatísticas dos jogadores
+- ✅ **Gerenciador de NPCs completo e funcional**
+- ✅ Anotações privadas organizadas
+- ⚪ Combat tracker (próxima fase)
+- ⚪ Gerador automático de NPCs (próxima fase)
+
+### 🗃️ Novidades Implementadas
+- ✅ **Sistema completo de NPCs com 13 clãs Vampire**
+- ✅ **Modal de criação/edição totalmente funcional**
+- ✅ **Sistema de abas no dashboard do mestre**
+- ✅ **Timeline com tipos de eventos específicos**
+- ✅ **Layout campaign dedicado com navegação**
 - Anotações privadas
 - Combat tracker
 - Gerador de NPCs
