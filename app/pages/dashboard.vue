@@ -278,8 +278,10 @@ const campaigns = ref<Campaign[]>([
 
 // Verificar se usuário é mestre
 const isMaster = (campaign: Campaign) => {
-  // O usuário que cria a campanha sempre será mestre
-  return campaign.masterId === user.value?.id || campaign.id === '1' // Campanha 1 para demo
+  // Usar a mesma lógica do middleware para consistência
+  // Campanhas '1' e '3': usuário é mestre
+  // Campanhas '2' e '4': usuário é jogador
+  return campaign.id === '1' || campaign.id === '3'
 }
 
 // Formatar data
@@ -297,9 +299,9 @@ const goToCampaign = async (id: string) => {
   console.log('Dashboard: Navegando para campanha:', id)
   
   try {
-    // Usar router.push em vez de navigateTo
+    // Ir para a rota base da campanha e deixar o middleware decidir
     const router = useRouter()
-    await router.push(`/campaign/${id}/master`)
+    await router.push(`/campaign/${id}`)
     console.log('Dashboard: Navegação concluída')
   } catch (error) {
     console.error('Dashboard: Erro na navegação:', error)

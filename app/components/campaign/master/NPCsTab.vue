@@ -124,8 +124,48 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Reactive data
-const npcs = ref<NPC[]>([])
+// NPCs mock data
+const npcs = ref<NPC[]>([
+  {
+    id: '1',
+    name: 'Vampiro Ancião',
+    type: 'Antagonista', 
+    photo: '/npcs/vampire-elder.jpg',
+    campaignId: props.campaignId,
+    clan: 'Ventrue',
+    generation: 7,
+    bio: 'Um vampiro antigo e poderoso que controla parte da cidade. Ex-nobre português do século XVIII.',
+    keyPoints: ['Dominação', 'Presença', 'Fortitude', 'Política'],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '2',
+    name: 'Bartender Joe',
+    type: 'Informante',
+    photo: '/npcs/bartender.jpg',
+    campaignId: props.campaignId,
+    clan: 'Nosferatu',
+    generation: 9,
+    bio: 'Conhece todos os segredos da cidade e está disposto a compartilhá-los... por um preço. Ex-detetive abraçado nos anos 80.',
+    keyPoints: ['Ofuscação', 'Animalismo', 'Informações', 'Contatos'],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: '3',
+    name: 'Madame Clarissa',
+    type: 'Aliada',
+    photo: '/npcs/madame-clarissa.jpg',
+    campaignId: props.campaignId,
+    clan: 'Toreador',
+    generation: 8,
+    bio: 'Proprietária de uma galeria de arte, conhece muitos segredos da sociedade vampíresca. Artista renomada abraçada na Belle Époque.',
+    keyPoints: ['Auspícios', 'Presença', 'Arte', 'Sociedade'],
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+])
 
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
@@ -154,32 +194,42 @@ const closeDetailsModal = () => {
   viewingNPC.value = null
 }
 
-const saveNPC = (npcData: Omit<NPC, 'id' | 'campaignId' | 'createdAt'>) => {
-  const npc: NPC = {
-    id: editingNPC.value?.id || `npc_${Date.now()}`,
-    campaignId: props.campaignId,
-    ...npcData,
-    createdAt: editingNPC.value?.createdAt || new Date(),
-    updatedAt: new Date()
-  }
-
+const saveNPC = (npcData: any) => {
   if (editingNPC.value) {
-    // Update existing
+    // Update existing NPC
     const index = npcs.value.findIndex(n => n.id === editingNPC.value!.id)
     if (index !== -1) {
-      npcs.value[index] = npc
+      npcs.value[index] = {
+        ...npcs.value[index],
+        ...npcData,
+        updatedAt: new Date()
+      }
     }
   } else {
-    // Create new
-    npcs.value.push(npc)
+    // Create new NPC
+    const newNPC: NPC = {
+      id: `npc-${Date.now()}`,
+      campaignId: props.campaignId,
+      ...npcData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    npcs.value.push(newNPC)
   }
 
   closeModal()
 }
 
 const addToGame = (npc: NPC) => {
-  console.log('Adicionando NPC ao jogo:', { name: npc.name, photo: npc.photo })
-  alert(`${npc.name} foi adicionado ao jogo! (apenas nome e foto serão visíveis aos jogadores)`)
+  console.log('Adicionando NPC ao jogo live:', { 
+    id: npc.id,
+    name: npc.name, 
+    photo: npc.photo,
+    type: npc.type
+  })
+  
+  // Simular adição ao jogo live - apenas mostrar nome e foto aos jogadores
+  alert(`${npc.name} foi adicionado ao jogo live!\n\nOs jogadores verão:\n- Nome: ${npc.name}\n- Foto: ${npc.photo ? 'Sim' : 'Avatar padrão'}\n\nDetalhes completos ficam visíveis apenas para o mestre.`)
 }
 
 // Expose data to parent if needed

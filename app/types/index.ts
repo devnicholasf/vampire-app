@@ -89,6 +89,7 @@ export interface NPC {
   id: string
   campaignId: string
   name: string
+  type?: string // Tipo do NPC (Antagonista, Aliado, Informante, etc.)
   clan?: VampireClan | string // Permitir string para mais flexibilidade
   generation?: number
   bio?: string // Biografia completa

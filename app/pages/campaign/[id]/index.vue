@@ -178,7 +178,8 @@ import MediaPlayer from '~/components/campaign/MediaPlayer.vue'
 import Timeline from '~/components/campaign/Timeline.vue'
 
 definePageMeta({
-  layout: 'campaign'
+  layout: 'campaign',
+  middleware: 'campaign-redirect'
 })
 
 const route = useRoute()

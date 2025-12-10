@@ -23,6 +23,8 @@ export default defineNuxtRouteMiddleware(async (to: RouteLocationNormalized) => 
 // Função auxiliar para verificar se o usuário é mestre
 async function checkIfUserIsMaster(campaignId: string): Promise<boolean> {
   // Mock: em produção seria uma consulta à API
-  // Para demo, campanha '1' sempre tem o usuário atual como mestre
-  return campaignId === '1'
+  // Para demo:
+  // - Campanha '1' e '3': usuário é mestre
+  // - Campanha '2' e '4': usuário é jogador
+  return campaignId === '1' || campaignId === '3'
 }

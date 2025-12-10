@@ -41,14 +41,29 @@
                 :key="npc.id"
                 class="bg-surface-primary p-3 rounded-vampire border border-border hover:border-red-500/50 transition-colors cursor-pointer"
                 @click="selectNPC(npc)"
+                :class="{ 'border-red-500': selectedNPC?.id === npc.id }"
               >
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
-                    {{ npc.name.charAt(0).toUpperCase() }}
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
+                      {{ npc.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <p class="font-medium text-text-primary text-sm">{{ npc.name }}</p>
+                      <p class="text-text-muted text-xs">{{ npc.type }}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p class="font-medium text-text-primary text-sm">{{ npc.name }}</p>
-                    <p class="text-text-muted text-xs">{{ npc.type }}</p>
+                  
+                  <!-- Controle de visibilidade para jogadores -->
+                  <div class="flex items-center gap-1">
+                    <BaseButton 
+                      variant="ghost" 
+                      size="sm" 
+                      @click.stop="toggleNPCVisibility(npc)"
+                      :class="npc.visibleToPlayers ? 'text-green-400' : 'text-gray-500'"
+                    >
+                      {{ npc.visibleToPlayers ? '👁️' : '🙈' }}
+                    </BaseButton>
                   </div>
                 </div>
               </div>
@@ -156,6 +171,41 @@
             <p class="text-sm">Escolha um mapa no painel lateral para compartilhar com os jogadores</p>
           </div>
         </div>
+        
+        <!-- NPCs visíveis aos jogadores -->
+        <div v-if="visibleNPCs.length > 0" class="absolute bottom-4 left-4 right-4">
+          <div class="bg-surface-card/90 backdrop-blur-sm rounded-vampire border border-border p-4">
+            <h4 class="text-text-primary font-semibold mb-3 text-sm">NPCs Presentes</h4>
+            <div class="flex flex-wrap gap-3">
+              <div 
+                v-for="npc in visibleNPCs" 
+                :key="npc.id"
+                class="bg-surface-primary p-3 rounded-vampire border border-border hover:border-red-500/50 transition-all duration-200 cursor-pointer group"
+                @click="highlightNPC(npc)"
+              >
+                <div class="flex items-center gap-3">
+                  <!-- Avatar do NPC -->
+                  <div class="relative">
+                    <div v-if="npc.photo" class="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500/30">
+                      <img :src="npc.photo" :alt="npc.name" class="w-full h-full object-cover" />
+                    </div>
+                    <div v-else class="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-gold-500 flex items-center justify-center text-white font-bold">
+                      {{ npc.name.charAt(0).toUpperCase() }}
+                    </div>
+                    <!-- Indicador de status -->
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-surface-card"></div>
+                  </div>
+                  
+                  <!-- Nome do NPC -->
+                  <div>
+                    <p class="font-medium text-text-primary text-sm group-hover:text-red-400 transition-colors">{{ npc.name }}</p>
+                    <p class="text-text-muted text-xs">Presente na cena</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Overlay de Informações -->
         <div v-if="selectedNPC" class="absolute top-4 right-4 w-64 bg-surface-card border border-border rounded-vampire p-4 shadow-lg">
@@ -178,7 +228,7 @@ definePageMeta({
   layout: false
 })
 
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import MapViewer from '~/components/campaign/MapViewer.vue'
@@ -187,29 +237,66 @@ const route = useRoute()
 const router = useRouter()
 const campaignId = route.params.id as string
 
-// Estados
-const campaign = ref({ name: 'Campanha Teste' })
+// Estado da interface
 const selectedNPC = ref<any>(null)
-const selectedTrack = ref('')
 const selectedScene = ref('')
+const selectedTrack = ref('')
 const isPlaying = ref(false)
 const showAddNPCModal = ref(false)
 
-// Mock data
+// Mock data - NPCs com controle de visibilidade
 const activeNPCs = ref([
   {
     id: '1',
     name: 'Vampiro Ancião',
     type: 'Antagonista',
-    description: 'Um vampiro antigo e poderoso'
+    description: 'Um vampiro antigo e poderoso que controla parte da cidade',
+    photo: '/npcs/vampire-elder.jpg',
+    visibleToPlayers: false,
+    details: {
+      clan: 'Ventrue',
+      generation: 7,
+      disciplines: ['Dominação', 'Presença', 'Fortitude'],
+      background: 'Ex-nobre português do século XVIII'
+    }
   },
   {
     id: '2', 
     name: 'Bartender Joe',
     type: 'Informante',
-    description: 'Conhece todos os segredos da cidade'
+    description: 'Conhece todos os segredos da cidade e está disposto a compartilhá-los... por um preço',
+    photo: '/npcs/bartender.jpg',
+    visibleToPlayers: true,
+    details: {
+      clan: 'Nosferatu',
+      generation: 9,
+      disciplines: ['Ofuscação', 'Animalismo'],
+      background: 'Ex-detetive que foi abraçado nos anos 80'
+    }
+  },
+  {
+    id: '3',
+    name: 'Madame Clarissa',
+    type: 'Aliada',
+    description: 'Proprietária de uma galeria de arte, conhece muitos segredos da sociedade vampíresca',
+    photo: '/npcs/madame-clarissa.jpg',
+    visibleToPlayers: false,
+    details: {
+      clan: 'Toreador',
+      generation: 8,
+      disciplines: ['Auspícios', 'Presença', 'Celeridade'],
+      background: 'Artista renomada abraçada na Belle Époque'
+    }
   }
 ])
+
+// Computed - NPCs visíveis aos jogadores
+const visibleNPCs = computed(() => {
+  return activeNPCs.value.filter(npc => npc.visibleToPlayers)
+})
+
+// Estados
+const campaign = ref({ name: 'Campanha Teste' })
 
 const musicTracks = ref([
   { id: '1', name: 'Gothic Atmosphere', url: '/music/gothic1.mp3' },
@@ -283,6 +370,19 @@ const addEvent = () => {
     timestamp: new Date()
   }
   recentEvents.value.unshift(newEvent)
+}
+
+// Métodos - Controle de NPCs
+const toggleNPCVisibility = (npc: any) => {
+  npc.visibleToPlayers = !npc.visibleToPlayers
+  console.log(`NPC ${npc.name} ${npc.visibleToPlayers ? 'visível' : 'oculto'} para jogadores`)
+  // TODO: Sincronizar com jogadores via WebSocket
+}
+
+const highlightNPC = (npc: any) => {
+  // Destacar NPC quando jogadores clicam nele
+  console.log('Destacando NPC:', npc.name)
+  // TODO: Adicionar efeito visual de destaque
 }
 
 // Métodos - Controle de Mapa
