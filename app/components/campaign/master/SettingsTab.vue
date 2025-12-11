@@ -268,6 +268,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import type { Campaign } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'

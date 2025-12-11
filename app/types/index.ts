@@ -103,8 +103,36 @@ export interface NPC {
     disciplines?: string[]
   }
   notes?: string // Notas privadas do mestre
+  sheet?: CharacterSheet // Ficha completa do NPC
+  isVisible?: boolean // Se está visível no jogo live
   createdAt: Date
   updatedAt?: Date
+}
+
+export interface CharacterSheet {
+  name: string
+  concept: string
+  clan: string
+  generation: number
+  sect: string
+  haven: string
+  player: string
+  attributes: {
+    physical: { strength: number; dexterity: number; stamina: number }
+    social: { charisma: number; manipulation: number; appearance: number }
+    mental: { perception: number; intelligence: number; wits: number }
+  }
+  skills: {
+    talents: Record<string, number>
+    skills: Record<string, number>
+    knowledges: Record<string, number>
+  }
+  disciplines: Array<{ name: string; level: number }>
+  virtues: { conscience: number; selfControl: number; courage: number }
+  humanity: number
+  willpower: number
+  healthLevels: boolean[]
+  notes: string
 }
 
 export interface MediaFile {

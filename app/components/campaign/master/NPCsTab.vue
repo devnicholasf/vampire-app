@@ -71,12 +71,15 @@
 
         <!-- Actions -->
         <div class="flex justify-between items-center pt-4 border-t border-border-dark">
-          <div class="flex space-x-2">
+          <div class="flex flex-wrap gap-2">
             <BaseButton variant="ghost" size="sm" @click="editNPC(npc)">
               ✏️ Editar
             </BaseButton>
             <BaseButton variant="ghost" size="sm" @click="viewDetails(npc)">
               👁️ Ver Detalhes
+            </BaseButton>
+            <BaseButton variant="ghost" size="sm" @click="openSheet(npc)">
+              📋 Ficha
             </BaseButton>
           </div>
           <BaseButton 
@@ -118,6 +121,14 @@
       @add-to-game="addToGame"
     />
 
+    <!-- NPC Sheet Modal -->
+    <NPCSheet
+      v-if="viewingSheet"
+      :npc="viewingSheet"
+      @close="closeSheet"
+      @save="saveNPCSheet"
+    />
+
     <!-- Delete NPC Confirmation Modal -->
     <div
       v-if="showDeleteModal"
@@ -155,11 +166,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import NPCModal from '~/components/campaign/master/NPCModal.vue'
 import NPCDetailsModal from '~/components/campaign/master/NPCDetailsModal.vue'
+import NPCSheet from '~/components/campaign/master/NPCSheet.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
@@ -169,52 +181,11 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// NPCs mock data
-const npcs = ref<NPC[]>([
-  {
-    id: '1',
-    name: 'Vampiro Ancião',
-    type: 'Antagonista', 
-    photo: '/npcs/vampire-elder.jpg',
-    campaignId: props.campaignId,
-    clan: 'Ventrue',
-    generation: 7,
-    bio: 'Um vampiro antigo e poderoso que controla parte da cidade. Ex-nobre português do século XVIII.',
-    keyPoints: ['Dominação', 'Presença', 'Fortitude', 'Política'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    name: 'Bartender Joe',
-    type: 'Informante',
-    photo: '/npcs/bartender.jpg',
-    campaignId: props.campaignId,
-    clan: 'Nosferatu',
-    generation: 9,
-    bio: 'Conhece todos os segredos da cidade e está disposto a compartilhá-los... por um preço. Ex-detetive abraçado nos anos 80.',
-    keyPoints: ['Ofuscação', 'Animalismo', 'Informações', 'Contatos'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '3',
-    name: 'Madame Clarissa',
-    type: 'Aliada',
-    photo: '/npcs/madame-clarissa.jpg',
-    campaignId: props.campaignId,
-    clan: 'Toreador',
-    generation: 8,
-    bio: 'Proprietária de uma galeria de arte, conhece muitos segredos da sociedade vampíresca. Artista renomada abraçada na Belle Époque.',
-    keyPoints: ['Auspícios', 'Presença', 'Arte', 'Sociedade'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-])
-
+// Reactive data
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
+const viewingSheet = ref<NPC | null>(null)
 
 // Toast states
 const toastMessage = ref('')
@@ -224,6 +195,35 @@ const showToast = ref(false)
 // Delete confirmation states
 const showDeleteModal = ref(false)
 const npcToDelete = ref<NPC | null>(null)
+
+// Mock NPCs data
+const npcs = ref<NPC[]>([
+  {
+    id: 'npc-1',
+    campaignId: props.campaignId,
+    name: 'Marcus Ventrue',
+    type: 'Antagonista',
+    clan: 'Ventrue',
+    generation: 8,
+    bio: 'Um ancião político poderoso que controla grande parte da cidade através de influência financeira.',
+    keyPoints: ['Político', 'Rico', 'Influente'],
+    photo: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: 'npc-2',
+    campaignId: props.campaignId,
+    name: 'Elena Toreador',
+    type: 'Aliado',
+    clan: 'Toreador',
+    generation: 10,
+    bio: 'Uma artista vampira que possui uma galeria de arte e serve como informante.',
+    keyPoints: ['Artista', 'Informante', 'Carismática'],
+    photo: '',
+    createdAt: new Date()
+  }
+])
 
 // Methods
 const createNPC = () => {
@@ -239,6 +239,10 @@ const viewDetails = (npc: NPC) => {
   viewingNPC.value = npc
 }
 
+const openSheet = (npc: NPC) => {
+  viewingSheet.value = npc
+}
+
 const closeModal = () => {
   showCreateModal.value = false
   editingNPC.value = null
@@ -246,6 +250,10 @@ const closeModal = () => {
 
 const closeDetailsModal = () => {
   viewingNPC.value = null
+}
+
+const closeSheet = () => {
+  viewingSheet.value = null
 }
 
 const saveNPC = (npcData: any) => {
@@ -272,6 +280,18 @@ const saveNPC = (npcData: any) => {
   }
 
   closeModal()
+}
+
+const saveNPCSheet = (npcData: any) => {
+  const index = npcs.value.findIndex(n => n.id === npcData.id)
+  if (index !== -1) {
+    npcs.value[index] = {
+      ...npcs.value[index],
+      ...npcData,
+      updatedAt: new Date()
+    }
+  }
+  closeSheet()
 }
 
 const addToGame = (npc: NPC) => {
@@ -328,6 +348,7 @@ const hideToast = () => {
 .line-clamp-3 {
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

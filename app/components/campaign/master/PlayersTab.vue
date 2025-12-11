@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
 

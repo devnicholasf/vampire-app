@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 // Vue 3 imports
-import { ref, computed, useSlots } from 'vue'
+import { ref, computed, useSlots, onMounted } from 'vue'
 
 interface Props {
   modelValue?: string | number
@@ -138,10 +138,13 @@ const slots = useSlots()
 const inputRef = ref<HTMLInputElement>()
 const isFocused = ref(false)
 
-// ID único e estável para evitar hydration mismatch
-let idCounter = 0
-const generateId = () => `input-${++idCounter}-${Date.now()}`
-const inputId = process.client ? generateId() : 'input-ssr'
+// ID único para evitar hydration mismatch
+const inputId = ref('input-ssr')
+
+// Gerar ID único no cliente
+onMounted(() => {
+  inputId.value = `input-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`
+})
 
 // Password visibility
 const showPassword = ref(false)
@@ -164,7 +167,10 @@ const togglePasswordVisibility = () => {
 }
 
 const detectCapsLock = (event: KeyboardEvent) => {
-  capsLockOn.value = event.getModifierState('CapsLock')
+  // Verificar se o método existe antes de chamá-lo
+  if (event.getModifierState && typeof event.getModifierState === 'function') {
+    capsLockOn.value = event.getModifierState('CapsLock')
+  }
 }
 
 // Classes dinâmicas
