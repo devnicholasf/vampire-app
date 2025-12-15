@@ -2,9 +2,6 @@
 definePageMeta({
   layout: false
 })
-
-// Redirecionar para /login de forma consistente  
-await navigateTo('/login', { replace: true })
 </script>
 
 <template>

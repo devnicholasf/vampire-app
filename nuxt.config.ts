@@ -70,8 +70,7 @@ export default defineNuxtConfig({
 
   // Configurações de performance
   experimental: {
-    payloadExtraction: false,
-    inlineSSRStyles: false
+    payloadExtraction: false
   },
 
   // Configurações de nitro para produção
@@ -79,6 +78,6 @@ export default defineNuxtConfig({
     compressPublicAssets: true
   },
 
-  // SSR habilitado (padrão Nuxt 4)
-  ssr: true
+  // SSR desabilitado para SPA
+  ssr: false
 })

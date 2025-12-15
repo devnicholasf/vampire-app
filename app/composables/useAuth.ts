@@ -42,6 +42,29 @@ export const useAuth = () => {
   }
 
   // ============================================
+  // Tradução de erros do Supabase
+  // ============================================
+  const translateAuthError = (authError: any): string => {
+    const errorMap: Record<string, string> = {
+      'Invalid login credentials': 'Email ou senha inválidos',
+      'invalid_credentials': 'Email ou senha inválidos',
+      'User not found': 'Usuário não encontrado',
+      'Invalid email': 'Email inválido',
+      'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres',
+      'User already registered': 'Este email já está em uso',
+      'Email not confirmed': 'Email não confirmado. Verifique sua caixa de entrada',
+      'Invalid email or password': 'Email ou senha inválidos',
+      'Too many requests': 'Muitas tentativas. Tente novamente em alguns minutos'
+    }
+
+    // Verificar mensagem e código do erro
+    const message = authError?.message || ''
+    const code = authError?.code || ''
+    
+    return errorMap[message] || errorMap[code] || 'Email ou senha inválidos'
+  }
+
+  // ============================================
   // Login com Supabase
   // ============================================
   const login = async (credentials: LoginCredentials) => {
@@ -49,25 +72,16 @@ export const useAuth = () => {
     error.value = null
 
     try {
-      console.log('Supabase disponível:', !!supabase)
-      console.log('Config URL:', config.public.supabaseUrl)
-      console.log('Config Key:', config.public.supabaseKey ? 'Configurado' : 'Não configurado')
-      
       if (!supabase) {
         throw new Error('Supabase não está disponível')
       }
-
-      console.log('Tentando autenticar com Supabase...')
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       })
 
-      console.log('Resposta do Supabase:', { data, authError })
-
       if (authError) {
-        console.error('Erro de autenticação:', authError)
-        error.value = authError.message
+        error.value = translateAuthError(authError)
         return { success: false, error: error.value }
       }
 
@@ -81,14 +95,12 @@ export const useAuth = () => {
           updatedAt: new Date(data.user.updated_at || data.user.created_at)
         }
 
-        console.log('Login bem-sucedido:', user.value)
         return { success: true, data: { user: user.value } }
       } else {
         error.value = 'Login falhou'
         return { success: false, error: error.value }
       }
     } catch (e: any) {
-      console.error('Erro durante login:', e)
       error.value = e.message || 'Erro ao fazer login'
       return { success: false, error: error.value }
     } finally {
@@ -119,7 +131,7 @@ export const useAuth = () => {
       })
 
       if (authError) {
-        error.value = authError.message
+        error.value = translateAuthError(authError)
         return { success: false, error: error.value }
       }
 
