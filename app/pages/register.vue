@@ -23,6 +23,18 @@
         </div>
       </div>
 
+      <!-- Mensagem de sucesso para confirmação de email -->
+      <div
+        v-if="successMessage"
+        class="p-4 bg-success/10 border border-success rounded-vampire text-success-light text-sm animate-slide-up"
+        role="alert"
+      >
+        <div class="flex items-center">
+          <span class="text-lg mr-2">✅</span>
+          <span>{{ successMessage }}</span>
+        </div>
+      </div>
+
       <!-- Formulário -->
       <form @submit.prevent="handleRegister" class="space-y-4">
         <!-- Nome de Usuário -->
@@ -167,6 +179,9 @@ definePageMeta({
 const { register, loading, error: authError } = useAuth()
 const router = useRouter()
 
+// Mensagem de sucesso
+const successMessage = ref('')
+
 // Form state
 const form = ref({
   username: '',
@@ -271,6 +286,9 @@ const isFormValid = computed(() => {
 const handleRegister = async () => {
   if (!isFormValid.value) return
 
+  // Limpar mensagens anteriores
+  successMessage.value = ''
+
   const data: RegisterData = {
     username: form.value.username,
     email: form.value.email,
@@ -281,7 +299,22 @@ const handleRegister = async () => {
   const result = await register(data)
   
   if (result.success) {
-    await router.push('/dashboard')
+    if (result.needsConfirmation) {
+      // Mostrar mensagem de confirmação de email
+      successMessage.value = result.message || 'Conta criada! Verifique seu email para confirmação.'
+      
+      // Limpar formulário
+      form.value = {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        acceptTerms: false
+      }
+    } else {
+      // Login automático - redirecionar para dashboard
+      await router.push('/dashboard')
+    }
   }
 }
 </script>

@@ -54,14 +54,18 @@ export const useAuth = () => {
       'User already registered': 'Este email já está em uso',
       'Email not confirmed': 'Email não confirmado. Verifique sua caixa de entrada',
       'Invalid email or password': 'Email ou senha inválidos',
-      'Too many requests': 'Muitas tentativas. Tente novamente em alguns minutos'
+      'Too many requests': 'Muitas tentativas. Tente novamente em alguns minutos',
+      'Signup not allowed for this instance': 'Cadastro não permitido no momento',
+      'Email address not authorized': 'Este email não está autorizado',
+      'Weak password': 'Senha muito fraca. Use uma senha mais forte',
+      'Password too short': 'Senha muito curta. Use pelo menos 6 caracteres'
     }
 
     // Verificar mensagem e código do erro
     const message = authError?.message || ''
     const code = authError?.code || ''
     
-    return errorMap[message] || errorMap[code] || 'Email ou senha inválidos'
+    return errorMap[message] || errorMap[code] || 'Erro na autenticação'
   }
 
   // ============================================
@@ -109,7 +113,7 @@ export const useAuth = () => {
   }
 
   // ============================================
-  // Registro (para implementar depois)
+  // Registro no Supabase
   // ============================================
   const register = async (data: RegisterData) => {
     loading.value = true
@@ -120,23 +124,59 @@ export const useAuth = () => {
         throw new Error('Supabase não está disponível')
       }
 
+      // Criar conta no Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
-            username: data.username
+            username: data.username,
+            display_name: data.username
           }
         }
       })
 
       if (authError) {
+        console.error('Erro ao criar conta:', authError)
         error.value = translateAuthError(authError)
         return { success: false, error: error.value }
       }
 
-      return { success: true, data: authData }
+      // Se o usuário foi criado com sucesso
+      if (authData.user) {
+        // Configurar dados do usuário
+        user.value = {
+          id: authData.user.id,
+          email: authData.user.email!,
+          username: data.username,
+          avatar: null,
+          createdAt: new Date(authData.user.created_at),
+          updatedAt: new Date(authData.user.updated_at || authData.user.created_at)
+        }
+
+        // Se a sessão foi criada automaticamente (email confirmado)
+        if (authData.session) {
+          return { 
+            success: true, 
+            data: { user: user.value },
+            needsConfirmation: false
+          }
+        } else {
+          // Email de confirmação enviado
+          return { 
+            success: true, 
+            data: { user: user.value },
+            needsConfirmation: true,
+            message: 'Conta criada! Verifique seu email para confirmação.'
+          }
+        }
+      }
+
+      error.value = 'Falha ao criar conta'
+      return { success: false, error: error.value }
+
     } catch (e: any) {
+      console.error('Erro durante registro:', e)
       error.value = e.message || 'Erro ao criar conta'
       return { success: false, error: error.value }
     } finally {
