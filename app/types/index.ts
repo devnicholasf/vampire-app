@@ -11,6 +11,16 @@ export interface User {
   updatedAt: Date
 }
 
+// Tipo específico para autenticação com Supabase
+export interface AuthUser {
+  id: string
+  email: string
+  username: string
+  avatar?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface Campaign {
   id: string
   name: string

@@ -2,26 +2,20 @@
 // useCampaign - Gerenciamento de Campanhas
 // ============================================
 
-// @ts-ignore - Auto-importado pelo Nuxt
 import type { Campaign, CampaignPlayer, CampaignPermissions, CreateCampaignData, JoinCampaignData, ApiResponse } from '~/types'
 
 export const useCampaign = (campaignId?: string) => {
-  // @ts-ignore - Auto-importado pelo Nuxt
   const { user } = useAuth()
   
-  // @ts-ignore - Auto-importado pelo Nuxt
-  const campaign = useState<Campaign | null>(`campaign-${campaignId}`, () => null)
-  // @ts-ignore - Auto-importado pelo Nuxt
-  const campaigns = useState<Campaign[]>('user-campaigns', () => [])
-  // @ts-ignore - Auto-importado pelo Nuxt
-  const loading = useState<boolean>('campaign-loading', () => false)
-  // @ts-ignore - Auto-importado pelo Nuxt
-  const error = useState<string | null>('campaign-error', () => null)
+  // Estados reativo com namespace para evitar conflitos
+  const campaign = useState<Campaign | null>(`campaign.${campaignId || 'current'}`, () => null)
+  const campaigns = useState<Campaign[]>('campaigns.user', () => [])
+  const loading = useState<boolean>('campaigns.loading', () => false)
+  const error = useState<string | null>('campaigns.error', () => null)
 
   // ============================================
   // Permissões
   // ============================================
-  // @ts-ignore - Auto-importado pelo Nuxt
   const permissions = computed<CampaignPermissions>(() => {
     if (!campaign.value || !user.value) {
       return {

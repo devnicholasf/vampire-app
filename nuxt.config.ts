@@ -5,13 +5,16 @@ export default defineNuxtConfig({
   
   modules: ['@nuxtjs/tailwindcss'],
 
+  // SEO e performance
   app: {
     head: {
       title: 'Vampire RPG - Sistema de Campanhas',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Sistema de gerenciamento de campanhas de Vampire: The Masquerade' }
+        { name: 'description', content: 'Sistema de gerenciamento de campanhas de Vampire: The Masquerade' },
+        { name: 'theme-color', content: '#DC2626' },
+        { name: 'robots', content: 'index, follow' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -36,23 +39,44 @@ export default defineNuxtConfig({
     
     public: {
       // Chaves públicas (client-side)
-      apiBase: process.env.API_BASE || '/api'
+      apiBase: process.env.API_BASE || '/api',
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseKey: process.env.SUPABASE_KEY
     }
   },
 
-  // Configuração de build
+  // Configuração de build otimizada
   vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'supabase': ['@supabase/supabase-js'],
+            'vue-vendor': ['vue', 'vue-router']
+          }
+        }
+      }
+    },
     optimizeDeps: {
-      include: ['vue', 'vue-router']
+      include: ['vue', 'vue-router', '@supabase/supabase-js']
     }
   },
 
-  // Configuração de imports (Nuxt 4 best practice)
+  // Configuração de imports otimizada
   imports: {
-    // Permitir auto-import apenas para globals do Nuxt
     global: true,
-    // Desabilitar auto-import de composables customizados
-    dirs: []
+    dirs: ['composables']
+  },
+
+  // Configurações de performance
+  experimental: {
+    payloadExtraction: false,
+    inlineSSRStyles: false
+  },
+
+  // Configurações de nitro para produção
+  nitro: {
+    compressPublicAssets: true
   },
 
   // SSR habilitado (padrão Nuxt 4)

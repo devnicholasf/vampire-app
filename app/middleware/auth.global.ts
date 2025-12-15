@@ -12,14 +12,11 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
-  // Verificar autenticação apenas no cliente
+  // Verificar autenticação usando composable
   if (process.client) {
-    const hasToken = localStorage.getItem('auth_token')
+    const { isAuthenticated } = useAuth()
     
-    console.log('Middleware - rota:', to.path, 'token:', !!hasToken)
-    
-    if (!hasToken) {
-      console.log('Middleware - sem token, redirecionando para login')
+    if (!isAuthenticated.value) {
       return navigateTo('/login')
     }
   }

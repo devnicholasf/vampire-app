@@ -34,7 +34,7 @@
           v-model="formData.email"
           type="email"
           label="Email"
-          placeholder="seu@email.com"
+          placeholder=""
           :error="errors.email"
           :disabled="loading"
           required
@@ -46,7 +46,7 @@
           v-model="formData.password"
           type="password"
           label="Senha"
-          placeholder="••••••••••"
+          placeholder=""
           :error="errors.password"
           :disabled="loading"
           required
@@ -160,33 +160,16 @@ import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseInput from '~/components/ui/BaseInput.vue'
 import WodButton from '~/components/ui/WodButton.vue'
 
+// ============================================
+// Page Meta
+// ============================================
 definePageMeta({
   middleware: []
 })
 
-// Tipos locais
-interface LoginCredentials {
-  email: string
-  password: string
-}
-
-interface User {
-  id: string
-  email: string
-  username: string
-  avatar?: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-}
-
-// Composable global de autenticação
+// ============================================  
+// Composables e State
+// ============================================
 const { login, loading, error: authError } = useAuth()
 const router = useRouter()
 
@@ -197,13 +180,15 @@ const formData = reactive({
   remember: false
 })
 
-// Validação local
+// Validation errors
 const errors = reactive({
   email: '',
   password: ''
 })
 
-// Validar formulário
+// ============================================
+// Validation & Form Logic
+// ============================================
 const isFormValid = computed(() => {
   return (
     formData.email.length > 0 &&
@@ -213,49 +198,36 @@ const isFormValid = computed(() => {
   )
 })
 
-// Validar email
-watch(() => formData.email, (value) => {
-  if (value && !value.includes('@')) {
+const validateForm = () => {
+  errors.email = ''
+  errors.password = ''
+  
+  if (!formData.email.includes('@')) {
     errors.email = 'Email inválido'
-  } else {
-    errors.email = ''
   }
-})
-
-// Validar senha
-watch(() => formData.password, (value) => {
-  if (value && value.length < 6) {
+  
+  if (formData.password.length < 6) {
     errors.password = 'Senha deve ter no mínimo 6 caracteres'
-  } else {
-    errors.password = ''
   }
-})
+  
+  return !errors.email && !errors.password
+}
 
-// Handle login
+// ============================================
+// Handlers
+// ============================================
 const handleLogin = async () => {
-  if (!isFormValid.value) return
+  if (!validateForm()) return
 
-  const credentials: LoginCredentials = {
+  const credentials = {
     email: formData.email,
     password: formData.password
   }
-
-  console.log('Tentando login com:', credentials)
   
-  try {
-    const result = await login(credentials)
-    console.log('Resultado do login:', result)
-    
-    if (result.success) {
-      console.log('Login bem-sucedido, redirecionando...')
-      
-      // Usar navigateTo do Nuxt para redirecionamento
-      await navigateTo('/dashboard')
-    } else {
-      console.log('Login falhou:', result.error)
-    }
-  } catch (e: any) {
-    console.error('Erro durante login:', e)
+  const result = await login(credentials)
+  
+  if (result.success) {
+    await navigateTo('/dashboard')
   }
 }
 </script>
