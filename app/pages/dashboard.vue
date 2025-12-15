@@ -12,11 +12,11 @@
       <div class="container mx-auto px-4 py-4 flex justify-between items-center">
         <!-- Logo/Title -->
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center p-2">
+          <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center p-1.5">
             <img 
               src="/ankh-symbol.svg" 
               alt="Ankh Symbol" 
-              class="w-full h-full text-white filter-white"
+              class="w-6 h-6 text-white filter-white"
               style="filter: brightness(0) invert(1);"
             />
           </div>
