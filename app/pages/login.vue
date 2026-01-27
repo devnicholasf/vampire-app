@@ -28,7 +28,7 @@
       </div>
 
       <!-- Formulário de Login -->
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form @submit.prevent="handleLogin" class="space-y-6" novalidate>
         <!-- Email -->
         <BaseInput
           v-model="formData.email"
@@ -37,7 +37,6 @@
           placeholder=""
           :error="errors.email"
           :disabled="loading"
-          required
           autocomplete="email"
         />
 
@@ -49,7 +48,6 @@
           placeholder=""
           :error="errors.password"
           :disabled="loading"
-          required
           autocomplete="current-password"
         />
 
@@ -180,7 +178,7 @@ const formData = reactive({
   remember: false
 })
 
-// Validation errors
+// Validação local
 const errors = reactive({
   email: '',
   password: ''
@@ -192,25 +190,39 @@ const errors = reactive({
 const isFormValid = computed(() => {
   return (
     formData.email.length > 0 &&
-    formData.password.length >= 6 &&
-    !errors.email &&
-    !errors.password
+    formData.password.length > 0
   )
 })
 
 const validateForm = () => {
+  // Limpar erros anteriores
   errors.email = ''
   errors.password = ''
   
-  if (!formData.email.includes('@')) {
-    errors.email = 'Email inválido'
+  let isValid = true
+  
+  // Validar email
+  if (!formData.email.trim()) {
+    errors.email = 'Email é obrigatório'
+    isValid = false
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      errors.email = 'Digite um email válido'
+      isValid = false
+    }
   }
   
-  if (formData.password.length < 6) {
-    errors.password = 'Senha deve ter no mínimo 6 caracteres'
+  // Validar senha
+  if (!formData.password) {
+    errors.password = 'Senha é obrigatória'
+    isValid = false
+  } else if (formData.password.length < 6) {
+    errors.password = 'A senha deve ter pelo menos 6 caracteres'
+    isValid = false
   }
   
-  return !errors.email && !errors.password
+  return isValid
 }
 
 // ============================================
@@ -220,7 +232,7 @@ const handleLogin = async () => {
   if (!validateForm()) return
 
   const credentials = {
-    email: formData.email,
+    email: formData.email.trim(),
     password: formData.password
   }
   
