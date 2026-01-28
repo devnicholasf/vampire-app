@@ -7,8 +7,14 @@
       </BaseButton>
     </div>
     
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mb-4 mx-auto"></div>
+      <p class="text-text-muted">Carregando NPCs...</p>
+    </div>
+    
     <!-- NPCs Grid -->
-    <div v-if="npcs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else-if="npcs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
         v-for="npc in npcs" 
         :key="npc.id"
@@ -86,16 +92,17 @@
             variant="ghost" 
             size="sm" 
             @click="addToGame(npc)"
-            class="text-accent hover:bg-accent hover:text-white"
+            :class="isGameLive ? 'text-accent hover:bg-accent hover:text-white' : 'text-text-muted'"
+            :disabled="!isGameLive"
           >
-            🎲 Usar no Jogo
+            🎲 {{ isGameLive ? 'Usar no Jogo' : 'Jogo Inativo' }}
           </BaseButton>
         </div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center py-12">
+    <div v-else-if="!loading" class="text-center py-12">
       <div class="text-6xl mb-4">🎭</div>
       <h4 class="text-lg font-semibold text-text-primary mb-2">Nenhum NPC criado</h4>
       <p class="text-text-muted mb-6">Crie seu primeiro NPC para começar a popular sua campanha</p>
@@ -153,26 +160,16 @@
         </div>
       </div>
     </div>
-
-    <!-- Toast Notification -->
-    <BaseToast
-      v-if="showToast"
-      :message="toastMessage"
-      :type="toastType"
-      @close="hideToast"
-      class="fixed top-4 right-4 z-[10000]"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { NPC } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import NPCModal from '~/components/campaign/master/NPCModal.vue'
 import NPCDetailsModal from '~/components/campaign/master/NPCDetailsModal.vue'
 import NPCSheet from '~/components/campaign/master/NPCSheet.vue'
-import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -181,49 +178,38 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Reactive data
+// Usar composable de campanha e jogo ao vivo
+const { campaignNPCs: npcs, loadCampaignNPCs, createNPC: createNPCInCampaign, updateNPC, deleteNPC, subscribeToNPCs, loading } = useCampaign()
+const { addNPCToGame, isGameLive } = useLiveGame()
+const toast = useToast()
+
+// Estados locais para UI
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
 const viewingSheet = ref<NPC | null>(null)
 
-// Toast states
-const toastMessage = ref('')
-const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
-const showToast = ref(false)
-
 // Delete confirmation states
 const showDeleteModal = ref(false)
 const npcToDelete = ref<NPC | null>(null)
 
-// Mock NPCs data
-const npcs = ref<NPC[]>([
-  {
-    id: 'npc-1',
-    campaignId: props.campaignId,
-    name: 'Marcus Ventrue',
-    type: 'Antagonista',
-    clan: 'Ventrue',
-    generation: 8,
-    bio: 'Um ancião político poderoso que controla grande parte da cidade através de influência financeira.',
-    keyPoints: ['Político', 'Rico', 'Influente'],
-    photo: '',
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 'npc-2',
-    campaignId: props.campaignId,
-    name: 'Elena Toreador',
-    type: 'Aliado',
-    clan: 'Toreador',
-    generation: 10,
-    bio: 'Uma artista vampira que possui uma galeria de arte e serve como informante.',
-    keyPoints: ['Artista', 'Informante', 'Carismática'],
-    photo: '',
-    createdAt: new Date()
+// Subscription para real-time updates
+let npcSubscription: any = null
+
+// Carregar NPCs quando componente for montado
+onMounted(async () => {
+  await loadCampaignNPCs(props.campaignId)
+  
+  // Ativar subscrição para tempo real
+  npcSubscription = subscribeToNPCs(props.campaignId)
+})
+
+// Limpar subscrição quando componente for desmontado
+onUnmounted(() => {
+  if (npcSubscription) {
+    npcSubscription.unsubscribe()
   }
-])
+})
 
 // Methods
 const createNPC = () => {
@@ -256,54 +242,52 @@ const closeSheet = () => {
   viewingSheet.value = null
 }
 
-const saveNPC = (npcData: any) => {
-  if (editingNPC.value) {
-    // Update existing NPC
-    const index = npcs.value.findIndex(n => n.id === editingNPC.value!.id)
-    if (index !== -1) {
-      npcs.value[index] = {
-        ...npcs.value[index],
-        ...npcData,
-        updatedAt: new Date()
-      }
+const saveNPC = async (npcData: any) => {
+  try {
+    if (editingNPC.value) {
+      // Update existing NPC
+      await updateNPC(editingNPC.value.id, npcData)
+      toast.success('NPC atualizado!', `${npcData.name} foi atualizado com sucesso`)
+    } else {
+      // Create new NPC
+      await createNPCInCampaign({
+        campaignId: props.campaignId,
+        ...npcData
+      })
+      toast.success('NPC criado!', `${npcData.name} foi adicionado à campanha`)
     }
-  } else {
-    // Create new NPC
-    const newNPC: NPC = {
-      id: `npc-${Date.now()}`,
-      campaignId: props.campaignId,
-      ...npcData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-    npcs.value.push(newNPC)
+  } catch (error: any) {
+    console.error('Erro ao salvar NPC:', error)
+    toast.error('Erro ao salvar NPC', error?.message || 'Tente novamente')
   }
-
+  
   closeModal()
 }
 
-const saveNPCSheet = (npcData: any) => {
-  const index = npcs.value.findIndex(n => n.id === npcData.id)
-  if (index !== -1) {
-    npcs.value[index] = {
-      ...npcs.value[index],
-      ...npcData,
-      updatedAt: new Date()
-    }
+const saveNPCSheet = async (npcData: any) => {
+  try {
+    await updateNPC(npcData.id, npcData)
+    toast.success('Ficha salva!', 'Ficha do NPC foi atualizada com sucesso')
+  } catch (error: any) {
+    console.error('Erro ao salvar ficha do NPC:', error)
+    toast.error('Erro ao salvar ficha', error?.message || 'Tente novamente')
   }
   closeSheet()
 }
 
-const addToGame = (npc: NPC) => {
-  console.log('Adicionando NPC ao jogo live:', { 
-    id: npc.id,
-    name: npc.name, 
-    photo: npc.photo,
-    type: npc.type
-  })
+const addToGame = async (npc: NPC) => {
+  if (!isGameLive.value) {
+    toast.warning('Jogo inativo', 'Nenhum jogo está ativo no momento')
+    return
+  }
   
-  // Simular adição ao jogo live - apenas mostrar nome e foto aos jogadores
-  showToastMessage(`${npc.name} foi adicionado ao jogo live! Os jogadores verão apenas nome e foto.`, 'success')
+  try {
+    await addNPCToGame(npc, true) // true = visível para jogadores
+    toast.success('NPC adicionado!', `${npc.name} entrou no jogo ao vivo`)
+  } catch (error: any) {
+    console.error('Erro ao adicionar NPC ao jogo:', error)
+    toast.error('Erro ao adicionar ao jogo', error?.message || 'Tente novamente')
+  }
 }
 
 const confirmDeleteNPC = (npc: NPC) => {
@@ -311,10 +295,15 @@ const confirmDeleteNPC = (npc: NPC) => {
   showDeleteModal.value = true
 }
 
-const executeDeleteNPC = () => {
+const executeDeleteNPC = async () => {
   if (npcToDelete.value) {
-    npcs.value = npcs.value.filter(n => n.id !== npcToDelete.value!.id)
-    showToastMessage(`${npcToDelete.value.name} foi removido`, 'success')
+    try {
+      await deleteNPC(npcToDelete.value.id)
+      toast.success('NPC removido!', `${npcToDelete.value.name} foi removido da campanha`)
+    } catch (error: any) {
+      console.error('Erro ao deletar NPC:', error)
+      toast.error('Erro ao remover NPC', error?.message || 'Tente novamente')
+    }
   }
   closeDeleteModal()
 }
@@ -329,19 +318,7 @@ defineExpose({
   npcs
 })
 
-const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
-  toastMessage.value = message
-  toastType.value = type
-  showToast.value = true
-  
-  setTimeout(() => {
-    showToast.value = false
-  }, 4000)
-}
 
-const hideToast = () => {
-  showToast.value = false
-}
 </script>
 
 <style scoped>

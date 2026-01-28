@@ -8,23 +8,26 @@ export default defineNuxtRouteMiddleware(async (to: RouteLocationNormalized) => 
   // Verificar se está acessando uma campanha diretamente
   if (to.path.startsWith('/campaign/') && to.path.split('/').length === 3) {
     const campaignId = to.params.id as string
+    const { user } = useAuth()
     
-    // Simular verificação de role - em produção seria uma API call
-    const isMaster = await checkIfUserIsMaster(campaignId)
+    if (!user.value) {
+      return navigateTo('/login')
+    }
     
-    if (isMaster) {
-      return navigateTo(`/campaign/${campaignId}/master`)
-    } else {
-      return navigateTo(`/campaign/${campaignId}/player`)
+    // Verificar se o usuário é mestre ou jogador desta campanha
+    const { getCampaignById } = useCampaign()
+    
+    try {
+      const campaign = await getCampaignById(campaignId)
+      
+      if (campaign.master_id === user.value.id) {
+        return navigateTo(`/campaign/${campaignId}/master`)
+      } else {
+        return navigateTo(`/campaign/${campaignId}/player`)
+      }
+    } catch (error) {
+      console.error('Erro ao verificar campanha:', error)
+      return navigateTo('/dashboard')
     }
   }
 })
-
-// Função auxiliar para verificar se o usuário é mestre
-async function checkIfUserIsMaster(campaignId: string): Promise<boolean> {
-  // Mock: em produção seria uma consulta à API
-  // Para demo:
-  // - Campanha '1' e '3': usuário é mestre
-  // - Campanha '2' e '4': usuário é jogador
-  return campaignId === '1' || campaignId === '3'
-}

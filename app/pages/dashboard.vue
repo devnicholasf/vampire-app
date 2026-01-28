@@ -60,7 +60,7 @@
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="text-center py-12">
+      <div v-if="campaignLoading" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
         <p class="text-text-muted mt-4">Carregando campanhas...</p>
       </div>
@@ -71,8 +71,8 @@
           v-for="campaign in campaigns"
           :key="campaign.id"
           class="bg-surface-card p-6 rounded-vampire border border-border hover:border-red-500 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 cursor-pointer group"
-          @click="goToCampaign(campaign.id)"
-          @keydown.enter="goToCampaign(campaign.id)"
+          @click="goToCampaign(campaign)"
+          @keydown.enter="goToCampaign(campaign)"
           tabindex="0"
           role="button"
           :aria-label="`Acessar campanha ${campaign.name}`"
@@ -80,18 +80,30 @@
           <!-- Header do Card -->
           <div class="flex justify-between items-start mb-4">
             <BaseBadge
-              :variant="isMaster(campaign) ? 'primary' : 'secondary'"
-              :iconLeft="isMaster(campaign) ? '👑' : '🎭'"
+              :variant="campaign.masterId === user?.id ? 'primary' : 'secondary'"
+              :iconLeft="campaign.masterId === user?.id ? '👑' : '🎭'"
               size="sm"
               class="flex-shrink-0"
             >
-              {{ isMaster(campaign) ? 'Mestre' : 'Jogador' }}
+              {{ campaign.masterId === user?.id ? 'Mestre' : 'Jogador' }}
             </BaseBadge>
             
-            <div class="text-right">
-              <div class="text-xs text-text-muted">
-                {{ formatDate(campaign.createdAt) }}
+            <div class="flex items-center gap-2">
+              <div class="text-right">
+                <div class="text-xs text-text-muted">
+                  {{ formatDate(campaign.createdAt) }}
+                </div>
               </div>
+              
+              <!-- Botão deletar (só para mestres) -->
+              <button
+                v-if="campaign.masterId === user?.id"
+                @click.stop="handleDeleteCampaign(campaign)"
+                class="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                title="Deletar campanha"
+              >
+                🗑️
+              </button>
             </div>
           </div>
 
@@ -131,6 +143,9 @@
         </BaseButton>
       </div>
     </main>
+
+    <!-- Toast Container -->
+    <ToastContainer />
 
     <!-- Modal de Criar Campanha -->
     <Teleport to="body">
@@ -206,6 +221,62 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal de Confirmação de Delete -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal && campaignToDelete"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4"
+        @click.self="cancelDeleteCampaign"
+      >
+        <div class="bg-surface border border-red-500 rounded-vampire p-8 max-w-md w-full">
+          <!-- Header -->
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">⚠️</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">Deletar Campanha</h3>
+              <p class="text-text-muted text-sm">Esta ação não pode ser desfeita</p>
+            </div>
+          </div>
+
+          <!-- Conteúdo -->
+          <div class="mb-6">
+            <p class="text-text-secondary mb-4">
+              Você tem certeza que deseja deletar permanentemente a campanha:
+            </p>
+            <div class="bg-surface-dark p-4 rounded-lg border border-border">
+              <h4 class="font-semibold text-text-primary">{{ campaignToDelete.name }}</h4>
+              <p class="text-sm text-text-muted mt-1">{{ campaignToDelete.description }}</p>
+            </div>
+            <p class="text-red-400 text-sm mt-4 font-medium">
+              ⚠️ Todos os NPCs, notas e sessões desta campanha também serão removidos
+            </p>
+          </div>
+
+          <!-- Botões -->
+          <div class="flex gap-3">
+            <BaseButton
+              variant="ghost"
+              class="flex-1"
+              @click="cancelDeleteCampaign"
+              :disabled="deleteLoading"
+            >
+              Cancelar
+            </BaseButton>
+            <BaseButton
+              variant="danger"
+              class="flex-1"
+              @click="confirmDeleteCampaign"
+              :disabled="deleteLoading"
+            >
+              {{ deleteLoading ? 'Deletando...' : 'Deletar Permanentemente' }}
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -223,6 +294,7 @@ import BaseBadge from '~/components/ui/BaseBadge.vue'
 import UserProfile from '~/components/ui/UserProfile.vue'
 import NotificationsDropdown from '~/components/ui/NotificationsDropdown.vue'
 import DirectMessages from '~/components/ui/DirectMessages.vue'
+import ToastContainer from '~/components/ui/ToastContainer.vue'
 
 interface Campaign {
   id: string
@@ -242,50 +314,36 @@ definePageMeta({
 })
 
 const { user, logout } = useAuth()
+const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign } = useCampaign()
+const toast = useToast()
+
+// Estados para modal de confirmação de delete
+const showDeleteModal = ref(false)
+const campaignToDelete = ref<Campaign | null>(null)
+const deleteLoading = ref(false)
 
 // Debug
-onMounted(() => {
+onMounted(async () => {
   console.log('Dashboard montado!')
   console.log('Usuário:', user.value)
-  console.log('Token:', localStorage.getItem('auth_token'))
+  
+  // Carregar campanhas do usuário
+  if (user.value) {
+    await loadCampaigns()
+  }
 })
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
-const loading = ref(false)
 const newCampaign = ref<CreateCampaignData>({
   name: '',
   description: ''
 })
 
-// Dados mock de campanhas
-const campaigns = ref<Campaign[]>([
-  {
-    id: '1',
-    name: 'Crônicas de Chicago',
-    description: 'Uma campanha sombria nas ruas de Chicago onde os Ventrue dominam a política vampírica local.',
-    masterId: 'current-user', // Este usuário será o mestre
-    createdAt: new Date('2024-12-01')
-  },
-  {
-    id: '2',
-    name: 'Noites de Berlin',
-    description: 'Explore os segredos da cidade dividida durante a Guerra Fria vampírica.',
-    masterId: 'other-user', // Este usuário não é o mestre
-    createdAt: new Date('2024-11-15')
-  }
-])
 
-// Verificar se usuário é mestre
-const isMaster = (campaign: Campaign) => {
-  // Usar a mesma lógica do middleware para consistência
-  // Campanhas '1' e '3': usuário é mestre
-  // Campanhas '2' e '4': usuário é jogador
-  return campaign.id === '1' || campaign.id === '3'
-}
 
 // Formatar data
-const formatDate = (date: Date) => {
+const formatDate = (date: string | Date) => {
   return new Date(date).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'short',
@@ -294,15 +352,18 @@ const formatDate = (date: Date) => {
 }
 
 // Ir para campanha
-const goToCampaign = async (id: string) => {
+const goToCampaign = async (campaign: Campaign) => {
   console.log('Dashboard: Clique na campanha detectado')
-  console.log('Dashboard: Navegando para campanha:', id)
+  console.log('Dashboard: Navegando para campanha:', campaign.id)
   
   try {
-    // Ir para a rota base da campanha e deixar o middleware decidir
     const router = useRouter()
-    await router.push(`/campaign/${id}`)
-    console.log('Dashboard: Navegação concluída')
+    // Verificar se é mestre ou jogador
+    const isMaster = campaign.masterId === user.value?.id
+    const route = isMaster ? 'master' : 'player'
+    
+    await router.push(`/campaign/${campaign.id}/${route}`)
+    console.log(`Dashboard: Navegação concluída para visão de ${route}`)
   } catch (error) {
     console.error('Dashboard: Erro na navegação:', error)
   }
@@ -310,37 +371,123 @@ const goToCampaign = async (id: string) => {
 
 // Criar campanha
 const handleCreateCampaign = async () => {
+  if (!newCampaign.value.name.trim()) {
+    toast.warning('Campo obrigatório', 'O nome da campanha é obrigatório')
+    return
+  }
+
+  if (newCampaign.value.name.trim().length < 3) {
+    toast.warning('Nome muito curto', 'O nome deve ter pelo menos 3 caracteres')
+    return
+  }
+
   createLoading.value = true
   
   try {
-    // Garantir que o usuário está logado antes de criar campanha
-    if (!user.value?.id) {
-      throw new Error('Usuário não está logado')
+    console.log('Dashboard: Iniciando criação de campanha:', {
+      name: newCampaign.value.name.trim(),
+      description: newCampaign.value.description.trim()
+    })
+
+    const campaign = await createCampaign({
+      name: newCampaign.value.name.trim(),
+      description: newCampaign.value.description.trim() || ''
+    })
+    
+    console.log('Dashboard: Campanha criada com sucesso:', campaign)
+    
+    // Resetar formulário e fechar modal
+    newCampaign.value = {
+      name: '',
+      description: ''
     }
-    
-    // Simular criação
-    const newId = Date.now().toString()
-    const newCamp: Campaign = {
-      id: newId,
-      name: newCampaign.value.name,
-      description: newCampaign.value.description,
-      masterId: user.value.id, // O criador sempre será mestre
-      createdAt: new Date()
-    }
-    
-    campaigns.value.push(newCamp)
-    
-    createLoading.value = false
     showCreateModal.value = false
-    newCampaign.value = { name: '', description: '' }
     
-    console.log('Nova campanha criada:', newCamp)
-    console.log('Usuário criador (mestre):', user.value.id)
+    toast.success('Campanha criada!', 'Sua nova campanha foi criada com sucesso')
     
-  } catch (error) {
-    console.error('Erro ao criar campanha:', error)
+    // Navegar automaticamente para a campanha como mestre
+    setTimeout(async () => {
+      const router = useRouter()
+      await router.push(`/campaign/${campaign.id}/master`)
+      toast.info('Bem-vindo!', 'Agora você pode configurar sua campanha como Mestre')
+    }, 1500) // Delay para mostrar o toast de sucesso
+    
+  } catch (error: any) {
+    console.error('Dashboard: Erro detalhado ao criar campanha:', {
+      error,
+      message: error?.message,
+      code: error?.code,
+      details: error?.details,
+      hint: error?.hint
+    })
+    
+    let errorMessage = 'Ocorreu um erro inesperado. Tente novamente.'
+    
+    // Mensagens mais específicas baseadas no erro
+    if (error?.message?.includes('não autenticado')) {
+      errorMessage = 'Sessão expirada. Faça login novamente.'
+    } else if (error?.message?.includes('duplicate key') || error?.message?.includes('already exists')) {
+      errorMessage = 'Já existe uma campanha com este nome. Escolha outro nome.'
+    } else if (error?.message?.includes('permission denied') || error?.code === '42501') {
+      errorMessage = 'Você não tem permissão para criar campanhas. Contate o suporte.'
+    } else if (error?.message?.includes('invalid input') || error?.code === '22P02') {
+      errorMessage = 'Dados fornecidos são inválidos. Verifique os campos.'
+    } else if (error?.message?.includes('connection') || error?.message?.includes('network')) {
+      errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.'
+    } else if (error?.message?.includes('timeout')) {
+      errorMessage = 'A operação demorou muito. Tente novamente.'
+    } else if (error?.message) {
+      errorMessage = error.message
+    }
+    
+    toast.error(
+      'Erro ao criar campanha', 
+      errorMessage
+      // Remover persistência - vai desaparecer automaticamente após 8 segundos
+    )
+  } finally {
     createLoading.value = false
   }
+}
+
+// Deletar campanha
+const handleDeleteCampaign = (campaign: Campaign) => {
+  campaignToDelete.value = campaign
+  showDeleteModal.value = true
+}
+
+const confirmDeleteCampaign = async () => {
+  if (!campaignToDelete.value) return
+
+  deleteLoading.value = true
+  
+  try {
+    await deleteCampaign(campaignToDelete.value.id)
+    
+    toast.success(
+      'Campanha deletada!', 
+      `"${campaignToDelete.value.name}" foi removida permanentemente`
+    )
+    
+    // Fechar modal
+    showDeleteModal.value = false
+    campaignToDelete.value = null
+    
+  } catch (error: any) {
+    console.error('Erro ao deletar campanha:', error)
+    toast.error(
+      'Erro ao deletar campanha',
+      error?.message || 'Não foi possível deletar a campanha. Tente novamente.'
+      // Remover persistência - vai desaparecer automaticamente após 8 segundos
+    )
+  } finally {
+    deleteLoading.value = false
+  }
+}
+
+const cancelDeleteCampaign = () => {
+  showDeleteModal.value = false
+  campaignToDelete.value = null
 }
 
 // Logout
