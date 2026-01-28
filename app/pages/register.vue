@@ -36,7 +36,7 @@
       </div>
 
       <!-- Formulário -->
-      <form @submit.prevent="handleRegister" class="space-y-4">
+      <form @submit.prevent="handleRegister" class="space-y-4" novalidate>>
         <!-- Nome de Usuário -->
         <BaseInput
           v-model="form.username"
@@ -45,7 +45,6 @@
           placeholder="Como deseja ser chamado"
           :error="errors.username"
           :disabled="loading"
-          required
           autocomplete="username"
         />
 
@@ -57,7 +56,6 @@
           placeholder="seu@email.com"
           :error="errors.email"
           :disabled="loading"
-          required
           autocomplete="email"
         />
 
@@ -69,7 +67,6 @@
           placeholder="Mínimo 6 caracteres"
           :error="errors.password"
           :disabled="loading"
-          required
           autocomplete="new-password"
           helper-text="Mínimo de 6 caracteres"
         />
@@ -82,7 +79,6 @@
           placeholder="Digite a senha novamente"
           :error="errors.confirmPassword"
           :disabled="loading"
-          required
           autocomplete="new-password"
         />
 
@@ -107,7 +103,6 @@
           <input
             v-model="form.acceptTerms"
             type="checkbox"
-            required
             class="mt-1 w-4 h-4 rounded border-border bg-surface text-primary focus:ring-2 focus:ring-border-focus focus:ring-offset-2 focus:ring-offset-background transition-colors"
           />
           <span class="text-sm text-text-secondary group-hover:text-text-primary transition-colors">
@@ -199,42 +194,73 @@ const errors = reactive({
   confirmPassword: ''
 })
 
-// Validar username
-watch(() => form.value.username, (value) => {
-  if (value && value.length < 3) {
-    errors.username = 'Nome deve ter no mínimo 3 caracteres'
-  } else {
-    errors.username = ''
-  }
+// Validar formulário - apenas verifica se tem conteúdo
+const isFormValid = computed(() => {
+  return (
+    form.value.username.length > 0 &&
+    form.value.email.length > 0 &&
+    form.value.password.length > 0 &&
+    form.value.confirmPassword.length > 0 &&
+    form.value.acceptTerms
+  )
 })
 
-// Validar email
-watch(() => form.value.email, (value) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (value && !emailRegex.test(value)) {
-    errors.email = 'Email inválido'
-  } else {
-    errors.email = ''
+// Validação completa no submit
+const validateForm = () => {
+  // Limpar erros anteriores
+  errors.username = ''
+  errors.email = ''
+  errors.password = ''
+  errors.confirmPassword = ''
+  
+  let isValid = true
+  
+  // Validar nome
+  if (!form.value.username.trim()) {
+    errors.username = 'Nome é obrigatório'
+    isValid = false
+  } else if (form.value.username.length < 3) {
+    errors.username = 'Nome deve ter pelo menos 3 caracteres'
+    isValid = false
   }
-})
-
-// Validar senha
-watch(() => form.value.password, (value) => {
-  if (value && value.length < 6) {
-    errors.password = 'Senha deve ter no mínimo 6 caracteres'
+  
+  // Validar email
+  if (!form.value.email.trim()) {
+    errors.email = 'Email é obrigatório'
+    isValid = false
   } else {
-    errors.password = ''
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.value.email)) {
+      errors.email = 'Digite um email válido'
+      isValid = false
+    }
   }
-})
-
-// Validar confirmação
-watch(() => form.value.confirmPassword, (value) => {
-  if (value && value !== form.value.password) {
+  
+  // Validar senha
+  if (!form.value.password) {
+    errors.password = 'Senha é obrigatória'
+    isValid = false
+  } else if (form.value.password.length < 6) {
+    errors.password = 'A senha deve ter pelo menos 6 caracteres'
+    isValid = false
+  }
+  
+  // Validar confirmação de senha
+  if (!form.value.confirmPassword) {
+    errors.confirmPassword = 'Confirme sua senha'
+    isValid = false
+  } else if (form.value.confirmPassword !== form.value.password) {
     errors.confirmPassword = 'As senhas não coincidem'
-  } else {
-    errors.confirmPassword = ''
+    isValid = false
   }
-})
+  
+  // Validar termos
+  if (!form.value.acceptTerms) {
+    isValid = false
+  }
+  
+  return isValid
+}
 
 // Password strength
 const passwordStrength = computed(() => {
@@ -267,31 +293,16 @@ const passwordStrengthColor = computed(() => {
   return 'bg-success'
 })
 
-// Validar formulário
-const isFormValid = computed(() => {
-  return (
-    form.value.username.length >= 3 &&
-    form.value.email.length > 0 &&
-    form.value.password.length >= 6 &&
-    form.value.confirmPassword === form.value.password &&
-    form.value.acceptTerms &&
-    !errors.username &&
-    !errors.email &&
-    !errors.password &&
-    !errors.confirmPassword
-  )
-})
-
 // Handle register
 const handleRegister = async () => {
-  if (!isFormValid.value) return
+  if (!validateForm()) return
 
   // Limpar mensagens anteriores
   successMessage.value = ''
 
   const data: RegisterData = {
-    username: form.value.username,
-    email: form.value.email,
+    username: form.value.username.trim(),
+    email: form.value.email.trim(),
     password: form.value.password,
     confirmPassword: form.value.confirmPassword
   }
@@ -299,22 +310,8 @@ const handleRegister = async () => {
   const result = await register(data)
   
   if (result.success) {
-    if (result.needsConfirmation) {
-      // Mostrar mensagem de confirmação de email
-      successMessage.value = result.message || 'Conta criada! Verifique seu email para confirmação.'
-      
-      // Limpar formulário
-      form.value = {
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        acceptTerms: false
-      }
-    } else {
-      // Login automático - redirecionar para dashboard
-      await router.push('/dashboard')
-    }
+    // Sempre redirecionar para dashboard após registro bem-sucedido
+    await router.push('/dashboard')
   }
 }
 </script>

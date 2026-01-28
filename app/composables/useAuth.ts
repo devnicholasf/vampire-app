@@ -124,7 +124,7 @@ export const useAuth = () => {
         throw new Error('Supabase não está disponível')
       }
 
-      // Criar conta no Supabase
+      // Criar conta no Supabase (apenas nome, email e senha)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -208,6 +208,63 @@ export const useAuth = () => {
     }
   }
 
+  // ============================================
+  // Atualizar perfil do usuário no Supabase
+  // ============================================
+  const updateUserProfile = async (profileData: { username?: string, email?: string }) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      if (!supabase) {
+        throw new Error('Supabase não está disponível')
+      }
+
+      if (!user.value) {
+        throw new Error('Usuário não está logado')
+      }
+
+      // Atualizar metadata do usuário
+      const { data, error: updateError } = await supabase.auth.updateUser({
+        email: profileData.email,
+        data: {
+          username: profileData.username,
+          display_name: profileData.username
+        }
+      })
+
+      if (updateError) {
+        console.error('Erro ao atualizar perfil:', updateError)
+        error.value = translateAuthError(updateError)
+        throw new Error(error.value)
+      }
+
+      if (data.user) {
+        // Atualizar estado local
+        const updatedUser: AuthUser = {
+          id: data.user.id,
+          email: data.user.email!,
+          username: data.user.user_metadata?.username || data.user.email!.split('@')[0],
+          avatar: data.user.user_metadata?.avatar || null,
+          createdAt: new Date(data.user.created_at),
+          updatedAt: new Date()
+        }
+
+        user.value = updatedUser
+        return updatedUser
+      }
+
+      throw new Error('Erro ao atualizar perfil')
+
+    } catch (e: any) {
+      console.error('Erro ao atualizar perfil:', e)
+      error.value = e.message || 'Erro ao atualizar perfil'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Restaurar sessão automaticamente no cliente
   onMounted(() => {
     if (process.client && !user.value) {
@@ -227,6 +284,7 @@ export const useAuth = () => {
     register,
     logout,
     restoreSession,
-    updateUser
+    updateUser,
+    updateUserProfile
   }
 }

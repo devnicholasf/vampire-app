@@ -49,11 +49,11 @@
               <input
                 v-model="profileForm.name"
                 type="text"
-                placeholder="Como você gostaria de ser chamado?"
+                :placeholder="displayName"
                 class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
               />
               <p class="text-xs text-text-muted mt-1">
-                Se vazio, será usado seu email
+                Valor atual: {{ displayName }}
               </p>
             </div>
 
@@ -65,23 +65,11 @@
               <input
                 v-model="profileForm.email"
                 type="email"
-                class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary focus:outline-none focus:border-red-500 transition-colors"
+                :placeholder="user?.email || 'Email atual'"
+                class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
               />
-            </div>
-
-            <!-- Bio -->
-            <div>
-              <label class="block text-text-secondary text-sm font-medium mb-2">
-                Biografia
-              </label>
-              <textarea
-                v-model="profileForm.bio"
-                rows="3"
-                placeholder="Conte um pouco sobre você como jogador/mestre..."
-                class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors resize-none"
-              ></textarea>
               <p class="text-xs text-text-muted mt-1">
-                Máximo 200 caracteres
+                Valor atual: {{ user?.email || 'Email não informado' }}
               </p>
             </div>
 
@@ -108,18 +96,63 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Confirmation Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showConfirmationModal"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4"
+        @click.self="closeConfirmationModal"
+      >
+        <div class="bg-surface border border-border rounded-vampire p-6 max-w-sm w-full">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-red-400 flex items-center gap-2">
+              <span>⚠️</span>
+              Confirmar Alterações
+            </h3>
+          </div>
+
+          <p class="text-text-primary mb-6">
+            Tem certeza que deseja salvar as alterações no seu perfil?
+          </p>
+
+          <!-- Buttons -->
+          <div class="flex gap-3">
+            <BaseButton
+              type="button"
+              variant="ghost"
+              class="flex-1"
+              @click="closeConfirmationModal"
+            >
+              Cancelar
+            </BaseButton>
+            <BaseButton
+              type="button"
+              variant="primary"
+              class="flex-1"
+              :disabled="loading"
+              @click="confirmSaveProfile"
+            >
+              {{ loading ? 'Salvando...' : 'Confirmar' }}
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import BaseButton from './BaseButton.vue'
+import { useAuth } from '../../composables/useAuth'
 
 interface UserData {
   id: string
   email: string
+  username?: string
   name?: string
-  bio?: string
 }
 
 interface Props {
@@ -131,19 +164,21 @@ const emit = defineEmits<{
   'profile-updated': [user: UserData]
 }>()
 
+const { updateUserProfile } = useAuth()
+
 // State
 const showProfileModal = ref(false)
+const showConfirmationModal = ref(false)
 const loading = ref(false)
 const profileForm = ref({
   name: '',
-  email: '',
-  bio: ''
+  email: ''
 })
 
 // Computed
 const displayName = computed(() => {
   if (!props.user) return 'Usuário'
-  return props.user.name || props.user.email || 'Usuário'
+  return props.user.username || props.user.name || 'Usuário'
 })
 
 const userInitials = computed(() => {
@@ -165,41 +200,73 @@ const userInitials = computed(() => {
 const openModal = () => {
   if (props.user) {
     profileForm.value = {
-      name: props.user.name || '',
-      email: props.user.email || '',
-      bio: props.user.bio || ''
+      name: props.user.username || props.user.name || '',
+      email: props.user.email || ''
     }
   }
   showProfileModal.value = true
 }
 
+// Watch for user changes to update form
+watch(() => props.user, (newUser) => {
+  if (newUser && showProfileModal.value) {
+    profileForm.value = {
+      name: newUser.username || newUser.name || '',
+      email: newUser.email || ''
+    }
+  }
+}, { immediate: true })
+
+// Watch for modal opening to ensure form is populated
+watch(showProfileModal, (isOpen) => {
+  if (isOpen && props.user) {
+    // Use nextTick to ensure DOM is ready
+    nextTick(() => {
+      profileForm.value = {
+        name: props.user.username || props.user.name || '',
+        email: props.user.email || ''
+      }
+    })
+  }
+})
+
 const closeModal = () => {
   showProfileModal.value = false
+}
+
+const closeConfirmationModal = () => {
+  showConfirmationModal.value = false
 }
 
 const handleSaveProfile = async () => {
   if (!props.user) return
   
+  // Mostrar modal de confirmação
+  showConfirmationModal.value = true
+}
+
+const confirmSaveProfile = async () => {
+  if (!props.user) return
+  
   loading.value = true
   
   try {
-    // TODO: Implementar API call
-    console.log('Salvando perfil:', profileForm.value)
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Emit updated user data
-    emit('profile-updated', {
-      ...props.user,
-      name: profileForm.value.name,
-      email: profileForm.value.email,
-      bio: profileForm.value.bio
+    // Chamar composable para atualizar no Supabase
+    const updatedUser = await updateUserProfile({
+      username: profileForm.value.name,
+      email: profileForm.value.email
     })
     
+    // Emit updated user data
+    emit('profile-updated', updatedUser)
+    
+    // Fechar modals
+    closeConfirmationModal()
     closeModal()
+    
   } catch (error) {
     console.error('Erro ao salvar perfil:', error)
+    // TODO: Mostrar notificação de erro
   } finally {
     loading.value = false
   }

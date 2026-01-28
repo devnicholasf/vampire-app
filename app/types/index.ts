@@ -21,6 +21,53 @@ export interface AuthUser {
   updatedAt: Date
 }
 
+// ============================================
+// CHAT SYSTEM TYPES
+// ============================================
+
+export interface ChatUser {
+  id: string
+  name: string
+  role?: string
+}
+
+export interface ChatMessage {
+  id: string
+  content: string
+  senderId: string
+  createdAt: Date
+}
+
+export interface ChatConversation {
+  id: string
+  otherUser: ChatUser
+  lastMessage?: ChatMessage
+  unreadCount: number
+  campaign?: { id: string; name: string }
+}
+
+// ============================================
+// NOTIFICATION SYSTEM TYPES
+// ============================================
+
+export interface NotificationAction {
+  id: string
+  label: string
+  primary?: boolean
+  action: 'accept' | 'decline' | 'view' | 'dismiss'
+}
+
+export interface Notification {
+  id: string
+  type: 'campaign_invite' | 'session_reminder' | 'message' | 'system'
+  title: string
+  message: string
+  read: boolean
+  createdAt: Date
+  data?: Record<string, any>
+  actions?: NotificationAction[]
+}
+
 export interface Campaign {
   id: string
   name: string
