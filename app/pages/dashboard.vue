@@ -121,7 +121,7 @@
           <div class="flex items-center justify-between pt-4 border-t border-border-secondary">
             <div class="flex items-center gap-2 text-xs text-text-secondary">
               <span>📅</span>
-              <span>Última sessão: Há 3 dias</span>
+              <span>{{ getLastSessionText(campaign) }}</span>
             </div>
             
             <div class="flex items-center gap-1">
@@ -351,18 +351,58 @@ const formatDate = (date: string | Date) => {
   })
 }
 
+// Calcular tempo decorrido desde a última sessão
+const getLastSessionText = (campaign: Campaign) => {
+  // TODO: Futuramente, buscar sessões reais da tabela campaign_sessions
+  // e mostrar quando foi a última sessão de jogo ao vivo
+  // Por enquanto, mostra informações baseadas na criação da campanha
+  
+  const now = new Date()
+  const campaignAge = now.getTime() - new Date(campaign.createdAt).getTime()
+  const minutesOld = Math.floor(campaignAge / (1000 * 60))
+  const hoursOld = Math.floor(campaignAge / (1000 * 60 * 60))
+  const daysOld = Math.floor(campaignAge / (1000 * 60 * 60 * 24))
+  
+  // Se a campanha foi criada há menos de 5 minutos, mostrar que é nova
+  if (minutesOld < 5) {
+    return 'Campanha recém-criada ✨'
+  }
+  
+  // Se foi criada há menos de 1 hora, mostrar em minutos
+  if (minutesOld < 60) {
+    return `Criada há ${minutesOld} minuto${minutesOld !== 1 ? 's' : ''}`
+  }
+  
+  // Se foi criada hoje, mostrar em horas
+  if (hoursOld < 24) {
+    return `Criada há ${hoursOld} hora${hoursOld !== 1 ? 's' : ''}`
+  }
+  
+  // Se foi criada há poucos dias, mostrar em dias
+  if (daysOld <= 30) {
+    return `Criada há ${daysOld} dia${daysOld !== 1 ? 's' : ''}`
+  }
+  
+  // Para campanhas muito antigas sem sessões
+  return 'Nenhuma sessão realizada'
+}
+
 // Ir para campanha
 const goToCampaign = async (campaign: Campaign) => {
   console.log('Dashboard: Clique na campanha detectado')
   console.log('Dashboard: Navegando para campanha:', campaign.id)
   
   try {
-    const router = useRouter()
     // Verificar se é mestre ou jogador
     const isMaster = campaign.masterId === user.value?.id
     const route = isMaster ? 'master' : 'player'
     
-    await router.push(`/campaign/${campaign.id}/${route}`)
+    console.log(`Dashboard: Usuário é ${isMaster ? 'mestre' : 'jogador'}`)
+    console.log(`Dashboard: Navegando para /campaign/${campaign.id}/${route}`)
+    
+    // Usar navigateTo em vez de router.push para evitar conflitos
+    await navigateTo(`/campaign/${campaign.id}/${route}`)
+    
     console.log(`Dashboard: Navegação concluída para visão de ${route}`)
   } catch (error) {
     console.error('Dashboard: Erro na navegação:', error)
@@ -403,7 +443,10 @@ const handleCreateCampaign = async () => {
     }
     showCreateModal.value = false
     
-    toast.success('Campanha criada!', 'Sua nova campanha foi criada com sucesso')
+    toast.success(
+      'Campanha criada!', 
+      `"${campaign.name}" foi criada com código ${campaign.inviteCode}`
+    )
     
     // Navegar automaticamente para a campanha como mestre
     setTimeout(async () => {

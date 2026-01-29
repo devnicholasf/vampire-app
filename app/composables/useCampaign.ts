@@ -28,6 +28,16 @@ export const useCampaign = () => {
   // Helper Functions
   // ============================================
   
+  // Gerar código de convite único
+  const generateInviteCode = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let result = ''
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return result
+  }
+  
   // Mapear dados do Supabase (snake_case) para tipos TypeScript (camelCase)
   const mapSupabaseCampaign = (supabaseCampaign: any): Campaign => {
     return {
@@ -35,6 +45,7 @@ export const useCampaign = () => {
       name: supabaseCampaign.name,
       description: supabaseCampaign.description,
       masterId: supabaseCampaign.master_id,
+      inviteCode: supabaseCampaign.invite_code,
       players: [], // TODO: mapear campaign_players quando necessário
       createdAt: new Date(supabaseCampaign.created_at),
       updatedAt: new Date(supabaseCampaign.updated_at),
@@ -122,17 +133,42 @@ export const useCampaign = () => {
     error.value = null
 
     try {
+      // Gerar código de convite único
+      let inviteCode = generateInviteCode()
+      let attempts = 0
+      const maxAttempts = 10
+      
+      // Verificar se o código já existe e gerar outro se necessário
+      while (attempts < maxAttempts) {
+        const { data: existing } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('invite_code', inviteCode)
+          .single()
+        
+        if (!existing) break
+        
+        inviteCode = generateInviteCode()
+        attempts++
+      }
+      
+      if (attempts >= maxAttempts) {
+        throw new Error('Não foi possível gerar um código único. Tente novamente.')
+      }
+
       console.log('Criando campanha com dados:', {
         name: campaignData.name,
         description: campaignData.description,
-        master_id: user.value.id
+        master_id: user.value.id,
+        invite_code: inviteCode
       })
 
-      // Dados simples para inserção
+      // Dados para inserção
       const insertData = {
         name: campaignData.name,
         description: campaignData.description,
-        master_id: user.value.id
+        master_id: user.value.id,
+        invite_code: inviteCode
       }
 
       console.log('Dados para inserção:', insertData)
@@ -175,7 +211,10 @@ export const useCampaign = () => {
     error.value = null
 
     try {
-      const { data: campaign, error: campaignError } = await supabase
+      console.log('Buscando campanha no Supabase:', campaignId)
+
+      // Buscar campanha COM campaign_players (RLS agora está funcionando)
+      let { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
         .select(`
           *,
@@ -189,13 +228,61 @@ export const useCampaign = () => {
         .eq('id', campaignId)
         .single()
 
-      if (campaignError) throw campaignError
+      console.log('Campaign data from Supabase:', campaign)
 
+      if (campaignError) {
+        console.error('Erro do Supabase:', campaignError)
+        throw campaignError
+      }
+
+      if (!campaign) {
+        throw new Error('Campanha não encontrada')
+      }
+
+      console.log('Campanha encontrada:', campaign)
       currentCampaign.value = campaign
       return campaign
 
     } catch (err: any) {
       console.error('Erro ao buscar campanha:', err)
+      error.value = err.message || 'Erro ao carregar campanha'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const findCampaignByInviteCode = async (inviteCode: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('Buscando campanha por código de convite:', inviteCode)
+
+      const { data: campaign, error: campaignError } = await supabase
+        .from('campaigns')
+        .select('*')
+        .eq('invite_code', inviteCode.toUpperCase())
+        .single()
+
+      if (campaignError) {
+        if (campaignError.code === 'PGRST116') {
+          throw new Error('Código de convite não encontrado')
+        }
+        throw new Error(`Erro ao buscar campanha: ${campaignError.message}`)
+      }
+
+      if (!campaign) {
+        throw new Error('Código de convite inválido')
+      }
+
+      const mappedCampaign = mapSupabaseCampaign(campaign)
+      console.log('Campanha encontrada:', mappedCampaign)
+      
+      return mappedCampaign
+
+    } catch (err: any) {
+      console.error('Erro ao buscar campanha por código:', err)
       error.value = err.message
       throw err
     } finally {
@@ -513,6 +600,7 @@ export const useCampaign = () => {
     createCampaign,
     deleteCampaign,
     getCampaignById,
+    findCampaignByInviteCode,
 
     // NPC methods
     loadCampaignNPCs,

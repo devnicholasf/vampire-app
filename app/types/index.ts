@@ -73,6 +73,7 @@ export interface Campaign {
   name: string
   description: string
   masterId: string // ID do mestre
+  inviteCode: string // Código único para convite de jogadores
   master?: User
   players: CampaignPlayer[]
   createdAt: Date

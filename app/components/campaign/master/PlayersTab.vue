@@ -84,21 +84,20 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { Campaign } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
   campaignId: string
+  campaign?: Campaign | null
 }
 
 const props = defineProps<Props>()
 
-// Mock data
-const players = ref([
-  { id: '1', name: 'João Silva', email: 'joao@example.com' },
-  { id: '2', name: 'Maria Santos', email: 'maria@example.com' }
-])
+// Use real players from campaign data passed as prop
+const players = computed(() => props.campaign?.players || [])
 
 const inviteEmail = ref('')
 

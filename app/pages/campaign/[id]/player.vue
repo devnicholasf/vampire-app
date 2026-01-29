@@ -278,6 +278,11 @@ definePageMeta({
 })
 
 // ============================================
+// Composables
+// ============================================
+const { user } = useAuth()
+
+// ============================================
 // State
 // ============================================
 const loading = ref(true)
@@ -304,49 +309,63 @@ const campaignDuration = computed(() => {
 const loadCampaignData = async () => {
   try {
     loading.value = true
+    console.log('🎭 PLAYER.VUE: Carregando dados da campanha...', campaignId)
     
-    // Mock data - em produção seria API calls
-    campaign.value = {
-      id: campaignId,
-      name: campaignId === '1' ? 'Crônicas de Chicago' : 'Nova Campanha',
-      description: 'Uma campanha sombria nas ruas de Chicago onde os Ventrue dominam a política vampírica local. Explore as sombras da cidade, faça alianças perigosas e sobreviva às intrigas da Camarilla.',
-      masterId: 'master-user',
-      createdAt: new Date('2024-12-01')
-    }
-
-    // Mock character data
-    myCharacter.value = {
-      id: 'char1',
-      name: 'Marcus Blackwood',
-      clan: 'Ventrue',
-      generation: 8,
-      attributes: {
-        physical: 7,
-        social: 9,
-        mental: 6
+    // Load real campaign data from Supabase
+    const { getCampaignById } = useCampaign()
+    const campaignData = await getCampaignById(campaignId)
+    
+    if (campaignData) {
+      campaign.value = {
+        id: campaignData.id,
+        name: campaignData.name,
+        description: campaignData.description || 'Sem descrição',
+        masterId: campaignData.master_id,
+        createdAt: new Date(campaignData.created_at)
       }
-    }
 
-    // Mock other players
-    otherPlayers.value = [
-      {
-        id: 'player2',
-        name: 'Maria Santos',
-        character: {
-          id: 'char2',
-          name: 'Isabella Rose',
-          clan: 'Toreador',
-          generation: 9,
-          attributes: { physical: 5, social: 8, mental: 7 }
+      // Find current user's character
+      const userPlayer = campaignData.campaign_players?.find(
+        (player: any) => player.user_id === user?.value?.id
+      )
+      
+      if (userPlayer) {
+        myCharacter.value = {
+          id: userPlayer.user_id,
+          name: userPlayer.character_name,
+          clan: 'Ventrue', // Default - will be extended later
+          generation: 8,   // Default - will be extended later
+          attributes: {
+            physical: 7,
+            social: 9,
+            mental: 6
+          }
         }
-      },
-      {
-        id: 'player3',
-        name: 'Pedro Costa'
       }
-    ]
 
-    // Mock session notes
+      // Load other players (excluding current user)
+      otherPlayers.value = (campaignData.campaign_players || [])
+        .filter((player: any) => player.user_id !== user?.value?.id)
+        .map((player: any) => ({
+          id: player.user_id,
+          name: player.character_name,
+          character: {
+            id: player.user_id,
+            name: player.character_name,
+            clan: 'Desconhecido', // Will be extended later
+            generation: 10,
+            attributes: { physical: 5, social: 6, mental: 7 }
+          }
+        }))
+      
+      console.log('🎭 PLAYER.VUE: Dados carregados:', {
+        campaign: campaign.value,
+        myCharacter: myCharacter.value,
+        otherPlayers: otherPlayers.value
+      })
+    }
+
+    // Session notes will remain mock for now
     sessionNotes.value = [
       {
         id: 'note1',

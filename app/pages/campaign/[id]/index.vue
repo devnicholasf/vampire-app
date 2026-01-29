@@ -178,8 +178,7 @@ import MediaPlayer from '~/components/campaign/MediaPlayer.vue'
 import Timeline from '~/components/campaign/Timeline.vue'
 
 definePageMeta({
-  layout: 'campaign',
-  middleware: 'campaign-redirect'
+  layout: 'campaign'
 })
 
 const route = useRoute()
@@ -191,79 +190,63 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const showQuickActions = ref(false)
 
-// Mock campaign data (replace with real data from backend)
-const mockCampaign: Campaign = {
-  id: campaignId,
-  name: 'Crônicas de Chicago',
-  description: 'Uma história sombria nas ruas sombrias de Chicago...',
-  masterId: 'master-1',
-  players: [
-    {
-      userId: 'player-1',
-      campaignId: campaignId,
-      character: {
-        name: 'Marcus Ventrue',
-        clan: 'Ventrue',
-        generation: 10,
-        avatar: '/images/marcus-avatar.jpg',
-        attributes: {
-          hunger: 2,
-          humanity: 7,
-          willpower: 8,
-          health: 10
-        },
-        disciplines: ['Dominação', 'Presença', 'Fortitude']
-      },
-      joinedAt: new Date()
-    },
-    {
-      userId: 'player-2',
-      campaignId: campaignId,
-      character: {
-        name: 'Elena Toreador',
-        clan: 'Toreador',
-        generation: 11,
-        attributes: {
-          hunger: 1,
-          humanity: 8,
-          willpower: 6,
-          health: 9
-        },
-        disciplines: ['Auspícios', 'Presença', 'Celeridade']
-      },
-      joinedAt: new Date()
-    }
-  ],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  isPremium: false
-}
-
 // Computed
 const permissions = computed(() => {
-  // Mock permissions (replace with real auth check)
+  if (!campaign.value) {
+    return {
+      isMaster: false,
+      isPlayer: false,
+      canEdit: false,
+      canDelete: false
+    }
+  }
+  
+  const { user } = useAuth()
+  const isMaster = campaign.value.masterId === user.value?.id
+  
   return {
-    isMaster: true, // This would come from auth/campaign check
-    isPlayer: true,
-    canEdit: true,
-    canDelete: false
+    isMaster,
+    isPlayer: !isMaster,
+    canEdit: isMaster,
+    canDelete: isMaster
   }
 })
 
 // Methods
 const fetchCampaign = async () => {
+  console.log('📄 INDEX.VUE: Iniciando fetchCampaign')
   loading.value = true
   error.value = null
   
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    campaign.value = mockCampaign
+    console.log('📄 INDEX.VUE: Carregando campanha no index:', campaignId)
+    
+    // Buscar dados reais da campanha do Supabase
+    const { getCampaignById } = useCampaign()
+    const campaignData = await getCampaignById(campaignId)
+    
+    if (campaignData) {
+      // Mapear dados do Supabase para o formato esperado
+      campaign.value = {
+        id: campaignData.id,
+        name: campaignData.name,
+        description: campaignData.description,
+        masterId: campaignData.master_id,
+        inviteCode: campaignData.invite_code,
+        players: campaignData.campaign_players || [],
+        createdAt: new Date(campaignData.created_at),
+        updatedAt: new Date(campaignData.updated_at),
+        isPremium: campaignData.is_premium || false
+      }
+      
+      console.log('📄 INDEX.VUE: Campanha carregada no index:', campaign.value)
+    }
   } catch (err) {
+    console.error('📄 INDEX.VUE: Campaign fetch error:', err)
     error.value = 'Erro ao carregar dados da campanha'
-    console.error('Campaign fetch error:', err)
   } finally {
     loading.value = false
+    console.log('📄 INDEX.VUE: fetchCampaign finalizado')
   }
 }
 
@@ -282,6 +265,8 @@ const changeMusic = () => {
 
 // Lifecycle
 onMounted(async () => {
+  console.log('📄 INDEX.VUE: Página index montada!')
+  console.log('📄 INDEX.VUE: Campaign ID:', campaignId)
   await fetchCampaign()
 })
 
