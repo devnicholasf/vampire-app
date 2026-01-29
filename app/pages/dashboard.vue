@@ -47,16 +47,30 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8 relative z-10">
-      <!-- Título e botão -->
+      <!-- Título e botões -->
       <div class="flex justify-between items-center mb-8">
         <div>
           <h2 class="text-3xl font-bold text-text-primary mb-2">Minhas Campanhas</h2>
           <p class="text-text-secondary">Gerencie suas campanhas como Mestre ou Jogador</p>
         </div>
-        <BaseButton variant="primary" @click="showCreateModal = true" class="flex items-center gap-2">
-          <span>🎲</span>
-          Nova Campanha
-        </BaseButton>
+        <div class="flex gap-3">
+          <BaseButton 
+            variant="ghost" 
+            @click="navigateToJoin" 
+            class="flex items-center gap-2"
+          >
+            <span>🎫</span>
+            Entrar em Campanha
+          </BaseButton>
+          <BaseButton 
+            variant="primary" 
+            @click="showCreateModal = true" 
+            class="flex items-center gap-2"
+          >
+            <span>🎲</span>
+            Nova Campanha
+          </BaseButton>
+        </div>
       </div>
 
       <!-- Loading -->
@@ -285,37 +299,41 @@
 // Vue imports
 // ============================================
 import { ref, computed, onMounted } from 'vue'
+import { useRouter, navigateTo } from 'nuxt/app'
+import type { Campaign } from '~/types'
 
 // ============================================
 // Imports explícitos dos componentes
 // ============================================
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
+import BaseInput from '~/components/ui/BaseInput.vue'
 import UserProfile from '~/components/ui/UserProfile.vue'
 import NotificationsDropdown from '~/components/ui/NotificationsDropdown.vue'
 import DirectMessages from '~/components/ui/DirectMessages.vue'
 import ToastContainer from '~/components/ui/ToastContainer.vue'
 
-interface Campaign {
-  id: string
-  name: string
-  description: string
-  masterId: string
-  createdAt: Date
-}
+// ============================================
+// Composables
+// ============================================
+const { user, logout } = useAuth()
+const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign } = useCampaign()
+const toast = useToast()
 
-interface CreateCampaignData {
-  name: string
-  description: string
-}
-
+// ============================================
+// Page Meta
+// ============================================
 definePageMeta({
   middleware: []
 })
 
-const { user, logout } = useAuth()
-const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign } = useCampaign()
-const toast = useToast()
+// ============================================
+// Interfaces
+// ============================================
+interface CreateCampaignData {
+  name: string
+  description: string
+}
 
 // Estados para modal de confirmação de delete
 const showDeleteModal = ref(false)
@@ -352,7 +370,7 @@ const formatDate = (date: string | Date) => {
 }
 
 // Calcular tempo decorrido desde a última sessão
-const getLastSessionText = (campaign: Campaign) => {
+const getLastSessionText = (campaign: any) => {
   // TODO: Futuramente, buscar sessões reais da tabela campaign_sessions
   // e mostrar quando foi a última sessão de jogo ao vivo
   // Por enquanto, mostra informações baseadas na criação da campanha
@@ -387,8 +405,13 @@ const getLastSessionText = (campaign: Campaign) => {
   return 'Nenhuma sessão realizada'
 }
 
+// Navegar para página de entrar em campanha
+const navigateToJoin = () => {
+  navigateTo('/join-campaign')
+}
+
 // Ir para campanha
-const goToCampaign = async (campaign: Campaign) => {
+const goToCampaign = async (campaign: any) => {
   console.log('Dashboard: Clique na campanha detectado')
   console.log('Dashboard: Navegando para campanha:', campaign.id)
   
@@ -494,7 +517,7 @@ const handleCreateCampaign = async () => {
 }
 
 // Deletar campanha
-const handleDeleteCampaign = (campaign: Campaign) => {
+const handleDeleteCampaign = (campaign: any) => {
   campaignToDelete.value = campaign
   showDeleteModal.value = true
 }

@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'nuxt/app'
 import type { Campaign } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import ToastContainer from '~/components/ui/ToastContainer.vue'

@@ -290,6 +290,72 @@ export const useCampaign = () => {
     }
   }
 
+  const joinCampaignByInviteCode = async (inviteCode: string, characterName: string) => {
+    if (!user.value) throw new Error('Usuário não autenticado')
+
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('Entrando na campanha com código:', inviteCode, 'como:', characterName)
+
+      // Primeiro, encontrar a campanha
+      const campaign = await findCampaignByInviteCode(inviteCode)
+      
+      // Verificar se já está na campanha
+      const { data: existingPlayer, error: checkError } = await supabase
+        .from('campaign_players')
+        .select('*')
+        .eq('user_id', user.value.id)
+        .eq('campaign_id', campaign.id)
+        .single()
+
+      if (existingPlayer) {
+        throw new Error('Você já faz parte desta campanha')
+      }
+
+      // Entrar na campanha
+      const { data: player, error: joinError } = await supabase
+        .from('campaign_players')
+        .insert({
+          user_id: user.value.id,
+          campaign_id: campaign.id,
+          character_name: characterName,
+          role: 'player',
+          joined_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (joinError) {
+        console.error('Erro ao entrar na campanha:', joinError)
+        throw new Error(`Erro ao entrar na campanha: ${joinError.message}`)
+      }
+
+      console.log('Entrou na campanha com sucesso:', player)
+      
+      // Recarregar campanhas para incluir a nova
+      await loadCampaigns()
+      
+      return {
+        campaign,
+        player: {
+          id: player.user_id,
+          name: player.character_name,
+          role: player.role,
+          joinedAt: new Date(player.joined_at)
+        }
+      }
+
+    } catch (err: any) {
+      console.error('Erro ao entrar na campanha:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   const deleteCampaign = async (campaignId: string) => {
     if (!user.value) throw new Error('Usuário não autenticado')
 
@@ -601,6 +667,7 @@ export const useCampaign = () => {
     deleteCampaign,
     getCampaignById,
     findCampaignByInviteCode,
+    joinCampaignByInviteCode,
 
     // NPC methods
     loadCampaignNPCs,

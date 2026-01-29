@@ -229,7 +229,7 @@ definePageMeta({
 })
 
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'nuxt/app'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import MapViewer from '~/components/campaign/MapViewer.vue'
 

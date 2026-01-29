@@ -1,5 +1,61 @@
 # 📝 CHANGELOG - Vampire RPG
 
+## 🚀 Versão 3.0.0 - Sistema Completo Multi-Usuário
+**Data:** Janeiro 28, 2026
+
+### 🎯 **INTEGRAÇÃO SUPABASE COMPLETA**
+- ✅ **Autenticação Real**: Supabase Auth substituindo mocks
+- ✅ **Banco de Dados**: Tabelas campaigns + campaign_players funcionais
+- ✅ **RLS Policies**: Row Level Security implementado e testado
+- ✅ **Dados Reais**: 100% dos mocks removidos e substituídos
+
+### 🎫 **SISTEMA DE CONVITES INOVADOR**  
+- ✅ **Códigos Únicos**: Geração automática (ex: GELYL0, XMPL8K)
+- ✅ **Página de Entrada**: `/join-campaign` com validação completa
+- ✅ **joinCampaignByInviteCode()**: Função integrada ao useCampaign
+- ✅ **Anti-Duplicata**: Constraint UNIQUE (campaign_id, user_id)
+- ✅ **Botão Dashboard**: "Entrar em Campanha" funcional
+
+### 🧛‍♂️ **SISTEMA MULTI-USUÁRIO FUNCIONANDO**
+- ✅ **Fluxo Testado**: Mestre cria → Jogador entra → Ambos veem
+- ✅ **Permissões**: Diferenciação correta mestre vs jogador  
+- ✅ **Interface**: "Jogadores: X" em tempo real
+- ✅ **Aba Mestre**: Lista real de participantes
+- ✅ **Constraint**: 1 usuário = 1 participação por campanha
+
+### 🔧 **OTIMIZAÇÕES TÉCNICAS**
+- ✅ **Imports Explícitos**: Todos componentes com imports manuais
+- ✅ **BaseButton Reutilizado**: Consistência em toda aplicação
+- ✅ **Navegação Nuxt**: vue-router → navigateTo em todos locais
+- ✅ **Mapeamento Dados**: campaign_players → formato template
+- ✅ **Código Limpo**: Redundâncias removidas, estrutura otimizada
+
+### 🐛 **PROBLEMAS CRÍTICOS RESOLVIDOS**
+- ✅ **RLS Recursion**: Policies otimizadas, sem loops infinitos
+- ✅ **Navigation Conflicts**: Middleware simplificado funcionando  
+- ✅ **Data Mapping**: user_id→id, character_name→name correto
+- ✅ **Toast System**: Notificações profissionais implementadas
+- ✅ **Campaign Loading**: Dados carregam corretamente nas páginas
+
+### 📊 **ESTATÍSTICAS DA SESSÃO**
+- **25+ arquivos** modificados com correções
+- **2 tabelas** Supabase configuradas e funcionais
+- **5 funcionalidades** principais implementadas  
+- **100% mocks** substituídos por dados reais
+- **Sistema completo** testado com múltiplos usuários
+
+### 🎮 **FLUXO VALIDADO**
+```
+Teste Completo Realizado:
+├── Usuário A: Cria conta → Cria campanha FORTALEZA → Código GELYL0
+├── Usuário B: Cria conta → Join campaign → GELYL0 + "Elena Toreador"  
+├── Verificação: Ambos veem campanha no dashboard
+├── Master View: "Jogadores: 2" na interface
+└── Aba Jogadores: Marcus Ventrue + Elena Toreador listados
+```
+
+---
+
 ## 🚀 Versão 2.0.0 - Sistema de Campanhas Implementado
 **Data:** Dezembro 2024
 

@@ -2,7 +2,7 @@
 // Middleware para redirecionamento baseado em role
 // Redireciona automaticamente para dashboard correto
 // ============================================
-import type { RouteLocationNormalized } from 'vue-router'
+import type { RouteLocationNormalized } from '#app'
 
 export default defineNuxtRouteMiddleware(async (to: RouteLocationNormalized) => {
   // Apenas verificar autenticação - não forçar redirecionamentos
