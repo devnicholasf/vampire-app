@@ -3,7 +3,7 @@
 // ============================================
 
 import { createClient } from '@supabase/supabase-js'
-import type { Campaign, NPC, CampaignNote, CampaignSession } from '~/types'
+import type { Campaign, NPC } from '~/types'
 
 export const useCampaign = () => {
   const config = useRuntimeConfig()
@@ -19,8 +19,8 @@ export const useCampaign = () => {
   const campaigns = useState<Campaign[]>('campaigns', () => [])
   const currentCampaign = useState<Campaign | null>('currentCampaign', () => null)
   const campaignNPCs = useState<NPC[]>('campaignNPCs', () => [])
-  const campaignNotes = useState<CampaignNote[]>('campaignNotes', () => [])
-  const campaignSessions = useState<CampaignSession[]>('campaignSessions', () => [])
+  const campaignNotes = useState<any[]>('campaignNotes', () => [])
+  const campaignSessions = useState<any[]>('campaignSessions', () => [])
   const loading = useState<boolean>('campaign.loading', () => false)
   const error = useState<string | null>('campaign.error', () => null)
 
@@ -259,23 +259,21 @@ export const useCampaign = () => {
     try {
       console.log('Buscando campanha por código de convite:', inviteCode)
 
-      const { data: campaign, error: campaignError } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('invite_code', inviteCode.toUpperCase())
-        .single()
+      // Usa RPC function que bypassa RLS para buscar por código de convite
+      const { data: campaigns, error: campaignError } = await supabase
+        .rpc('find_campaign_by_invite_code', { 
+          invite_code_param: inviteCode.toUpperCase() 
+        })
 
       if (campaignError) {
-        if (campaignError.code === 'PGRST116') {
-          throw new Error('Código de convite não encontrado')
-        }
         throw new Error(`Erro ao buscar campanha: ${campaignError.message}`)
       }
 
-      if (!campaign) {
-        throw new Error('Código de convite inválido')
+      if (!campaigns || campaigns.length === 0) {
+        throw new Error('Código de convite não encontrado')
       }
 
+      const campaign = campaigns[0]
       const mappedCampaign = mapSupabaseCampaign(campaign)
       console.log('Campanha encontrada:', mappedCampaign)
       
