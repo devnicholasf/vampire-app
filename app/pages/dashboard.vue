@@ -109,7 +109,7 @@
                 </div>
               </div>
               
-              <!-- Botão deletar (só para mestres) -->
+              <!-- Botão deletar para mestres / sair para jogadores -->
               <button
                 v-if="campaign.masterId === user?.id"
                 @click.stop="handleDeleteCampaign(campaign)"
@@ -117,6 +117,14 @@
                 title="Deletar campanha"
               >
                 🗑️
+              </button>
+              <button
+                v-else
+                @click.stop="handleLeaveCampaign(campaign)"
+                class="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                title="Sair da campanha"
+              >
+                🚪
               </button>
             </div>
           </div>
@@ -291,6 +299,62 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Modal de Confirmação de Saída (Jogador) -->
+    <Teleport to="body">
+      <div
+        v-if="showLeaveModal && campaignToLeave"
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4"
+        @click.self="cancelLeaveCampaign"
+      >
+        <div class="bg-surface border border-yellow-500 rounded-vampire p-8 max-w-md w-full">
+          <!-- Header -->
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">🚪</span>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-text-primary">Sair da Campanha</h3>
+              <p class="text-text-muted text-sm">Você será removido como jogador</p>
+            </div>
+          </div>
+
+          <!-- Conteúdo -->
+          <div class="mb-6">
+            <p class="text-text-secondary mb-4">
+              Você tem certeza que deseja sair da campanha:
+            </p>
+            <div class="bg-surface-dark p-4 rounded-lg border border-border">
+              <h4 class="font-semibold text-text-primary">{{ campaignToLeave.name }}</h4>
+              <p class="text-sm text-text-muted mt-1">{{ campaignToLeave.description }}</p>
+            </div>
+            <p class="text-yellow-400 text-sm mt-4 font-medium">
+              ⚠️ Sua ficha de personagem será mantida, mas você precisará de um novo convite para voltar
+            </p>
+          </div>
+
+          <!-- Botões -->
+          <div class="flex gap-3">
+            <BaseButton
+              variant="ghost"
+              class="flex-1"
+              @click="cancelLeaveCampaign"
+              :disabled="leaveLoading"
+            >
+              Cancelar
+            </BaseButton>
+            <BaseButton
+              variant="danger"
+              class="flex-1"
+              @click="confirmLeaveCampaign"
+              :disabled="leaveLoading"
+            >
+              {{ leaveLoading ? 'Saindo...' : 'Sair da Campanha' }}
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -317,7 +381,7 @@ import ToastContainer from '~/components/ui/ToastContainer.vue'
 // Composables
 // ============================================
 const { user, logout } = useAuth()
-const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign } = useCampaign()
+const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign, removePlayerFromCampaign } = useCampaign()
 const toast = useToast()
 
 // ============================================
@@ -339,6 +403,11 @@ interface CreateCampaignData {
 const showDeleteModal = ref(false)
 const campaignToDelete = ref<Campaign | null>(null)
 const deleteLoading = ref(false)
+
+// Estados para modal de confirmação de saída (jogador)
+const showLeaveModal = ref(false)
+const campaignToLeave = ref<Campaign | null>(null)
+const leaveLoading = ref(false)
 
 // Debug
 onMounted(async () => {
@@ -435,12 +504,12 @@ const goToCampaign = async (campaign: any) => {
 // Criar campanha
 const handleCreateCampaign = async () => {
   if (!newCampaign.value.name.trim()) {
-    toast.warning('Campo obrigatório', 'O nome da campanha é obrigatório')
+    toast.error('Campo obrigatório', 'O nome da campanha é obrigatório')
     return
   }
 
   if (newCampaign.value.name.trim().length < 3) {
-    toast.warning('Nome muito curto', 'O nome deve ter pelo menos 3 caracteres')
+    toast.error('Nome muito curto', 'O nome deve ter pelo menos 3 caracteres')
     return
   }
 
@@ -475,7 +544,7 @@ const handleCreateCampaign = async () => {
     setTimeout(async () => {
       const router = useRouter()
       await router.push(`/campaign/${campaign.id}/master`)
-      toast.info('Bem-vindo!', 'Agora você pode configurar sua campanha como Mestre')
+      toast.success('Bem-vindo!', 'Agora você pode configurar sua campanha como Mestre')
     }, 1500) // Delay para mostrar o toast de sucesso
     
   } catch (error: any) {
@@ -554,6 +623,48 @@ const confirmDeleteCampaign = async () => {
 const cancelDeleteCampaign = () => {
   showDeleteModal.value = false
   campaignToDelete.value = null
+}
+
+// Sair da campanha (jogador)
+const handleLeaveCampaign = (campaign: any) => {
+  campaignToLeave.value = campaign
+  showLeaveModal.value = true
+}
+
+const confirmLeaveCampaign = async () => {
+  if (!campaignToLeave.value || !user.value) return
+
+  leaveLoading.value = true
+  
+  try {
+    await removePlayerFromCampaign(campaignToLeave.value.id, user.value.id)
+    
+    toast.success(
+      'Você saiu da campanha!', 
+      `Você não faz mais parte de "${campaignToLeave.value.name}"`
+    )
+    
+    // Fechar modal e recarregar campanhas
+    showLeaveModal.value = false
+    campaignToLeave.value = null
+    
+    // Recarregar lista de campanhas
+    await loadCampaigns()
+    
+  } catch (error: any) {
+    console.error('Erro ao sair da campanha:', error)
+    toast.error(
+      'Erro ao sair da campanha',
+      error?.message || 'Não foi possível sair da campanha. Tente novamente.'
+    )
+  } finally {
+    leaveLoading.value = false
+  }
+}
+
+const cancelLeaveCampaign = () => {
+  showLeaveModal.value = false
+  campaignToLeave.value = null
 }
 
 // Logout

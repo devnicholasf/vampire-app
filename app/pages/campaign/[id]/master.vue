@@ -299,10 +299,13 @@ onMounted(async () => {
         createdAt: new Date(campaignData.created_at),
         updatedAt: new Date(campaignData.updated_at),
         isPremium: campaignData.is_premium || false
-      }
+      } as any // Usar any para incluir campaign_players do Supabase
+      
+      // Adicionar campaign_players original
+      ;(campaign.value as any).campaign_players = campaignData.campaign_players || []
       
       console.log('🎯 MASTER.VUE: Campanha mapeada:', campaign.value)
-      console.log('🎯 MASTER.VUE: Jogadores encontrados:', campaign.value.players)
+      console.log('🎯 MASTER.VUE: Jogadores encontrados:', (campaign.value as any).campaign_players)
     }
     
     // Mock data initialization para sessões (pode ser substituído depois)

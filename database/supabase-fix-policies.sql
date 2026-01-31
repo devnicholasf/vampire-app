@@ -84,6 +84,17 @@ WITH CHECK (
 CREATE POLICY "campaign_players_update_policy" ON campaign_players
 FOR UPDATE TO authenticated
 USING (
+  user_id = auth.uid()
+  OR
+  campaign_id IN (
+    SELECT id 
+    FROM campaigns 
+    WHERE master_id = auth.uid()
+  )
+)
+WITH CHECK (
+  user_id = auth.uid()
+  OR
   campaign_id IN (
     SELECT id 
     FROM campaigns 

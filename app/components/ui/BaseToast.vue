@@ -2,27 +2,30 @@
   <div 
     v-show="show"
     :class="toastClasses"
-    class="fixed z-50 max-w-sm w-full shadow-lg rounded-lg pointer-events-auto overflow-hidden"
+    class="fixed z-50 max-w-md w-full shadow-2xl rounded-lg pointer-events-auto overflow-hidden transform transition-all duration-300 backdrop-blur-sm"
     role="alert"
   >
-    <div class="p-4">
-      <div class="flex items-start">
+    <div class="p-5">
+      <div class="flex items-start gap-4">
         <div v-if="icon" class="flex-shrink-0">
-          <span class="text-lg">{{ icon }}</span>
+          <div :class="iconBgClasses" class="w-12 h-12 rounded-full flex items-center justify-center">
+            <span class="text-2xl">{{ icon }}</span>
+          </div>
         </div>
         
-        <div class="ml-3 w-0 flex-1">
-          <p v-if="title" class="text-sm font-semibold" :class="titleClasses">
+        <div class="flex-1 pt-1">
+          <p v-if="title" class="text-base font-bold mb-1" :class="titleClasses">
             {{ title }}
           </p>
-          <p class="text-sm" :class="messageClasses">
+          <p class="text-sm leading-relaxed" :class="messageClasses">
             {{ message }}
           </p>
         </div>
 
-        <div v-if="dismissible" class="ml-4 flex-shrink-0 flex">
+        <div v-if="dismissible" class="flex-shrink-0">
           <button
-            class="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            :class="closeButtonClasses"
+            class="p-1.5 rounded-md transition-all duration-200 hover:scale-110"
             @click="dismiss"
           >
             <span class="sr-only">Fechar</span>
@@ -37,7 +40,7 @@
     <!-- Progress bar for auto-dismiss -->
     <div
       v-if="autoDismiss && duration > 0"
-      class="h-1 bg-black bg-opacity-20"
+      class="h-1.5 bg-black bg-opacity-10"
     >
       <div
         class="h-full transition-all ease-linear"
@@ -87,10 +90,10 @@ let progressTimer: NodeJS.Timeout | null = null
 
 const toastClasses = computed(() => {
   const variants = {
-    success: 'bg-green-50 border border-green-200',
-    error: 'bg-red-50 border border-red-200', 
-    warning: 'bg-yellow-50 border border-yellow-200',
-    info: 'bg-surface-card border border-border-primary'
+    success: 'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-400',
+    error: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400', 
+    warning: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400',
+    info: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400'
   }
 
   const positions = {
@@ -108,32 +111,52 @@ const toastClasses = computed(() => {
   ]
 })
 
+const iconBgClasses = computed(() => {
+  const variants = {
+    success: 'bg-green-500 bg-opacity-20',
+    error: 'bg-red-500 bg-opacity-20',
+    warning: 'bg-red-500 bg-opacity-20',
+    info: 'bg-red-500 bg-opacity-20'
+  }
+  return variants[props.variant]
+})
+
+const closeButtonClasses = computed(() => {
+  const variants = {
+    success: 'text-green-600 hover:bg-green-200',
+    error: 'text-red-600 hover:bg-red-200',
+    warning: 'text-red-600 hover:bg-red-200',
+    info: 'text-red-600 hover:bg-red-200'
+  }
+  return variants[props.variant]
+})
+
 const titleClasses = computed(() => {
   const variants = {
-    success: 'text-green-800',
-    error: 'text-red-800',
-    warning: 'text-yellow-800', 
-    info: 'text-text-primary'
+    success: 'text-green-900',
+    error: 'text-red-900',
+    warning: 'text-red-900', 
+    info: 'text-red-900'
   }
   return variants[props.variant]
 })
 
 const messageClasses = computed(() => {
   const variants = {
-    success: 'text-green-700',
-    error: 'text-red-700',
-    warning: 'text-yellow-700',
-    info: 'text-text-secondary'
+    success: 'text-green-800',
+    error: 'text-red-800',
+    warning: 'text-red-800',
+    info: 'text-red-800'
   }
   return variants[props.variant]
 })
 
 const progressBarClasses = computed(() => {
   const variants = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-brand-primary'
+    success: 'bg-green-600',
+    error: 'bg-red-600',
+    warning: 'bg-red-600',
+    info: 'bg-red-600'
   }
   return variants[props.variant]
 })

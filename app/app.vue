@@ -1,11 +1,12 @@
 <template>
   <div class="min-h-screen bg-gradient-atmospheric text-text-primary">
     <NuxtPage />
+    <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
-// App principal - apenas roteamento
+import ToastContainer from '~/components/ui/ToastContainer.vue'
 </script>
 
 <style>

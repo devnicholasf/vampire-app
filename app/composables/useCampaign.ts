@@ -211,9 +211,7 @@ export const useCampaign = () => {
     error.value = null
 
     try {
-      console.log('Buscando campanha no Supabase:', campaignId)
-
-      // Buscar campanha COM campaign_players (RLS agora está funcionando)
+      // Buscar campanha COM campaign_players E seus sheets
       let { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
         .select(`
@@ -221,14 +219,13 @@ export const useCampaign = () => {
           campaign_players(
             user_id,
             character_name,
+            sheet,
             role,
             joined_at
           )
         `)
         .eq('id', campaignId)
         .single()
-
-      console.log('Campaign data from Supabase:', campaign)
 
       if (campaignError) {
         console.error('Erro do Supabase:', campaignError)
@@ -239,7 +236,6 @@ export const useCampaign = () => {
         throw new Error('Campanha não encontrada')
       }
 
-      console.log('Campanha encontrada:', campaign)
       currentCampaign.value = campaign
       return campaign
 
@@ -382,6 +378,43 @@ export const useCampaign = () => {
 
     } catch (err: any) {
       console.error('Erro completo ao deletar campanha:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const removePlayerFromCampaign = async (campaignId: string, userId: string) => {
+    if (!user.value) throw new Error('Usuário não autenticado')
+
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('Removendo jogador da campanha:', { campaignId, userId })
+
+      // Deletar o registro do jogador na tabela campaign_players
+      const { error: deleteError } = await supabase
+        .from('campaign_players')
+        .delete()
+        .eq('campaign_id', campaignId)
+        .eq('user_id', userId)
+
+      if (deleteError) {
+        console.error('Erro do Supabase ao remover jogador:', deleteError)
+        throw new Error(`Erro ao remover jogador: ${deleteError.message}`)
+      }
+
+      console.log('Jogador removido com sucesso')
+      
+      // Recarregar a campanha para atualizar a lista de jogadores
+      await getCampaignById(campaignId)
+      
+      return true
+
+    } catch (err: any) {
+      console.error('Erro ao remover jogador:', err)
       error.value = err.message
       throw err
     } finally {
@@ -641,6 +674,92 @@ export const useCampaign = () => {
     return user.value && campaign.players?.some((p: any) => p.user_id === user.value!.id)
   }
 
+  // ============================================
+  // Player Sheet Management
+  // ============================================
+
+  const savePlayerSheet = async (campaignId: string, userId: string, sheetData: any) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data: player, error: updateError } = await supabase
+        .from('campaign_players')
+        .update({
+          sheet: sheetData,
+          character_name: sheetData.name || null
+        })
+        .eq('campaign_id', campaignId)
+        .eq('user_id', userId)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Erro ao salvar ficha:', updateError)
+        throw new Error(`Erro ao salvar ficha: ${updateError.message}`)
+      }
+
+      return player
+
+    } catch (err: any) {
+      console.error('Erro ao salvar ficha do jogador:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const loadPlayerSheet = async (campaignId: string, userId: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      console.log('Carregando ficha do jogador:', { campaignId, userId })
+
+      const { data: player, error: loadError } = await supabase
+        .from('campaign_players')
+        .select('sheet, character_name')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', userId)
+        .single()
+
+      if (loadError) {
+        console.error('Erro ao carregar ficha:', loadError)
+        throw new Error(`Erro ao carregar ficha: ${loadError.message}`)
+      }
+
+      console.log('Ficha carregada:', player)
+      return player
+
+    } catch (err: any) {
+      console.error('Erro ao carregar ficha do jogador:', err)
+      error.value = err.message
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const subscribeToPlayerSheets = (campaignId: string) => {
+    return supabase
+      .channel(`campaign_players:campaign_id=eq.${campaignId}`)
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'campaign_players',
+          filter: `campaign_id=eq.${campaignId}`
+        },
+        (payload) => {
+          console.log('Player sheet changed:', payload)
+          // Pode disparar evento para atualizar UI em tempo real
+        }
+      )
+      .subscribe()
+  }
+
   // Limpar dados quando sair
   const clearCampaignData = () => {
     currentCampaign.value = null
@@ -666,12 +785,18 @@ export const useCampaign = () => {
     getCampaignById,
     findCampaignByInviteCode,
     joinCampaignByInviteCode,
+    removePlayerFromCampaign,
 
     // NPC methods
     loadCampaignNPCs,
     createNPC,
     updateNPC,
     deleteNPC,
+
+    // Player Sheet methods
+    savePlayerSheet,
+    loadPlayerSheet,
+    subscribeToPlayerSheets,
 
     // Real-time methods
     subscribeToNPCs,

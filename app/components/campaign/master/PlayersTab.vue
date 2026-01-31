@@ -2,27 +2,24 @@
   <div class="space-y-6">
     <div class="flex justify-between items-center">
       <h3 class="text-lg font-semibold">Gerenciar Jogadores</h3>
-      <BaseButton variant="ghost" size="sm" @click="refreshStats">
-        🔄 Atualizar
-      </BaseButton>
     </div>
     
     <div class="grid gap-4">
       <div 
         v-for="player in players" 
-        :key="player.id"
+        :key="player.user_id"
         class="bg-surface-card p-4 rounded-lg border border-primary"
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="font-medium text-text-primary">{{ player.name }}</p>
-            <p class="text-text-muted text-sm">{{ player.email }}</p>
+            <p class="font-medium text-text-primary">{{ player.character_name || 'Sem nome' }}</p>
+            <p class="text-text-muted text-sm">{{ player.role || 'player' }}</p>
           </div>
           <div class="flex space-x-2">
-            <BaseButton variant="ghost" size="sm">
+            <BaseButton variant="ghost" size="sm" @click="viewPlayerSheet(player)">
               📊 Ver Ficha
             </BaseButton>
-            <BaseButton variant="ghost" size="sm" @click="kickPlayer(player.id)">
+            <BaseButton variant="ghost" size="sm" @click="kickPlayer(player.user_id)">
               ❌ Remover
             </BaseButton>
           </div>
@@ -75,9 +72,18 @@
     <BaseToast
       v-if="showToast"
       :message="toastMessage"
-      :type="toastType"
-      @close="hideToast"
+      :variant="toastType"
+      @dismiss="hideToast"
       class="fixed top-4 right-4 z-[10000]"
+    />
+
+    <!-- Player Sheet Modal -->
+    <PlayerSheet
+      v-if="viewingPlayerSheet"
+      :player="viewingPlayerSheet"
+      :canEdit="false"
+      @close="closePlayerSheet"
+      @save="savePlayerSheet"
     />
   </div>
 </template>
@@ -87,6 +93,7 @@ import { ref, computed } from 'vue'
 import type { Campaign } from '~/types'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
+import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
 
 // Props
 interface Props {
@@ -96,8 +103,12 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Use real players from campaign data passed as prop
-const players = computed(() => props.campaign?.players || [])
+// Use real players from campaign_players
+const players = computed(() => {
+  console.log('Campaign data:', props.campaign)
+  console.log('Campaign players:', props.campaign?.campaign_players)
+  return props.campaign?.campaign_players || []
+})
 
 const inviteEmail = ref('')
 
@@ -110,23 +121,59 @@ const showToast = ref(false)
 const showKickModal = ref(false)
 const playerToKick = ref<{ id: string; name: string } | null>(null)
 
+// Player sheet modal state
+const viewingPlayerSheet = ref<any>(null)
+
 // Methods
-const refreshStats = () => {
-  console.log('Atualizando estatísticas dos jogadores...')
+const viewPlayerSheet = (player: any) => {
+  viewingPlayerSheet.value = player
+}
+
+const closePlayerSheet = () => {
+  viewingPlayerSheet.value = null
+}
+
+const savePlayerSheet = async (playerData: any) => {
+  try {
+    const { savePlayerSheet: saveToDB } = useCampaign()
+    
+    console.log('Salvando ficha do jogador (Mestre):', playerData)
+    
+    // Salvar no Supabase
+    await saveToDB(props.campaignId, playerData.user_id, playerData.sheet)
+    
+    showToastMessage('Ficha do jogador atualizada!', 'success')
+  } catch (error: any) {
+    console.error('Erro ao salvar ficha:', error)
+    showToastMessage('Erro ao salvar ficha: ' + error.message, 'error')
+  }
+  closePlayerSheet()
 }
 
 const kickPlayer = (playerId: string) => {
-  const player = players.value.find(p => p.id === playerId)
+  const player = players.value.find(p => p.user_id === playerId)
   if (player) {
-    playerToKick.value = { id: playerId, name: player.name }
+    playerToKick.value = { id: playerId, name: player.character_name || player.name || 'Jogador' }
     showKickModal.value = true
   }
 }
 
-const confirmKickPlayer = () => {
+const confirmKickPlayer = async () => {
   if (playerToKick.value) {
-    players.value = players.value.filter(p => p.id !== playerToKick.value!.id)
-    showToastMessage(`${playerToKick.value.name} foi removido da campanha`, 'success')
+    try {
+      const { removePlayerFromCampaign, getCampaignById } = useCampaign()
+      
+      // Remover jogador
+      await removePlayerFromCampaign(props.campaignId, playerToKick.value.id)
+      
+      // Recarregar campanha para atualizar lista de jogadores
+      await getCampaignById(props.campaignId)
+      
+      showToastMessage(`${playerToKick.value.name} foi removido da campanha`, 'success')
+    } catch (error: any) {
+      console.error('Erro ao remover jogador:', error)
+      showToastMessage(`Erro ao remover jogador: ${error.message}`, 'error')
+    }
   }
   closeKickModal()
 }

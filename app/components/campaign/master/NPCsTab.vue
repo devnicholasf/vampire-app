@@ -277,7 +277,7 @@ const saveNPCSheet = async (npcData: any) => {
 
 const addToGame = async (npc: NPC) => {
   if (!isGameLive.value) {
-    toast.warning('Jogo inativo', 'Nenhum jogo está ativo no momento')
+    toast.error('Jogo inativo', 'Nenhum jogo está ativo no momento')
     return
   }
   
