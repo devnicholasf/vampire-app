@@ -1,10 +1,18 @@
 <template>
-  <div 
-    v-show="show"
-    :class="toastClasses"
-    class="fixed z-50 max-w-md w-full shadow-2xl rounded-lg pointer-events-auto overflow-hidden transform transition-all duration-300 backdrop-blur-sm"
-    role="alert"
+  <Transition
+    enter-active-class="transition-all duration-300 ease-out"
+    enter-from-class="translate-x-full opacity-0"
+    enter-to-class="translate-x-0 opacity-100"
+    leave-active-class="transition-all duration-300 ease-in"
+    leave-from-class="translate-x-0 opacity-100"
+    leave-to-class="translate-x-full opacity-0"
   >
+    <div 
+      v-if="show"
+      :class="toastClasses"
+      class="relative max-w-md w-full shadow-2xl rounded-lg pointer-events-auto overflow-hidden backdrop-blur-sm"
+      role="alert"
+    >
     <div class="p-5">
       <div class="flex items-start gap-4">
         <div v-if="icon" class="flex-shrink-0">
@@ -43,19 +51,20 @@
       class="h-1.5 bg-black bg-opacity-10"
     >
       <div
-        class="h-full transition-all ease-linear"
+        :key="animationKey"
+        class="h-full progress-bar-animated"
         :class="progressBarClasses"
-        :style="progressBarStyle"
       ></div>
     </div>
   </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
 // ============================================
 // BaseToast - Sistema de notificações/toasts
 // ============================================
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
 interface Props {
   message: string
@@ -76,7 +85,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   variant: 'info',
   position: 'top-right',
-  duration: 5000,
+  duration: 4000,
   dismissible: true,
   autoDismiss: true,
   show: true
@@ -84,9 +93,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const progress = ref(100)
+const animationKey = ref(0)
 let timer: NodeJS.Timeout | null = null
-let progressTimer: NodeJS.Timeout | null = null
 
 const toastClasses = computed(() => {
   const variants = {
@@ -96,19 +104,7 @@ const toastClasses = computed(() => {
     info: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400'
   }
 
-  const positions = {
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-center': 'top-4 left-1/2 transform -translate-x-1/2',
-    'bottom-center': 'bottom-4 left-1/2 transform -translate-x-1/2'
-  }
-
-  return [
-    variants[props.variant],
-    positions[props.position]
-  ]
+  return variants[props.variant]
 })
 
 const iconBgClasses = computed(() => {
@@ -161,10 +157,6 @@ const progressBarClasses = computed(() => {
   return variants[props.variant]
 })
 
-const progressBarStyle = computed(() => ({
-  width: `${progress.value}%`
-}))
-
 const icon = computed(() => {
   const icons = {
     success: '✅',
@@ -186,35 +178,29 @@ const clearTimers = () => {
     clearTimeout(timer)
     timer = null
   }
-  if (progressTimer) {
-    clearInterval(progressTimer)
-    progressTimer = null
-  }
 }
 
-const startAutoDismiss = () => {
+const startAutoDismiss = async () => {
   if (!props.autoDismiss || props.duration <= 0) return
+  
+  // Incrementar key para forçar re-render da barra de progresso
+  animationKey.value++
 
-  // Timer principal para remover
+  // Timer principal para remover o toast
   timer = setTimeout(dismiss, props.duration)
-
-  // Timer para atualizar barra de progresso
-  const interval = 50 // Atualiza a cada 50ms
-  const steps = props.duration / interval
-  const decrement = 100 / steps
-
-  progressTimer = setInterval(() => {
-    progress.value -= decrement
-    if (progress.value <= 0) {
-      progress.value = 0
-      clearInterval(progressTimer!)
-    }
-  }, interval)
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (props.show) {
-    startAutoDismiss()
+    await startAutoDismiss()
+  }
+})
+
+// Observar mudanças no show para reiniciar timer
+watch(() => props.show, async (newVal) => {
+  clearTimers()
+  if (newVal) {
+    await startAutoDismiss()
   }
 })
 
@@ -224,22 +210,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Animações de entrada/saída */
-.toast-enter-active {
-  transition: all 0.3s ease-out;
+.progress-bar-animated {
+  width: 100%;
+  animation: toast-progress v-bind('`${duration}ms`') linear forwards;
 }
 
-.toast-leave-active {
-  transition: all 0.3s ease-in;
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%);
+@keyframes toast-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 </style>

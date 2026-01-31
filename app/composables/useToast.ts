@@ -18,7 +18,7 @@ export const useToast = () => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     const newToast: Toast = {
       id,
-      duration: 5000,
+      duration: 4000,
       persistent: false,
       ...toast
     }
@@ -44,7 +44,7 @@ export const useToast = () => {
   }
 
   // Métodos de conveniência
-  const success = (title: string, message?: string, duration: number = 5000) => {
+  const success = (title: string, message?: string, duration: number = 4000) => {
     return addToast({ type: 'success', title, message, duration, persistent: false })
   }
 
@@ -54,15 +54,15 @@ export const useToast = () => {
       title, 
       message, 
       persistent,
-      duration: persistent ? undefined : (duration || 8000) // Erros ficam mais tempo por padrão
+      duration: persistent ? undefined : (duration || 4000)
     })
   }
 
-  const warning = (title: string, message?: string, duration: number = 6000) => {
+  const warning = (title: string, message?: string, duration: number = 4000) => {
     return addToast({ type: 'warning', title, message, duration, persistent: false })
   }
 
-  const info = (title: string, message?: string, duration: number = 5000) => {
+  const info = (title: string, message?: string, duration: number = 4000) => {
     return addToast({ type: 'info', title, message, duration, persistent: false })
   }
 

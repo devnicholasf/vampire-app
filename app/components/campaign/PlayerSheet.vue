@@ -448,14 +448,7 @@
         </div>
       </form>
 
-      <!-- Toast Notification -->
-      <BaseToast
-        v-if="showToast"
-        :message="toastMessage"
-        :variant="toastType"
-        @dismiss="hideToast"
-        class="fixed top-4 right-4 z-[10000]"
-      />
+
     </div>
 
     <!-- Confirmation Modal -->
@@ -524,7 +517,6 @@
 import { ref } from 'vue'
 import type { Ref } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
-import BaseToast from '~/components/ui/BaseToast.vue'
 
 // Props
 interface Props {
@@ -542,11 +534,6 @@ const emit = defineEmits<{
 
 // Reactive data
 const hasUnsavedChanges = ref(false)
-
-// Toast states
-const toastMessage = ref('')
-const toastType = ref<'success' | 'error' | 'warning' | 'info'>('info')
-const showToast = ref(false)
 
 // Confirmation modal
 const showConfirmModal = ref(false)
@@ -711,19 +698,16 @@ const toggleHealthLevel = (index: number) => {
 
 const validateRequiredFields = (): boolean => {
   if (!sheetData.value.name || !sheetData.value.name.trim()) {
-    showToastMessage('❌ Nome do personagem é obrigatório!', 'error')
+    // Validação falhou - usuário verá campo vazio
     return false
   }
   if (!sheetData.value.concept || !sheetData.value.concept.trim()) {
-    showToastMessage('❌ Conceito do personagem é obrigatório!', 'error')
     return false
   }
   if (!sheetData.value.clan || !sheetData.value.clan.trim()) {
-    showToastMessage('❌ Clã do personagem é obrigatório!', 'error')
     return false
   }
   if (!sheetData.value.generation || sheetData.value.generation < 3 || sheetData.value.generation > 15) {
-    showToastMessage('❌ Geração deve estar entre 3 e 15!', 'error')
     return false
   }
   return true
@@ -759,7 +743,7 @@ const confirmSave = () => {
     // para que o toast permaneça visível mesmo após o modal fechar
   } catch (error) {
     console.error('Erro ao salvar:', error)
-    showToastMessage('❌ Erro ao salvar a ficha. Tente novamente.', 'error')
+    // Erro será tratado pelo componente pai
   }
 }
 
@@ -794,19 +778,5 @@ const confirmClose = () => {
 
 const cancelClose = () => {
   showConfirmModal.value = false
-}
-
-const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
-  toastMessage.value = message
-  toastType.value = type
-  showToast.value = true
-  
-  setTimeout(() => {
-    showToast.value = false
-  }, 5000)
-}
-
-const hideToast = () => {
-  showToast.value = false
 }
 </script>

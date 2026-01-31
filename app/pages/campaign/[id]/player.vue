@@ -48,6 +48,15 @@
       @save="saveCharacterSheet"
     />
 
+    <!-- Toast Notification -->
+    <BaseToast
+      :message="toastMessage"
+      :variant="toastVariant"
+      :show="showToast"
+      @dismiss="hideToast"
+      class="fixed top-4 right-4 z-[10000]"
+    />
+
     <main class="container mx-auto px-4 py-8 relative z-10">
       <div v-if="loading" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
@@ -340,6 +349,7 @@ import { ref, onMounted, computed } from 'vue'
 // ============================================
 import BaseButton from '~/components/ui/BaseButton.vue'
 import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 
 // ============================================
 // Types
@@ -404,6 +414,11 @@ const otherPlayers = ref<Player[]>([])
 const sessionNotes = ref<SessionNote[]>([])
 const showCharacterSheet = ref(false)
 const sheetKey = ref(0) // Key para forçar recriação do componente
+
+// Toast states
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastVariant = ref<'success' | 'error' | 'warning' | 'info'>('success')
 
 // ============================================
 // Computed
@@ -520,8 +535,15 @@ const saveCharacterSheet = async (updatedPlayer: any) => {
     // Fechar o modal imediatamente
     showCharacterSheet.value = false
     
-    // Mostrar toast após fechar
-    toast.success('Ficha salva com sucesso!')
+    // Mostrar toast com barra de progresso
+    toastMessage.value = 'Ficha salva com sucesso!'
+    toastVariant.value = 'success'
+    showToast.value = true
+    
+    // Auto-esconder após 4 segundos
+    setTimeout(() => {
+      showToast.value = false
+    }, 4000)
     
     // Recarregar dados do banco em background
     await loadCampaignData()
@@ -531,7 +553,13 @@ const saveCharacterSheet = async (updatedPlayer: any) => {
     
   } catch (error: any) {
     console.error('Erro ao salvar ficha:', error)
-    toast.error('Erro ao salvar ficha: ' + error.message)
+    toastMessage.value = 'Erro ao salvar ficha: ' + error.message
+    toastVariant.value = 'error'
+    showToast.value = true
+    
+    setTimeout(() => {
+      showToast.value = false
+    }, 4000)
   }
 }
 
@@ -542,6 +570,10 @@ const createCharacter = () => {
 
 const editCharacter = () => {
   openCharacterSheet()
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 
 const viewRules = () => {
