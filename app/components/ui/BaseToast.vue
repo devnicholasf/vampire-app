@@ -10,7 +10,7 @@
     <div 
       v-if="show"
       :class="toastClasses"
-      class="relative max-w-md w-full shadow-2xl rounded-lg pointer-events-auto overflow-hidden backdrop-blur-sm"
+      class="max-w-md w-full shadow-2xl rounded-lg pointer-events-auto overflow-hidden backdrop-blur-sm"
       role="alert"
     >
     <div class="p-5">
