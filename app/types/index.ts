@@ -175,6 +175,29 @@ export interface CharacterSheet {
   sect: string
   haven: string
   player: string
+  avatar?: string // Avatar base64
+  
+  // Campos da ficha oficial V5
+  resonance?: string // Ressonância
+  chronicleTenets?: string // Princípios da Crônica
+  touchstonesConvictions?: string // Pilares & Convicções  
+  clanBane?: string // Perdição do Clã
+  advantages?: Array<{ name: string; level: number }> // Vantagens & Defeitos
+  bloodPotency?: number // Potência de Sangue (0-10)
+  bloodSurge?: string // Surto de Sangue
+  powerBonus?: string // Bônus de Poder
+  feedingPenalty?: string // Penalidade de Alimentação
+  baneSeverity?: string // Gravidade da Perdição
+  
+  // Informações pessoais
+  trueAge?: string // Idade Verdadeira
+  apparentAge?: string // Idade Aparente
+  dateOfBirth?: string // Data de Nascimento
+  dateOfDeath?: string // Data de Morte (abraço)
+  appearance?: string // Aparência (descrição física)
+  distinguishingFeatures?: string // Traços Distintivos
+  history?: string // História completa
+  
   attributes: {
     physical: { strength: number; dexterity: number; stamina: number }
     social: { charisma: number; manipulation: number; appearance: number }
@@ -189,6 +212,12 @@ export interface CharacterSheet {
   virtues: { conscience: number; selfControl: number; courage: number }
   humanity: number
   willpower: number
+  vitality?: number // Vitalidade (V5)
+  hunger?: number // Fome atual (1-5)
+  conditions?: string[] // Condições narrativas ativas
+  xpTotal?: number // Experiência Total
+  xpAvailable?: number // XP disponível
+  xpSpent?: number // XP gasto
   healthLevels: boolean[]
   notes: string
 }

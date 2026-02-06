@@ -31,7 +31,7 @@
       <form @submit.prevent="saveSheet" class="space-y-4 sm:space-y-6">
         <!-- Header da Ficha -->
         <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             <div>
               <label class="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">Nome <span class="text-red-500">*</span></label>
               <input
@@ -67,7 +67,7 @@
             </div>
           </div>
           
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-3 sm:mt-4 md:mt-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mt-3 sm:mt-4 md:mt-6">
             <div>
               <label class="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">Geração <span class="text-red-500">*</span></label>
               <input
@@ -99,15 +99,6 @@
               <input
                 v-model="sheetData.haven"
                 placeholder="Local do refúgio"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-            </div>
-            <div>
-              <label class="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">Jogador</label>
-              <input
-                v-model="sheetData.player"
-                placeholder="Seu nome"
                 :disabled="!canEdit"
                 class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
               >
@@ -283,128 +274,308 @@
           </div>
         </div>
 
-        <!-- Disciplinas e Vantagens -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-          <!-- Disciplinas -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Disciplinas</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
-              <div v-for="(discipline, index) in sheetData.disciplines" :key="index" class="flex items-center space-x-2 sm:space-x-3">
-                <input
-                  v-model="discipline.name"
-                  placeholder="Nome da Disciplina"
-                  :disabled="!canEdit"
-                  class="flex-1 px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                <div class="flex space-x-0.5 sm:space-x-1">
-                  <button
-                    v-for="n in 5"
-                    :key="n"
-                    type="button"
-                    @click="setDisciplineValue(index, n)"
-                    :class="[
-                      'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
-                      n <= discipline.level
-                        ? 'bg-red-600 border-red-600'
-                        : 'border-red-600 hover:bg-red-600 hover:bg-opacity-30'
-                    ]"
-                  >
-                    <span class="sr-only">{{ n }}</span>
-                  </button>
-                </div>
-                <BaseButton
-                  v-if="canEdit"
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  @click="removeDiscipline(index)"
-                  class="text-red-400 !p-1"
-                >
-                  🗑️
-                </BaseButton>
-              </div>
-              <BaseButton
-                v-if="canEdit"
-                variant="outline"
-                size="sm"
-                type="button"
-                @click="addDiscipline"
-                class="w-full"
-              >
-                + Disciplina
-              </BaseButton>
-            </div>
-          </div>
-
-          <!-- Virtudes e Humanidade -->
-          <div class="space-y-3 sm:space-y-4 md:space-y-6">
-            <!-- Virtudes -->
+        <!-- Campos com Bolinhas: Grid 2 colunas -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:items-start">
+          <div class="space-y-3 sm:space-y-4 md:space-y-6 flex flex-col">
+            <!-- Disciplinas -->
             <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">✨ Virtudes</h3>
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Disciplinas</h3>
               <div class="space-y-2 sm:space-y-3 md:space-y-4">
-                <div v-for="virtue in virtues" :key="virtue.key" class="flex justify-between items-center">
-                  <label class="text-xs sm:text-sm font-medium text-text-primary">{{ virtue.name }}</label>
+                <div v-for="(discipline, index) in sheetData.disciplines" :key="index" class="flex items-center space-x-2 sm:space-x-3">
+                  <select
+                    v-model="discipline.name"
+                    :disabled="!canEdit"
+                    @change="hasUnsavedChanges = true"
+                    class="flex-1 px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Selecione uma disciplina</option>
+                    <option v-for="disc in vampireDisciplines" :key="disc" :value="disc">{{ disc }}</option>
+                  </select>
                   <div class="flex space-x-0.5 sm:space-x-1">
                     <button
                       v-for="n in 5"
                       :key="n"
                       type="button"
-                      @click="setVirtueValue(virtue.key, n)"
+                      @click="setDisciplineValue(index, n)"
+                      :disabled="!canEdit"
                       :class="[
                         'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
-                        n <= (sheetData.virtues as any)[virtue.key]
-                          ? 'bg-yellow-500 border-yellow-500'
-                          : 'border-yellow-500 hover:bg-yellow-500 hover:bg-opacity-30'
+                        n <= discipline.level
+                          ? 'bg-red-600 border-red-600'
+                          : 'border-red-600 hover:bg-red-600 hover:bg-opacity-30'
                       ]"
                     >
                       <span class="sr-only">{{ n }}</span>
                     </button>
                   </div>
+                  <button
+                    v-if="canEdit"
+                    type="button"
+                    @click="removeDiscipline(index)"
+                    class="p-1 text-red-400 hover:text-red-300"
+                  >
+                    <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
+                      <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </button>
                 </div>
+                <BaseButton
+                  v-if="canEdit"
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  @click="addDiscipline"
+                  class="w-full"
+                >
+                  + Disciplina
+                </BaseButton>
               </div>
             </div>
 
-            <!-- Humanidade & Força de Vontade -->
+            <!-- Vantagens & Defeitos -->
             <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">❤️ Humanidade & Vontade</h3>
-              <div class="space-y-2 sm:space-y-3 md:space-y-4">
-                <div class="flex justify-between items-center">
-                  <label class="text-xs sm:text-sm font-medium text-text-primary">Humanidade</label>
-                  <div class="flex space-x-0.5 sm:space-x-1">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⭐ Vantagens & Defeitos</h3>
+              <div class="space-y-2">
+                <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="flex items-center gap-2">
+                  <input
+                    v-model="adv.name"
+                    type="text"
+                    placeholder="Nome da vantagem/defeito"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="flex-1 px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                  <div class="flex gap-1">
                     <button
-                      v-for="n in 10"
-                      :key="n"
+                      v-for="level in 5"
+                      :key="level"
                       type="button"
-                      @click="sheetData.humanity = n; hasUnsavedChanges = true"
+                      @click="setAdvantageLevel(Number(idx), level)"
+                      :disabled="!canEdit"
                       :class="[
-                        'w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full border-2 transition-colors',
-                        n <= sheetData.humanity
-                          ? 'bg-red-500 border-red-500'
-                          : 'border-red-500 hover:bg-red-500 hover:bg-opacity-30'
+                        'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
+                        adv.level >= level
+                          ? 'bg-accent border-accent'
+                          : 'border-primary hover:bg-accent hover:bg-opacity-30'
                       ]"
                     >
-                      <span class="sr-only">{{ n }}</span>
+                      <span class="sr-only">Nível {{ level }}</span>
                     </button>
                   </div>
+                  <button
+                    v-if="canEdit && Number(idx) > 0"
+                    type="button"
+                    @click="removeAdvantage(Number(idx))"
+                    class="p-1 text-red-400 hover:text-red-300"
+                  >
+                    <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
+                      <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </button>
                 </div>
-                <div class="flex justify-between items-center">
-                  <label class="text-xs sm:text-sm font-medium text-text-primary">Força de Vontade</label>
-                  <div class="flex space-x-0.5 sm:space-x-1">
-                    <button
-                      v-for="n in 10"
-                      :key="n"
-                      type="button"
-                      @click="sheetData.willpower = n; hasUnsavedChanges = true"
-                      :class="[
-                        'w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full border-2 transition-colors',
-                        n <= sheetData.willpower
-                          ? 'bg-blue-500 border-blue-500'
-                          : 'border-blue-500 hover:bg-blue-500 hover:bg-opacity-30'
-                      ]"
-                    >
-                      <span class="sr-only">{{ n }}</span>
-                    </button>
-                  </div>
+                <BaseButton
+                  v-if="canEdit && sheetData.advantages.length < 10"
+                  variant="ghost"
+                  @click="addAdvantage"
+                  class="w-full text-sm mt-2"
+                >
+                  + Adicionar Vantagem/Defeito
+                </BaseButton>
+              </div>
+            </div>
+
+            <!-- Fome -->
+            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Fome</h3>
+              <div class="flex gap-1">
+                <button
+                  v-for="level in 5"
+                  :key="level"
+                  type="button"
+                  @click="sheetData.hunger = level; hasUnsavedChanges = true"
+                  :disabled="!canEdit"
+                  :class="[
+                    'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
+                    (sheetData.hunger || 0) >= level
+                      ? 'bg-red-600 border-red-600'
+                      : 'border-red-600 hover:bg-red-600 hover:bg-opacity-30'
+                  ]"
+                >
+                  <span class="sr-only">Fome {{ level }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col">
+            <!-- Potência de Sangue -->
+            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary h-full">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Potência de Sangue</h3>
+              
+              <!-- Nível de Potência -->
+              <div class="mb-4">
+                <label class="block text-xs sm:text-sm text-text-muted mb-1">Nível de Potência (0-10)</label>
+                <div class="flex gap-1 flex-wrap">
+                  <button
+                    v-for="level in 11"
+                    :key="level - 1"
+                    type="button"
+                    @click="setBloodPotency(level - 1)"
+                    :disabled="!canEdit"
+                    :class="[
+                      'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
+                      sheetData.bloodPotency >= level - 1
+                        ? 'bg-red-600 border-red-600'
+                        : 'border-red-600 hover:bg-red-600 hover:bg-opacity-30'
+                    ]"
+                  >
+                    <span class="sr-only">{{ level - 1 }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Mecânicas de Potência -->
+              <div class="space-y-2 sm:space-y-3 md:space-y-4">
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Surto de Sangue</label>
+                  <input
+                    v-model="sheetData.bloodSurge"
+                    type="text"
+                    placeholder="+2"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Bônus de Poder</label>
+                  <input
+                    v-model="sheetData.powerBonus"
+                    type="text"
+                    placeholder="0"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Penalidade de Alimentação</label>
+                  <input
+                    v-model="sheetData.feedingPenalty"
+                    type="text"
+                    placeholder="Sem Penalidade"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Gravidade da Perdição</label>
+                  <input
+                    v-model="sheetData.baneSeverity"
+                    type="text"
+                    placeholder="0"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Virtudes e Humanidade -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+          <!-- Virtudes -->
+          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">✨ Virtudes</h3>
+            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+              <div v-for="virtue in virtues" :key="virtue.key" class="flex justify-between items-center">
+                <label class="text-xs sm:text-sm font-medium text-text-primary">{{ virtue.name }}</label>
+                <div class="flex space-x-0.5 sm:space-x-1">
+                  <button
+                    v-for="n in 5"
+                    :key="n"
+                    type="button"
+                    @click="setVirtueValue(virtue.key, n)"
+                    :disabled="!canEdit"
+                    :class="[
+                      'w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full border-2 transition-colors',
+                      n <= (sheetData.virtues as any)[virtue.key]
+                        ? 'bg-yellow-500 border-yellow-500'
+                        : 'border-yellow-500 hover:bg-yellow-500 hover:bg-opacity-30'
+                    ]"
+                  >
+                    <span class="sr-only">{{ n }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Humanidade, Vontade & Vitalidade -->
+          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">❤️ Humanidade, Vontade & Vitalidade</h3>
+            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+              <div class="flex justify-between items-center">
+                <label class="text-xs sm:text-sm font-medium text-text-primary">Humanidade</label>
+                <div class="flex space-x-0.5 sm:space-x-1">
+                  <button
+                    v-for="n in 10"
+                    :key="n"
+                    type="button"
+                    @click="sheetData.humanity = n; hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    :class="[
+                      'w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full border-2 transition-colors',
+                      n <= sheetData.humanity
+                        ? 'bg-red-500 border-red-500'
+                        : 'border-red-500 hover:bg-red-500 hover:bg-opacity-30'
+                    ]"
+                  >
+                    <span class="sr-only">{{ n }}</span>
+                  </button>
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <label class="text-xs sm:text-sm font-medium text-text-primary">Força de Vontade</label>
+                <div class="flex space-x-0.5 sm:space-x-1">
+                  <button
+                    v-for="n in 10"
+                    :key="n"
+                    type="button"
+                    @click="sheetData.willpower = n; hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    :class="[
+                      'w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full border-2 transition-colors',
+                      n <= sheetData.willpower
+                        ? 'bg-blue-500 border-blue-500'
+                        : 'border-blue-500 hover:bg-blue-500 hover:bg-opacity-30'
+                    ]"
+                  >
+                    <span class="sr-only">{{ n }}</span>
+                  </button>
+                </div>
+              </div>
+              <div class="flex justify-between items-center">
+                <label class="text-xs sm:text-sm font-medium text-text-primary">Vitalidade</label>
+                <div class="flex space-x-0.5 sm:space-x-1">
+                  <button
+                    v-for="n in 10"
+                    :key="n"
+                    type="button"
+                    @click="sheetData.vitality = n; hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    :class="[
+                      'w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 rounded-full border-2 transition-colors',
+                      n <= sheetData.vitality
+                        ? 'bg-green-500 border-green-500'
+                        : 'border-green-500 hover:bg-green-500 hover:bg-opacity-30'
+                    ]"
+                  >
+                    <span class="sr-only">{{ n }}</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -434,13 +605,214 @@
           </div>
         </div>
 
-        <!-- Notas -->
+        <!-- Ressonância -->
         <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📝 História do Personagem</h3>
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🎭 Ressonância</h3>
+          <input
+            v-model="sheetData.resonance"
+            type="text"
+            placeholder="Choleric, Melancholic, Phlegmatic, Sanguine..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        <!-- Princípios da Crônica -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📜 Princípios da Crônica</h3>
           <textarea
-            v-model="sheetData.notes"
-            rows="4"
-            placeholder="Conte a história do seu personagem, sua personalidade, objetivos e segredos..."
+            v-model="sheetData.chronicleTenets"
+            rows="3"
+            placeholder="As regras e princípios da crônica que você deve seguir..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          ></textarea>
+        </div>
+
+        <!-- Pilares & Convicções -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚖️ Pilares & Convicções</h3>
+          <textarea
+            v-model="sheetData.touchstonesConvictions"
+            rows="3"
+            placeholder="Suas crenças fundamentais, pilares de humanidade e conexões mortais..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          ></textarea>
+        </div>
+
+        <!-- Perdição do Clã -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚠️ Perdição do Clã</h3>
+          <textarea
+            v-model="sheetData.clanBane"
+            rows="2"
+            placeholder="A maldição específica do seu clã vampírico..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          ></textarea>
+        </div>
+
+        <!-- Experiência -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">💎 Experiência</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Total</label>
+              <input
+                v-model.number="sheetData.xpTotal"
+                type="number"
+                min="0"
+                placeholder="0"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Gasto</label>
+              <input
+                v-model.number="sheetData.xpSpent"
+                type="number"
+                min="0"
+                placeholder="0"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Disponível</label>
+              <input
+                :value="(sheetData.xpTotal || 0) - (sheetData.xpSpent || 0)"
+                type="number"
+                disabled
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface-hover text-text-primary opacity-60 cursor-not-allowed"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Idade e Datas -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📅 Idade e Datas</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Idade Verdadeira</label>
+              <input
+                v-model="sheetData.trueAge"
+                type="text"
+                placeholder="250 anos"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Idade Aparente</label>
+              <input
+                v-model="sheetData.apparentAge"
+                type="text"
+                placeholder="30 anos"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Data de Nascimento</label>
+              <input
+                v-model="sheetData.dateOfBirth"
+                type="text"
+                placeholder="15/03/1774"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label class="block text-xs text-text-muted mb-1">Data de Morte (Abraço)</label>
+              <input
+                v-model="sheetData.dateOfDeath"
+                type="text"
+                placeholder="20/11/1804"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Aparência e Traços -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">👤 Aparência</h3>
+          <textarea
+            v-model="sheetData.appearance"
+            rows="3"
+            placeholder="Descrição física do personagem: altura, compleição, cor dos olhos e cabelo, estilo de vestimenta..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed mb-3"
+          ></textarea>
+          
+          <label class="block text-xs text-text-muted mb-1">Traços Distintivos</label>
+          <textarea
+            v-model="sheetData.distinguishingFeatures"
+            rows="2"
+            placeholder="Cicatrizes, tatuagens, marcas de nascença, maneirismos únicos..."
+            @input="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          ></textarea>
+        </div>
+
+        <!-- Condições Narrativas -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚠️ Condições Narrativas</h3>
+          <div class="space-y-2">
+            <div v-for="(condition, idx) in sheetData.conditions" :key="idx" class="flex items-center gap-2">
+              <input
+                v-model="sheetData.conditions[idx]"
+                type="text"
+                placeholder="Ex: Ferido, Faminto, Ensanguentado, Frenesi"
+                @input="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="flex-1 px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+              />
+              <button
+                v-if="canEdit && sheetData.conditions.length > 1"
+                type="button"
+                @click="removeCondition(Number(idx))"
+                class="p-1 text-red-400 hover:text-red-300"
+              >
+                <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
+                  <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <BaseButton
+              v-if="canEdit && sheetData.conditions.length < 10"
+              variant="ghost"
+              @click="addCondition"
+              class="w-full text-sm mt-2"
+            >
+              + Adicionar Condição
+            </BaseButton>
+          </div>
+        </div>
+
+        <!-- História -->
+        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📖 História do Personagem</h3>
+          <textarea
+            v-model="sheetData.history"
+            rows="6"
+            placeholder="A história completa do seu personagem: origem, vida mortal, circunstâncias do abraço, eventos importantes da não-vida..."
             @input="hasUnsavedChanges = true"
             :disabled="!canEdit"
             class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
@@ -546,6 +918,25 @@ const vampireClans = [
   'Lasombra', 'Tzimisce', 'Caitiff', 'Thin-Blood'
 ]
 
+// Disciplinas V5
+const vampireDisciplines = [
+  'Animalismo',
+  'Auspícios',
+  'Celeridade',
+  'Dominação',
+  'Feitiçaria de Sangue',
+  'Fortitude',
+  'Metamorfose',
+  'Ofuscação',
+  'Potência',
+  'Presença',
+  'Tenebrosidade',
+  'Serpentis',
+  'Quietus',
+  'Quimerismo',
+  'Vicissitude'
+]
+
 // Atributos
 const physicalAttributes = [
   { key: 'strength', name: 'Força' },
@@ -565,43 +956,40 @@ const mentalAttributes = [
   { key: 'wits', name: 'Raciocínio' }
 ]
 
-// Habilidades
+// Habilidades (ordem EXATA do print oficial V5)
 const talents = [
-  { key: 'alertness', name: 'Prontidão' },
-  { key: 'athletics', name: 'Esportes' },
-  { key: 'awareness', name: 'Consciência' },
+  { key: 'melee', name: 'Armas Brancas' },
+  { key: 'firearms', name: 'Armas de Fogo' },
+  { key: 'athletics', name: 'Atletismo' },
   { key: 'brawl', name: 'Briga' },
-  { key: 'empathy', name: 'Empatia' },
-  { key: 'expression', name: 'Expressão' },
-  { key: 'intimidation', name: 'Intimidação' },
-  { key: 'leadership', name: 'Liderança' },
-  { key: 'streetwise', name: 'Lábia' },
-  { key: 'subterfuge', name: 'Subterfúgio' }
+  { key: 'drive', name: 'Condução' },
+  { key: 'stealth', name: 'Furtividade' },
+  { key: 'larceny', name: 'Ladroagem' },
+  { key: 'craft', name: 'Ofícios' },
+  { key: 'survival', name: 'Sobrevivência' }
 ]
 
 const skills = [
   { key: 'animalKen', name: 'Empatia com Animais' },
-  { key: 'craft', name: 'Ofícios' },
-  { key: 'drive', name: 'Condução' },
   { key: 'etiquette', name: 'Etiqueta' },
-  { key: 'firearms', name: 'Armas de Fogo' },
-  { key: 'larceny', name: 'Furto' },
-  { key: 'melee', name: 'Armas Brancas' },
+  { key: 'intimidation', name: 'Intimidação' },
+  { key: 'leadership', name: 'Liderança' },
+  { key: 'streetwise', name: 'Manha' },
   { key: 'performance', name: 'Performance' },
-  { key: 'stealth', name: 'Furtividade' },
-  { key: 'survival', name: 'Sobrevivência' }
+  { key: 'persuasion', name: 'Persuasão' },
+  { key: 'awareness', name: 'Sagacidade' },
+  { key: 'subterfuge', name: 'Subterfúgio' }
 ]
 
 const knowledges = [
-  { key: 'academics', name: 'Acadêmicos' },
-  { key: 'computer', name: 'Computador' },
+  { key: 'science', name: 'Ciência' },
+  { key: 'academics', name: 'Erudição' },
   { key: 'finance', name: 'Finanças' },
   { key: 'investigation', name: 'Investigação' },
-  { key: 'law', name: 'Direito' },
   { key: 'medicine', name: 'Medicina' },
   { key: 'occult', name: 'Ocultismo' },
+  { key: 'perception', name: 'Percepção' },
   { key: 'politics', name: 'Política' },
-  { key: 'science', name: 'Ciências' },
   { key: 'technology', name: 'Tecnologia' }
 ]
 
@@ -632,6 +1020,28 @@ const sheetData = ref({
   sect: props.player.sheet?.sect || '',
   haven: props.player.sheet?.haven || '',
   player: props.player.name || '',
+  
+  // Novos campos da ficha oficial V5
+  resonance: props.player.sheet?.resonance || '',
+  chronicleTenets: props.player.sheet?.chronicleTenets || '',
+  touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
+  clanBane: props.player.sheet?.clanBane || '',
+  advantages: props.player.sheet?.advantages || [{ name: '', level: 0 }],
+  bloodPotency: props.player.sheet?.bloodPotency || 0,
+  bloodSurge: props.player.sheet?.bloodSurge || '+2',
+  powerBonus: props.player.sheet?.powerBonus || '0',
+  feedingPenalty: props.player.sheet?.feedingPenalty || 'Sem Penalidade',
+  baneSeverity: props.player.sheet?.baneSeverity || '0',
+  xpTotal: props.player.sheet?.xpTotal || 0,
+  xpSpent: props.player.sheet?.xpSpent || 0,
+  trueAge: props.player.sheet?.trueAge || '',
+  apparentAge: props.player.sheet?.apparentAge || '',
+  dateOfBirth: props.player.sheet?.dateOfBirth || '',
+  dateOfDeath: props.player.sheet?.dateOfDeath || '',
+  appearance: props.player.sheet?.appearance || '',
+  distinguishingFeatures: props.player.sheet?.distinguishingFeatures || '',
+  history: props.player.sheet?.history || '',
+  
   attributes: props.player.sheet?.attributes || {
     physical: { strength: 1, dexterity: 1, stamina: 1 },
     social: { charisma: 1, manipulation: 1, appearance: 1 },
@@ -646,6 +1056,9 @@ const sheetData = ref({
   virtues: props.player.sheet?.virtues || { conscience: 1, selfControl: 1, courage: 1 },
   humanity: props.player.sheet?.humanity || 7,
   willpower: props.player.sheet?.willpower || 3,
+  vitality: props.player.sheet?.vitality || 10,
+  hunger: props.player.sheet?.hunger ?? 1,
+  conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : [''],
   healthLevels: props.player.sheet?.healthLevels || [false, false, false, false, false, false, false],
   notes: props.player.sheet?.notes || ''
 })
@@ -690,6 +1103,51 @@ const removeDiscipline = (index: string | number) => {
   hasUnsavedChanges.value = true
 }
 
+// Métodos para Vantagens & Defeitos
+const setAdvantageLevel = (index: number, level: number) => {
+  if (!props.canEdit) return
+  if (sheetData.value.advantages[index].level === level) {
+    sheetData.value.advantages[index].level = 0
+  } else {
+    sheetData.value.advantages[index].level = level
+  }
+  hasUnsavedChanges.value = true
+}
+
+const addAdvantage = () => {
+  if (!props.canEdit) return
+  if (sheetData.value.advantages.length >= 10) return
+  sheetData.value.advantages.push({ name: '', level: 0 })
+  hasUnsavedChanges.value = true
+}
+
+const removeAdvantage = (index: number) => {
+  if (!props.canEdit) return
+  sheetData.value.advantages.splice(index, 1)
+  hasUnsavedChanges.value = true
+}
+
+// Métodos para Condições Narrativas
+const addCondition = () => {
+  if (!props.canEdit) return
+  if (sheetData.value.conditions.length >= 10) return
+  sheetData.value.conditions.push('')
+  hasUnsavedChanges.value = true
+}
+
+const removeCondition = (index: number) => {
+  if (!props.canEdit) return
+  sheetData.value.conditions.splice(index, 1)
+  hasUnsavedChanges.value = true
+}
+
+// Método para Potência de Sangue
+const setBloodPotency = (level: number) => {
+  if (!props.canEdit) return
+  sheetData.value.bloodPotency = level
+  hasUnsavedChanges.value = true
+}
+
 const toggleHealthLevel = (index: number) => {
   if (!props.canEdit) return
   sheetData.value.healthLevels[index] = !sheetData.value.healthLevels[index]
@@ -731,10 +1189,17 @@ const confirmSave = () => {
   
   try {
     console.log('✅ PlayerSheet: Emitindo evento SAVE')
+    
+    // Filtrar condições vazias antes de salvar
+    const cleanedConditions = sheetData.value.conditions.filter((c: string) => c && c.trim())
+    
     emit('save', {
       ...props.player,
       characterName: sheetData.value.name,
-      sheet: sheetData.value
+      sheet: {
+        ...sheetData.value,
+        conditions: cleanedConditions
+      }
     })
     
     hasUnsavedChanges.value = false

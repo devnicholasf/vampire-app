@@ -59,7 +59,7 @@
             @click="navigateToJoin" 
             class="flex items-center gap-2"
           >
-            <span>🎫</span>
+            <span></span>
             Entrar em Campanha
           </BaseButton>
           <BaseButton 
@@ -67,7 +67,7 @@
             @click="showCreateModal = true" 
             class="flex items-center gap-2"
           >
-            <span>🎲</span>
+            <span></span>
             Nova Campanha
           </BaseButton>
         </div>
@@ -116,7 +116,9 @@
                 class="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
                 title="Deletar campanha"
               >
-                🗑️
+                <svg class="w-4 h-4" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
               </button>
               <button
                 v-else
@@ -124,7 +126,9 @@
                 class="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover:opacity-100"
                 title="Sair da campanha"
               >
-                🚪
+                <svg class="w-4 h-4" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
               </button>
             </div>
           </div>

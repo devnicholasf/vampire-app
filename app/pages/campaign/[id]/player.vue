@@ -78,15 +78,38 @@
             <div v-if="myCharacter" class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <!-- Character Avatar & Name -->
               <div class="md:col-span-1 flex flex-col items-center text-center">
-                <div class="w-32 h-32 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center text-white font-bold text-4xl shadow-xl mb-4 border-2 border-purple-400">
-                  {{ getCharacterInitials(myCharacter.character_name || myCharacter.name) }}
+                <div 
+                  class="w-32 h-32 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center text-white font-bold text-4xl shadow-xl mb-4 border-2 border-purple-400 cursor-pointer hover:border-purple-300 transition-all relative group overflow-hidden"
+                  @click="triggerAvatarUpload"
+                  title="Clique para alterar avatar"
+                >
+                  <img 
+                    v-if="myCharacter.sheet?.avatar" 
+                    :src="myCharacter.sheet.avatar" 
+                    :alt="myCharacter.character_name || myCharacter.name"
+                    class="w-full h-full object-cover"
+                  />
+                  <span v-else>{{ getCharacterInitials(myCharacter.character_name || myCharacter.name) }}</span>
+                  <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-sm">📷 Alterar</span>
+                  </div>
                 </div>
+                <input
+                  ref="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleAvatarUpload"
+                />
                 <h3 class="text-2xl font-bold text-text-primary mb-2">
                   {{ myCharacter.character_name || myCharacter.name }}
                 </h3>
                 <div class="text-text-muted space-y-1">
                   <p class="text-lg">
                     {{ myCharacter.sheet?.clan || '🔮 Clã não definido' }}
+                  </p>
+                  <p v-if="myCharacter.sheet?.concept" class="text-sm italic text-purple-300">
+                    "{{ myCharacter.sheet.concept }}"
                   </p>
                   <p v-if="myCharacter.sheet?.generation" class="text-sm">
                     {{ myCharacter.sheet.generation }}ª Geração
@@ -120,49 +143,8 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="bg-surface-dark p-4 rounded-lg border border-red-500/30">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-sm text-text-muted">❤️ Humanidade</span>
-                      <span class="text-lg font-bold text-red-400">{{ myCharacter.sheet.humanity || 7 }}</span>
-                    </div>
-                    <div class="w-full bg-surface-hover rounded-full h-2">
-                      <div 
-                        class="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full transition-all"
-                        :style="{ width: `${((myCharacter.sheet.humanity || 7) / 10) * 100}%` }"
-                      ></div>
-                    </div>
-                  </div>
-                  <div class="bg-surface-dark p-4 rounded-lg border border-blue-500/30">
-                    <div class="flex items-center justify-between mb-2">
-                      <span class="text-sm text-text-muted">💪 Força de Vontade</span>
-                      <span class="text-lg font-bold text-blue-400">{{ myCharacter.sheet.willpower || 3 }}</span>
-                    </div>
-                    <div class="w-full bg-surface-hover rounded-full h-2">
-                      <div 
-                        class="bg-gradient-to-r from-blue-600 to-blue-400 h-2 rounded-full transition-all"
-                        :style="{ width: `${((myCharacter.sheet.willpower || 3) / 10) * 100}%` }"
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Top Disciplines -->
-                <div v-if="myCharacter.sheet.disciplines?.length > 0" class="mt-4 bg-surface-dark p-4 rounded-lg border border-purple-500/30">
-                  <p class="text-sm text-text-muted mb-3">🩸 Disciplinas Principais</p>
-                  <div class="flex flex-wrap gap-2">
-                    <div 
-                      v-for="discipline in myCharacter.sheet.disciplines.filter((d: any) => d.name && d.level > 0).slice(0, 5)" 
-                      :key="discipline.name"
-                      class="bg-red-900/20 border border-red-500/30 rounded-full px-3 py-1 text-sm"
-                    >
-                      {{ discipline.name }} <span class="text-red-400 font-bold">{{ '●'.repeat(discipline.level) }}</span>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Editar Ficha Button -->
-                <div class="mt-6 text-center">
+                <div class="text-center">
                   <BaseButton 
                     variant="primary" 
                     size="md"
@@ -194,6 +176,157 @@
               <div class="text-6xl mb-4">🎭</div>
               <p class="text-text-muted text-lg mb-4">Você ainda não faz parte desta campanha</p>
               <p class="text-text-muted text-sm">Entre em contato com o Mestre para receber um convite</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado Atual do Vampiro & Estatísticas (Grid 2 colunas) -->
+        <div v-if="myCharacter?.sheet" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Estado Atual do Vampiro -->
+          <div class="bg-gradient-to-br from-red-900/20 to-purple-900/20 border border-red-500/30 rounded-vampire p-6">
+            <h2 class="text-2xl font-bold text-red-400 mb-6 flex items-center gap-2">
+              🩸 Estado Atual do Vampiro
+            </h2>
+            
+            <div class="space-y-4">
+              <!-- Fome Atual -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-red-500/20">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold text-text-muted flex items-center gap-2">
+                    🍷 Fome Atual
+                  </span>
+                  <span class="text-2xl font-bold text-red-400">{{ myCharacter.sheet.hunger || 1 }} / 5</span>
+                </div>
+                <div class="flex gap-1">
+                  <div 
+                    v-for="i in 5" 
+                    :key="i"
+                    class="flex-1 h-3 rounded-sm transition-all"
+                    :class="i <= (myCharacter.sheet.hunger || 1) ? 'bg-gradient-to-r from-red-600 to-red-500' : 'bg-surface-hover'"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Humanidade -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-purple-500/20">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold text-text-muted flex items-center gap-2">
+                    ❤️ Humanidade
+                  </span>
+                  <span class="text-2xl font-bold text-purple-400">{{ myCharacter.sheet.humanity || 7 }} / 10</span>
+                </div>
+                <div class="w-full bg-surface-hover rounded-full h-3">
+                  <div 
+                    class="bg-gradient-to-r from-purple-600 to-purple-400 h-3 rounded-full transition-all"
+                    :style="{ width: `${((myCharacter.sheet.humanity || 7) / 10) * 100}%` }"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Força de Vontade -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-blue-500/20">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold text-text-muted flex items-center gap-2">
+                    💪 Força de Vontade
+                  </span>
+                  <span class="text-2xl font-bold text-blue-400">{{ myCharacter.sheet.willpower || 3 }} / 10</span>
+                </div>
+                <div class="w-full bg-surface-hover rounded-full h-3">
+                  <div 
+                    class="bg-gradient-to-r from-blue-600 to-blue-400 h-3 rounded-full transition-all"
+                    :style="{ width: `${((myCharacter.sheet.willpower || 3) / 10) * 100}%` }"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Condições Narrativas -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-yellow-500/20">
+                <p class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                  ⚠️ Condições Ativas
+                </p>
+                <div v-if="myCharacter.sheet.conditions?.length > 0" class="flex flex-wrap gap-2">
+                  <span 
+                    v-for="(condition, idx) in myCharacter.sheet.conditions" 
+                    :key="idx"
+                    class="bg-yellow-900/20 border border-yellow-500/30 rounded-full px-3 py-1 text-sm text-yellow-300"
+                  >
+                    {{ condition }}
+                  </span>
+                </div>
+                <p v-else class="text-text-muted text-sm italic">Nenhuma condição ativa</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estatísticas-Chave -->
+          <div class="bg-gradient-to-br from-green-900/20 to-blue-900/20 border border-green-500/30 rounded-vampire p-6">
+            <h2 class="text-2xl font-bold text-green-400 mb-6 flex items-center gap-2">
+              📊 Estatísticas-Chave
+            </h2>
+            
+            <div class="space-y-4">
+              <!-- XP -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-green-500/20">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-xs text-text-muted mb-1">✨ XP Disponível</p>
+                    <p class="text-3xl font-bold text-green-400">{{ myCharacter.sheet.xpAvailable || 0 }}</p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-text-muted mb-1">💎 XP Gasto</p>
+                    <p class="text-3xl font-bold text-blue-400">{{ myCharacter.sheet.xpSpent || 0 }}</p>
+                  </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-border-dark">
+                  <p class="text-xs text-text-muted">Total Acumulado</p>
+                  <p class="text-lg font-bold text-purple-400">{{ (myCharacter.sheet.xpAvailable || 0) + (myCharacter.sheet.xpSpent || 0) }} XP</p>
+                </div>
+              </div>
+
+              <!-- Disciplinas Ativas -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-red-500/20">
+                <p class="text-sm font-semibold text-text-muted mb-3 flex items-center gap-2">
+                  🩸 Disciplinas Ativas
+                </p>
+                <div v-if="myCharacter.sheet.disciplines?.filter((d: any) => d.level > 0).length > 0" class="space-y-2">
+                  <div 
+                    v-for="discipline in myCharacter.sheet.disciplines.filter((d: any) => d.name && d.level > 0)" 
+                    :key="discipline.name"
+                    class="flex justify-between items-center"
+                  >
+                    <span class="text-sm text-text-primary">{{ discipline.name }}</span>
+                    <span class="text-red-400 font-bold">{{ '●'.repeat(discipline.level) }}</span>
+                  </div>
+                  <div class="pt-2 mt-2 border-t border-border-dark">
+                    <p class="text-xs text-text-muted">Nível Total</p>
+                    <p class="text-xl font-bold text-red-400">
+                      {{ myCharacter.sheet.disciplines.reduce((sum: number, d: any) => sum + (d.level || 0), 0) }} pontos
+                    </p>
+                  </div>
+                </div>
+                <p v-else class="text-text-muted text-sm italic">Nenhuma disciplina ativa</p>
+              </div>
+
+              <!-- Pontos Fortes/Fracos -->
+              <div class="bg-surface-dark/50 p-4 rounded-lg border border-purple-500/20">
+                <p class="text-sm font-semibold text-text-muted mb-3">⚖️ Resumo</p>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-start gap-2">
+                    <span class="text-green-400">✓</span>
+                    <span class="text-text-muted">
+                      <strong class="text-text-primary">Forte em:</strong> 
+                      {{ getStrongestAttribute() }}
+                    </span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <span class="text-red-400">✗</span>
+                    <span class="text-text-muted">
+                      <strong class="text-text-primary">Fraco em:</strong> 
+                      {{ getWeakestAttribute() }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -609,6 +742,94 @@ const formatDate = (date: Date) => {
     month: 'short',
     year: 'numeric'
   })
+}
+
+const getStrongestAttribute = () => {
+  if (!myCharacter.value?.sheet?.attributes) return 'N/A'
+  
+  const attrs = myCharacter.value.sheet.attributes
+  const physical = calculateAttributeSum(attrs.physical)
+  const social = calculateAttributeSum(attrs.social)
+  const mental = calculateAttributeSum(attrs.mental)
+  
+  const max = Math.max(physical, social, mental)
+  if (max === physical) return '🏋️ Físico'
+  if (max === social) return '🎭 Social'
+  return '🧠 Mental'
+}
+
+const getWeakestAttribute = () => {
+  if (!myCharacter.value?.sheet?.attributes) return 'N/A'
+  
+  const attrs = myCharacter.value.sheet.attributes
+  const physical = calculateAttributeSum(attrs.physical)
+  const social = calculateAttributeSum(attrs.social)
+  const mental = calculateAttributeSum(attrs.mental)
+  
+  const min = Math.min(physical, social, mental)
+  if (min === physical) return '🏋️ Físico'
+  if (min === social) return '🎭 Social'
+  return '🧠 Mental'
+}
+
+// Avatar Upload
+const avatarInput = ref<HTMLInputElement | null>(null)
+
+const triggerAvatarUpload = () => {
+  avatarInput.value?.click()
+}
+
+const handleAvatarUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file) return
+  
+  // Validar tipo de arquivo
+  if (!file.type.startsWith('image/')) {
+    toastMessage.value = 'Por favor, selecione apenas arquivos de imagem'
+    toastVariant.value = 'error'
+    showToast.value = true
+    setTimeout(() => showToast.value = false, 4000)
+    return
+  }
+  
+  // Validar tamanho (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    toastMessage.value = 'Imagem muito grande. Máximo 2MB'
+    toastVariant.value = 'error'
+    showToast.value = true
+    setTimeout(() => showToast.value = false, 4000)
+    return
+  }
+  
+  try {
+    // Converter para base64
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string
+      
+      // Atualizar ficha com avatar
+      if (myCharacter.value?.sheet) {
+        myCharacter.value.sheet.avatar = base64
+        
+        // Salvar no banco
+        await savePlayerSheet(campaignId, user.value!.id, myCharacter.value.sheet)
+        
+        toastMessage.value = 'Avatar atualizado com sucesso!'
+        toastVariant.value = 'success'
+        showToast.value = true
+        setTimeout(() => showToast.value = false, 4000)
+      }
+    }
+    reader.readAsDataURL(file)
+  } catch (error: any) {
+    console.error('Erro ao fazer upload do avatar:', error)
+    toastMessage.value = 'Erro ao atualizar avatar'
+    toastVariant.value = 'error'
+    showToast.value = true
+    setTimeout(() => showToast.value = false, 4000)
+  }
 }
 
 // ============================================
