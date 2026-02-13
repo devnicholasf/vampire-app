@@ -1,239 +1,150 @@
-# 🧛 Vampire RPG - Sistema de Gerenciamento de Campanhas
+﻿#  Vampire RPG - Sistema de Gerenciamento de Campanhas
 
-Sistema completo para gerenciar campanhas de **Vampire: The Masquerade** com Nuxt 4 + Tailwind CSS.
+Sistema completo para gerenciar campanhas de **Vampire: The Masquerade V5** com Nuxt 4 + Vue 3 + TypeScript + Tailwind CSS + Supabase.
 
-## ✅ **STATUS: 95% IMPLEMENTADO**
+##  STATUS: v4.0.0 - Ficha V5 Completa
 
-> 📋 **Última Atualização:** Sistema de campanhas e NPCs totalmente funcionais!
-> Próximo passo: Implementação do backend (APIs) para persistência.
+> **Última Atualização:** Fevereiro 12, 2026
+> Ficha de personagem V5 totalmente funcional com design vampírico.
 
-## ✨ Características
+---
 
-### 🎭 **Para Jogadores** ✅
-- ✅ Criação e gerenciamento de personagens
-- ✅ Acompanhamento de atributos (Fome, Humanidade, Força de Vontade)
-- ✅ Timeline interativa de eventos da campanha
-- ✅ Visualização de mapas e documentos compartilhados
-- ✅ Upload de avatar personalizado
-- ✅ Player de música ambiente
+##  Funcionalidades
 
-### 👑 **Para Mestres** ✅
-- ✅ Dashboard avançado com sistema de abas
-- ✅ **Gerenciamento completo de NPCs** (criar, editar, visualizar)
-- ✅ Sistema de clãs Vampire (13 clãs implementados)
-- ✅ Biblioteca de mapas e músicas
-- ✅ Anotações privadas organizadas
-- ⚪ Sistema de combate (iniciativa e turnos) - *próxima fase*
-- ✅ Controle de mídia em tempo real
-- ⚪ Gerador automático de NPCs - *próxima fase*
-- ✅ Estatísticas e gestão dos jogadores
+###  Para Jogadores
+-  Dashboard com estado atual do vampiro (Fome, Humanidade, Vontade, Condições)
+-  Ficha de personagem V5 completa e editável
+-  Layout oficial com habilidades, disciplinas, virtudes, potência de sangue
+-  Design vampírico com borda vermelha, ornamentos e avatar
+-  Salvamento automático com sincronização do dashboard
 
-### 🎯 **Sistema de Campanhas** ✅
-- ✅ Qualquer usuário pode criar campanhas
-- ✅ Criador automático vira Mestre
-- ✅ Mesmo usuário pode ser Mestre em uma e Jogador em outra
-- ✅ Sistema de permissões granular
-- ✅ Timeline organizada por sessões
-- ✅ Interface diferenciada para mestres e jogadores
+###  Para Mestres
+-  Dashboard avançado com 5 abas (Jogadores, NPCs, Mídia, Notas, Configurações)
+-  Gerenciamento completo de NPCs (criar, editar, visualizar)
+-  Visualização de fichas dos jogadores (somente leitura)
+-  Sistema de convites por código único
+-  Anotações privadas organizadas
 
-## 🛠️ Stack Tecnológica
+###  Sistema de Campanhas
+-  Criação de campanhas com código de convite automático
+-  Múltiplos papéis: mesmo usuário pode ser Mestre em uma e Jogador em outra
+-  Dados persistentes no Supabase com RLS
+-  Constraint anti-duplicata (1 usuário = 1 participação por campanha)
 
-- **Frontend**: Vue 4+, Nuxt 4+, TypeScript
-- **Styling**: Tailwind CSS 3.4+ (tema customizado)
-- **Backend**: Nuxt Server API
-- **Database**: PostgreSQL / Supabase (recomendado)
-- **Storage**: Cloudinary / S3
-- **Realtime**: WebSockets / Supabase Realtime
-- **Auth**: JWT
+###  Ficha V5 (PlayerSheet)
+-  Atributos: Físicos/Sociais/Mentais com bolinhas interativas
+-  Habilidades na ordem oficial V5 em português
+-  Disciplinas como dropdown (15 opções V5)
+-  Fome: 5 bolinhas vermelhas (padrão 1)
+-  Vitalidade: 10 bolinhas verdes
+-  Humanidade: 10 bolinhas vermelhas
+-  Vontade: 10 bolinhas azuis
+-  Virtudes: 3  5 bolinhas amarelas
+-  Potência de Sangue: 10 círculos + modificadores
+-  Vantagens & Defeitos: lista dinâmica com níveis
+-  Condições Narrativas: adicionar/remover
+-  Geração do Abraço: Cria/Neófito/Ancião
+-  Design vampírico: borda vermelha, ornamentos, avatar, sombra glow
 
-## 📦 Estrutura do Projeto
+---
+
+##  Stack Tecnológica
+
+| Tecnologia | Versão | Uso |
+|-----------|--------|-----|
+| Vue 3 | 3.x | Framework frontend |
+| Nuxt | 4.x | Meta-framework SSR |
+| TypeScript | 5.x | Tipagem estática |
+| Tailwind CSS | 3.4+ | Estilização |
+| Supabase | - | Auth + Database + RLS |
+
+---
+
+##  Estrutura do Projeto
 
 ```
 vampire-app/
-├── app/
-│   ├── components/
-│   │   ├── auth/              # Login, registro ✅
-│   │   ├── campaign/          # Componentes da campanha ✅
-│   │   │   ├── master/        # Dashboard do mestre ✅
-│   │   │   │   ├── NPCsTab.vue
-│   │   │   │   ├── NPCModal.vue
-│   │   │   │   └── NPCDetailsModal.vue
-│   │   │   ├── Timeline.vue
-│   │   │   ├── MediaPlayer.vue
-│   │   │   └── PlayerAvatar.vue
-│   │   └── ui/                # Componentes reutilizáveis ✅
-│   ├── layouts/
-│   │   ├── auth.vue           # Layout autenticação ✅
-│   │   └── campaign.vue       # Layout campanha ✅
-│   ├── pages/
-│   │   ├── login.vue          # Páginas auth ✅
-│   │   ├── dashboard.vue      # Dashboard principal ✅
-│   │   └── campaign/          # Páginas campanha ✅
-│   │       └── [id]/
-│   │           ├── index.vue      # Tela compartilhada
-│   │           ├── master.vue     # Dashboard mestre
-│   │           └── player.vue     # Tela jogador
-│   └── middleware/         # Proteção de rotas ✅
-├── composables/            # Lógica reutilizável ✅
-├── types/                  # TypeScript types ✅
-└── server/api/             # APIs (próximo passo) ⚪
-│   ├── pages/
-│   │   ├── login.vue          # ✅ Autenticação
-│   │   ├── register.vue       # ✅ Registro
-│   │   ├── dashboard.vue      # ✅ Dashboard principal
-│   │   └── campaign/
-│   │       ├── [id].vue       # Tela de campanha
-│   │       └── [id]/master.vue # Dashboard do mestre
-│   └── layouts/
-├── composables/
-│   ├── useAuth.ts             # ✅ Autenticação
-│   ├── useCampaign.ts         # ✅ Campanhas
-│   ├── useTimeline.ts         # ✅ Timeline
-│   └── useUpload.ts           # ✅ Upload
-├── middleware/
-│   ├── auth.global.ts         # ✅ Proteção de rotas
-│   ├── isMaster.ts            # ✅ Verificação mestre
-│   └── isPlayer.ts            # ✅ Verificação jogador
-├── server/api/                # Endpoints da API
-├── types/index.ts             # ✅ Tipos TypeScript
-└── utils/                     # Helpers e validadores
+ app/
+    components/
+       auth/              # Autenticação
+       campaign/          # Componentes da campanha
+          PlayerSheet.vue    #  Ficha V5 (~1206 linhas)
+          master/            # Dashboard do mestre
+       ui/                # Componentes reutilizáveis
+    composables/           # Lógica reutilizável
+    layouts/               # Layouts (auth, campaign)
+    middleware/             # Proteção de rotas
+    pages/                 # Páginas (file-based routing)
+       campaign/[id]/
+           player.vue     #  Dashboard do jogador
+           master.vue     # Dashboard do mestre
+           index.vue      # Tela compartilhada
+    types/index.ts         # Tipos TypeScript
+ database/                  # Scripts SQL Supabase
+ nuxt.config.ts
+ tailwind.config.js
+ package.json
 ```
 
-## 🚀 Como Usar
+---
 
-## 💡 Comandos Disponíveis
+##  Como Usar
 
-### 1. Desenvolvimento Local
-
+### Desenvolvimento
 ```bash
-# Instalar dependências (se necessário)
 npm install
-
-# Iniciar servidor de desenvolvimento
 npm run dev
 ```
-
 Acesse: http://localhost:3000
 
-### 2. Estrutura Implementada
-
-#### ✅ **Já Criado**
-- Types TypeScript completos
-- Composables (useAuth, useCampaign, useTimeline, useUpload)
-- Middleware de autenticação e permissões
-- Páginas de login e registro
-- Dashboard principal
-- Configuração do Nuxt e Tailwind
-
-#### 🔜 **Próximos Passos**
-- Implementar endpoints da API (`/server/api/`)
-- Criar componentes da tela de campanha
-- Criar dashboard do mestre
-- Integrar banco de dados
-- Adicionar realtime
-
-## 📚 Documentação
-
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Arquitetura completa do sistema
-- **[DEV_GUIDE.md](./DEV_GUIDE.md)** - Guia detalhado de desenvolvimento
-
-## 🎨 Tema Customizado
-
-Paleta de cores Vampire-themed:
-- **Dourado** (`brand-primary`) - Destaque e ações
-- **Preto/Cinza escuro** (`surface-*`) - Backgrounds
-- **Vermelho** (`error-*`) - Alertas e perigo
-- **Gradientes** personalizados
-
-## 🔐 Sistema de Permissões
-
-```typescript
-// Verificação automática
-const { permissions } = useCampaign(campaignId)
-
-permissions.isMaster   // É mestre?
-permissions.isPlayer   // É jogador?
-permissions.canEdit    // Pode editar?
-```
-
-## 📊 Funcionalidades Principais
-
-### 🔑 Cadastro & Login ✅
-- ✅ Validação de formulários completa
-- ✅ JWT para autenticação
-- ✅ Sessão persistente (localStorage)
-- ✅ Páginas de terms/privacy
-- ✅ Forgot password funcional
-
-### 🏰 Campanhas ✅
-- ✅ Criação ilimitada de campanhas
-- ✅ Sistema multi-papel (mestre em uma, jogador em outra)
-- ✅ Permissões granulares implementadas
-- ✅ Dashboard diferenciado por role
-
-### 🎮 Tela de Campanha ✅
-- ✅ Party Team com avatares personalizados
-- ✅ Timeline interativa de eventos
-- ✅ Player de áudio funcional
-- ⚪ Visualizador de mapas (próxima fase)
-- ⚪ Biblioteca de documentos (próxima fase)
-
-### 👑 Dashboard do Mestre ✅
-- ✅ Estatísticas dos jogadores
-- ✅ **Gerenciador de NPCs completo e funcional**
-- ✅ Anotações privadas organizadas
-- ⚪ Combat tracker (próxima fase)
-- ⚪ Gerador automático de NPCs (próxima fase)
-
-### 🗃️ Novidades Implementadas
-- ✅ **Sistema completo de NPCs com 13 clãs Vampire**
-- ✅ **Modal de criação/edição totalmente funcional**
-- ✅ **Sistema de abas no dashboard do mestre**
-- ✅ **Timeline com tipos de eventos específicos**
-- ✅ **Layout campaign dedicado com navegação**
-- Anotações privadas
-- Combat tracker
-- Gerador de NPCs
-
-## 🧪 Comandos
-
+### Build
 ```bash
-# Desenvolvimento
-npm run dev
-
-# Build para produção
 npm run build
-
-# Preview da build
 npm run preview
-
-# Gerar site estático
-npm run generate
 ```
 
-## 🌐 Deploy
-
-### Vercel (Recomendado)
+### Limpar Cache
 ```bash
-vercel
+rm -rf .nuxt
+npm run postinstall
 ```
 
-### Netlify
-```bash
-npm run generate
-# Deploy da pasta .output/public
-```
+---
 
-## 📝 Variáveis de Ambiente
+##  Variáveis de Ambiente
 
 Criar arquivo `.env`:
-
 ```bash
-JWT_SECRET=seu-secret-aqui
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_KEY=sua-key-aqui
 ```
 
 ---
 
-**Sistema desenvolvido para campanhas épicas de Vampire: The Masquerade! 🧛‍♂️🎲**
+##  Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Arquitetura completa do sistema |
+| [DEV_GUIDE.md](./DEV_GUIDE.md) | Guia de desenvolvimento |
+| [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md) | Status detalhado |
+| [CHANGELOG.md](./CHANGELOG.md) | Histórico de mudanças |
+| [ARCHITECTURAL_CHANGES.md](./ARCHITECTURAL_CHANGES.md) | Mudanças arquiteturais |
+| [MIGRATION_NOTES.md](./MIGRATION_NOTES.md) | Notas para continuidade |
+
+---
+
+##  Próximos Passos
+
+- [ ] Integrar NPCs com Supabase
+- [ ] Timeline persistente no banco
+- [ ] Upload real de mídia (Supabase Storage)
+- [ ] Jogo ao vivo completo
+- [ ] Combat Tracker funcional
+- [ ] Chat em tempo real
+- [ ] Atualizar NPCSheet para padrão V5
+- [ ] Deploy (Vercel/Netlify)
+
+---
+
+**Sistema desenvolvido para campanhas épicas de Vampire: The Masquerade V5! **

@@ -1,477 +1,191 @@
-# 🔄 NOTAS DE MIGRAÇÃO - Vampire RPG
+﻿#  NOTAS DE MIGRAÇÃO - Vampire RPG
 
-## 📋 Resumo da Sessão Atual
-
-**Data:** Janeiro 2026  
-**Duração:** Sessão intensiva - Integração Supabase + Sistema Completo  
-**Progresso:** Sistema funcionando com dados reais e múltiplos usuários  
-
-## 🎯 O que foi Implementado Nesta Sessão
-
-### ✅ Integração Completa com Supabase
-1. **Banco de dados real configurado**
-   - Tabelas: campaigns, campaign_players
-   - RLS policies implementadas
-   - Autenticação Supabase Auth funcionando
-
-2. **Sistema de Convites Funcionais**
-   - Códigos únicos (ex: GELYL0) 
-   - Página /join-campaign criada
-   - joinCampaignByInviteCode() implementada
-   - Verificação anti-duplicata
-
-3. **Dados Reais vs Mocks**
-   - ✅ Todos os mocks removidos
-   - ✅ Dados carregados do Supabase
-   - ✅ Interface funcionando com dados reais
-   - ✅ Jogadores aparecem na aba mestre
-
-### ✅ Correções Técnicas Implementadas
-1. **Imports Explícitos**
-   - Todos os componentes com imports explícitos
-   - vue-router substituído por nuxt/app
-   - BaseButton reutilizado consistentemente
-
-2. **Navegação Corrigida**
-   - useRouter → navigateTo do Nuxt
-   - Rotas funcionando corretamente
-   - Redirecionamentos após ações
-
-3. **Mapeamento de Dados**
-   - campaign_players → formato do template
-   - user_id → id, character_name → name
-   - Constraints do banco respeitadas
-
-## 🔧 Problemas Resolvidos Nesta Sessão
-
-### 1. Integração com Banco Real
-**Problema:** Sistema usava apenas mocks  
-**Solução:** Supabase integrado com RLS policies  
-**Resultado:** Dados persistentes e seguros
-
-### 2. Sistema de Convites
-**Problema:** Não havia como jogadores entrarem  
-**Solução:** Sistema completo com códigos únicos  
-**Resultado:** Múltiplos usuários funcionando
-
-### 3. Constraint de Duplicação
-**Problema:** Usuário podia entrar múltiplas vezes  
-**Solução:** UNIQUE (campaign_id, user_id)  
-**Resultado:** 1 usuário = 1 participação por campanha
-
-### 4. Mapeamento de Interface
-**Problema:** Template esperava campos diferentes do banco  
-**Solução:** Mapeamento no master.vue  
-**Resultado:** Jogadores aparecem corretamente
-
-## 🧪 Estado Atual de Funcionamento
-
-### ✅ 100% Funcional
-- [x] Sistema de autenticação com Supabase
-- [x] Criação de campanhas com códigos únicos
-- [x] Sistema de convites funcionando
-- [x] Múltiplos usuários testado
-- [x] Dashboard mestre com dados reais
-- [x] Aba jogadores mostrando participantes
-- [x] Navegação entre páginas
-- [x] Permissions (mestre vs jogador)
-- [x] Toast notifications profissionais
-
-### ✅ Componentes Otimizados
-- [x] Imports explícitos em todos os arquivos
-- [x] BaseButton reutilizado consistentemente
-- [x] Navegação Nuxt (não vue-router)
-- [x] Código redundante removido
-- [x] Console logs de debug mantidos
-
-## 🚨 Próximos Passos Críticos
-
-### 1. Expansão do Sistema de NPCs
-- Integrar NPCs com Supabase
-- Criar tabela npcs no banco
-- CRUD completo funcionando
-
-### 2. Sistema de Timeline Real
-- Persistir eventos no banco
-- Realtime updates
-- Timeline compartilhada
-
-### 3. Sistema de Mídia
-- Upload real de arquivos
-- Storage do Supabase
-- Player funcionando com arquivos reais
-
-## 📁 Arquivos Importantes Modificados Nesta Sessão
-
-### Backend Integration
-```
-app/composables/
-├── useCampaign.ts        ✅ Integração Supabase completa
-├── useAuth.ts           ✅ Supabase Auth funcionando
-└── useSupabase.ts       ✅ Cliente configurado
-
-database/
-├── supabase-clean-and-fix.sql  ✅ RLS policies
-└── add-test-player.sql         ✅ Dados de teste
-```
-
-### Sistema de Convites
-```
-app/pages/
-├── join-campaign.vue     ✅ Página de convites criada
-└── dashboard.vue         ✅ Botão entrar campanha
-
-app/composables/
-└── useCampaign.ts       ✅ joinCampaignByInviteCode()
-```
-
-### Correções Técnicas
-```
-app/pages/campaign/[id]/
-├── master.vue           ✅ Imports explícitos, mapeamento dados
-├── index.vue            ✅ Dados reais do Supabase  
-├── player.vue           ✅ Composables corretos
-└── live.vue             ✅ Imports Nuxt
-
-app/components/
-└── **/*.vue             ✅ BaseButton reutilizado
-```
-
-## 🎯 Comandos para Continuar
-
-### Testar Sistema Completo
-```bash
-# Iniciar projeto
-npm run dev
-
-# Teste 1: Usuário Mestre
-1. Registrar nova conta
-2. Criar campanha
-3. Anotar código (ex: GELYL0)
-
-# Teste 2: Usuário Jogador  
-1. Registrar outra conta
-2. Clicar "Entrar em Campanha"
-3. Usar código do mestre
-4. Criar personagem
-
-# Verificar:
-- Dashboard mostra campanha para ambos
-- Master vê "Jogadores: 2" 
-- Aba Jogadores mostra ambos
-```
-
-### Debugging
-```bash
-# Ver dados no Supabase
-- campaigns: deve ter campanha
-- campaign_players: deve ter 2 registros
-
-# Console do browser
-- Verificar logs de debug 
-- Confirmar carregamento de dados
-- Testar navegação
-```
-
-## 📝 Checklist Estado Atual
-
-### ✅ Sistema Base (COMPLETO)
-- [x] Autenticação Supabase funcionando
-- [x] Dashboard com campanhas reais
-- [x] Sistema de criação de campanhas
-- [x] Sistema de convites funcionando  
-- [x] Múltiplos usuários testado
-
-### ✅ Interface (COMPLETO)
-- [x] Páginas de campanha funcionais
-- [x] Dashboard mestre com abas
-- [x] Sistema de navegação correto
-- [x] Componentes otimizados
-- [x] Toast notifications
-
-### 🔜 Próximas Expansões
-- [ ] NPCs integrados com banco
-- [ ] Timeline persistente
-- [ ] Upload real de mídia
-- [ ] Chat em tempo real
-- [ ] Combat tracker funcional
-
-## 💡 Dicas Importantes
-
-1. **Supabase RLS:** Policies funcionando, campaigns protegidas
-2. **Constraint Única:** campaign_players impede duplicatas
-3. **Mapeamento:** user_id→id, character_name→name no template
-4. **Imports:** Sempre explícitos, nunca confiar no auto-import
-5. **Navegação:** navigateTo do Nuxt, não $router.push
-6. **BaseButton:** Reutilizar sempre ao invés de botões customizados
-
-## 🎉 Conquistas da Sessão
-
-- ✅ Sistema 100% funcional com dados reais
-- ✅ Múltiplos usuários testado e funcionando  
-- ✅ Supabase integrado completamente
-- ✅ Código otimizado e limpo
-- ✅ Documentação atualizada
-- ✅ Sistema de convites inovador
-- ✅ RLS policies seguras implementadas
-- ✅ Interface profissional funcionando
+**Última Sessão:** Fevereiro 12, 2026
+**Versão:** 4.0.0 - Ficha V5 Completa
 
 ---
 
-**🚀 Sistema pronto para próxima fase de expansão!**  
-**📊 Sistema base 100% funcional com múltiplos usuários**  
+##  RESUMO DA ÚLTIMA SESSÃO
 
-## 🎯 O que foi Implementado Nesta Sessão
+Sessão focada na **reformulação completa da ficha de personagem (PlayerSheet.vue)** para seguir o padrão oficial do Vampire: The Masquerade 5ª Edição (V5).
 
-### ✅ Páginas de Campanha Completas
-1. **`/app/pages/campaign/[id]/index.vue`** - Tela compartilhada
-2. **`/app/pages/campaign/[id]/master.vue`** - Dashboard do mestre
-3. **`/app/pages/campaign/[id]/player.vue`** - Tela do jogador
-4. **`/app/layouts/campaign.vue`** - Layout específico para campanhas
+### O que foi feito nesta sessão:
 
-### ✅ Sistema Completo de NPCs
-1. **`NPCsTab.vue`** - Gerenciador principal
-   - Lista de NPCs
-   - Botão criar NPC (funcionando perfeitamente)
-   - Integração com modais
-   - Mock data para demonstração
+1. **Reordenar habilidades** para ordem oficial V5 em PT-BR
+2. **Adicionar Vitalidade** (vitality) com 10 bolinhas verdes
+3. **Disciplinas como dropdown** (15 opções V5)
+4. **Substituir emoji lixeira** por botão X com SVG
+5. **Remover campo "Jogador"** do cabeçalho
+6. **Alinhar cabeçalho** em grid 3+3 (Nome/Conceito/Clã | Geração/Seita/Refúgio)
+7. **Remover "Notas Gerais"** do final da ficha
+8. **Adicionar Fome** com 5 bolinhas vermelhas (padrão 1)
+9. **Adicionar Condições Narrativas** com add/remove e sync com dashboard
+10. **Remover "Níveis de Saúde"** (não é V5)
+11. **Mover Experiência** para coluna da Potência (preencher espaço)
+12. **Redesign do cabeçalho** com avatar circular + nome vermelho grande
+13. **Adicionar borda vampírica** com ornamentos nos cantos e sombra vermelha
+14. **Corrigir clipping da borda** movendo ornamentos para fora do scroll
+15. **Substituir "Idade e Datas"** por dropdown "Geração do Abraço" (Cria/Neófito/Ancião)
 
-2. **`NPCModal.vue`** - Modal de criação/edição
-   - Formulário completo com todos os campos VtM
-   - Seleção de clã (13 clãs implementados)
-   - Atributos: Fome, Humanidade, Força de Vontade, Saúde
-   - Upload de avatar (simulado)
-   - Validação de campos
+---
 
-3. **`NPCDetailsModal.vue`** - Modal de detalhes
-   - Visualização completa do NPC
-   - Botões de ação: Editar, Adicionar ao jogo, Deletar
-   - Design consistente
+##  ARQUIVOS MODIFICADOS NESTA SESSÃO
 
-### ✅ Componentes de Timeline
-1. **`Timeline.vue`** - Timeline principal
-   - Lista de eventos cronológicos
-   - Filtros por tipo de evento
-   - Adição de eventos (mestre)
+### Arquivos Principais:
 
-2. **`TimelineItem.vue`** - Item da timeline
-   - Ícones específicos por tipo
-   - Design responsivo
-   - Ações de edição/exclusão
+```
+app/components/campaign/PlayerSheet.vue  (~1206 linhas)
+   Reformulação completa da ficha V5
+   Todas as mudanças de layout, campos e visual
 
-### ✅ Sistema de Mídia
-1. **`MediaPlayer.vue`** - Player de música ambiente
-   - Controles de reprodução
-   - Upload de música
-   - Controle de volume
+app/types/index.ts
+   Interface CharacterSheet atualizada
+   Campos removidos: healthLevels, trueAge, apparentAge, dateOfBirth, dateOfDeath
+   Campos adicionados: embraceGeneration, hunger, conditions, vitality
 
-## 🔧 Problemas Resolvidos
-
-### 1. Auto-imports do Nuxt 4
-**Problema:** Componentes não carregavam automaticamente  
-**Solução:** Adicionados imports explícitos onde necessário
-```vue
-<script setup lang="ts">
-import { ref, watchEffect } from 'vue'
-import type { NPC } from '~/types'
-// imports explícitos quando auto-import falha
-</script>
+app/pages/campaign/[id]/player.vue  (~851 linhas, NÃO modificado nesta sessão)
+   Dashboard do jogador - já suportava fome, condições, humanidade, vontade
 ```
 
-### 2. Modal não aparecendo
-**Problema:** NPCModal não renderizava quando chamado  
-**Solução:** Removido `Teleport` problemático, ajustado z-index  
-**Resultado:** Modal funciona perfeitamente agora
-
-### 3. CSS Syntax Issues
-**Problema:** Webkit scrollbar com sintaxe incorreta  
-**Solução:** Corrigida sintaxe CSS para scrollbars customizadas
-```css
-/* ANTES (incorreto) */
-&::-webkit-scrollbar::-webkit-scrollbar-track
-
-/* DEPOIS (correto) */
-&::-webkit-scrollbar-track
-```
-
-### 4. Tamanho do Modal
-**Problema:** Modal muito grande para o conteúdo  
-**Solução:** Ajustadas dimensões para `max-w-xl` e `max-h-[85vh]`
-
-## 🧪 Estado Atual de Funcionamento
-
-### ✅ Totalmente Funcional
-- [x] Navegação entre páginas de campanha
-- [x] Sistema de abas no dashboard do mestre
-- [x] Criação de NPCs via modal (botão + formulário + salvamento)
-- [x] Visualização de detalhes de NPCs
-- [x] Timeline interativa
-- [x] Media Player com controles
-- [x] Layouts responsivos
-- [x] Sistema de permissões (mestre/jogador)
-
-### ⚪ Mock Data em Uso
-- NPCs usam dados simulados (localStorage futuro)
-- Timeline eventos simulados
-- Campanhas com dados de exemplo
-- Upload de arquivo simulado
-
-## 🚨 Pontos Críticos para Próxima Sessão
-
-### 1. Backend APIs (Prioridade ALTA)
+### Campos da Interface CharacterSheet (estado final):
 ```typescript
-// Implementar em /server/api/
-- auth/ (login, register, logout)
-- campaigns/ (CRUD campanhas)
-- npcs/ (CRUD NPCs) // NOVO - necessário
-- timeline/ (eventos)
-- upload/ (arquivos)
-```
-
-### 2. Substituir Mock Data
-- Conectar NPCs ao banco de dados
-- Persistir criação/edição de NPCs
-- Sistema real de upload de avatares
-- Timeline persistente
-
-### 3. Supabase Integration
-- Criar tabelas: users, campaigns, npcs, timeline_events
-- Configurar storage para avatares
-- Implementar realtime para mudanças ao vivo
-
-## 📁 Arquivos Importantes Criados/Modificados
-
-### Componentes Principais
-```
-app/components/campaign/master/
-├── NPCsTab.vue          ✅ Funcional
-├── NPCModal.vue         ✅ Funcional  
-├── NPCDetailsModal.vue  ✅ Funcional
-├── PlayersTab.vue       ✅ Estrutura
-├── MediaTab.vue         ✅ Estrutura
-├── NotesTab.vue         ✅ Estrutura
-└── SettingsTab.vue      ✅ Estrutura
-```
-
-### Páginas de Campanha
-```
-app/pages/campaign/[id]/
-├── index.vue    ✅ Tela compartilhada
-├── master.vue   ✅ Dashboard mestre
-└── player.vue   ✅ Tela jogador
-```
-
-### Layouts
-```
-app/layouts/
-├── auth.vue      ✅ Autenticação
-└── campaign.vue  ✅ Campanhas (NOVO)
-```
-
-## 🧱 Estrutura de Dados NPCs
-
-```typescript
-interface NPC {
-  id: string
-  campaignId: string
-  name: string
-  clan: VampireClan
-  generation: number
-  sire?: string
-  description?: string
-  background?: string
+export interface CharacterSheet {
+  // Cabeçalho
+  name: string; concept: string; clan: string
+  generation: number; sect: string; haven: string; player: string
   avatar?: string
-  attributes: NPCAttributes
-  skills: NPCSkills
-  disciplines: string[]
-  createdAt: Date
-  updatedAt: Date
+
+  // Campos V5
+  resonance?: string; chronicleTenets?: string
+  touchstonesConvictions?: string; clanBane?: string
+  advantages?: Array<{ name: string; level: number }>
+  bloodPotency?: number; bloodSurge?: string
+  powerBonus?: string; feedingPenalty?: string; baneSeverity?: string
+
+  // Informações pessoais
+  embraceGeneration?: string  // "Cria (Childer)", "Neófito (Neonate)", "Ancião (Ancilla)"
+  appearance?: string; distinguishingFeatures?: string; history?: string
+
+  // Mecânicas
+  attributes: { physical, social, mental }
+  skills: { talents, skills, knowledges }
+  disciplines: Array<{ name: string; level: number }>
+  virtues: { conscience: number; selfControl: number; courage: number }
+  humanity: number; willpower: number
+  vitality?: number   // 0-10
+  hunger?: number     // 0-5, padrão 1
+  conditions?: string[]
+
+  // Experiência
+  xpTotal?: number; xpAvailable?: number; xpSpent?: number
+  notes?: string
 }
-
-interface NPCAttributes {
-  hunger: number      // 0-5
-  humanity: number    // 0-10
-  willpower: number   // 0-10
-  health: number      // 0-10
-}
 ```
-
-## 🎯 Comandos para Continuar
-
-### Desenvolvimento
-```bash
-# Iniciar projeto
-cd vampire-app
-npm run dev
-
-# Acessar dashboard
-http://localhost:3000/dashboard
-
-# Testar campanha (mock)
-http://localhost:3000/campaign/123/master
-```
-
-### Debugging
-```bash
-# Limpar cache se houver problemas
-rm -rf .nuxt
-npm run postinstall
-
-# Verificar tipos
-npx nuxi typecheck
-```
-
-## 📝 Checklist para Próxima Sessão
-
-### Backend (Prioridade 1)
-- [ ] Implementar API de autenticação
-- [ ] Criar tabelas no Supabase
-- [ ] API de campanhas (CRUD)
-- [ ] **API de NPCs (CRUD) - ESSENCIAL**
-- [ ] API de timeline
-- [ ] Sistema de upload real
-
-### Expansões (Prioridade 2)  
-- [ ] Combat Tracker
-- [ ] Map Viewer
-- [ ] Sistema de chat
-- [ ] Realtime updates
-
-### Polish (Prioridade 3)
-- [ ] Testes automatizados
-- [ ] Loading states
-- [ ] Error handling
-- [ ] Optimizações de performance
-
-## 🔗 Links de Documentação
-
-- **ARCHITECTURE.md** - Visão completa da arquitetura
-- **IMPLEMENTATION_STATUS.md** - Status detalhado 
-- **DEV_GUIDE.md** - Guia de desenvolvimento
-- **EXAMPLES.md** - Exemplos de uso dos composables
-- **CHANGELOG.md** - Histórico de mudanças
-
-## 💡 Dicas Importantes
-
-1. **Nuxt 4 Auto-imports:** Nem sempre funcionam, keep imports explícitos como backup
-2. **Modal Rendering:** Evitar `Teleport`, usar z-index adequado
-3. **CSS Customizado:** Syntax webkit deve estar correta
-4. **Mock Data:** Está em `~/composables/` como fallback
-5. **TypeScript:** Tipos estão em `~/types/index.ts` e são completos
-
-## 🎉 Conquistas da Sessão
-
-- ✅ Sistema de campanhas 100% funcional
-- ✅ NPCs totalmente implementados com modal
-- ✅ Dashboard do mestre profissional
-- ✅ Timeline interativa funcionando
-- ✅ Media Player operacional
-- ✅ Layout campaign dedicado
-- ✅ Sistema de abas responsivo
-- ✅ Debugging completo realizado
-- ✅ Documentação atualizada
 
 ---
 
-**🚀 Projeto pronto para implementação do backend!**  
-**📊 95% do frontend concluído com sucesso**
+##  PONTOS IMPORTANTES PARA CONTINUAÇÃO
+
+### 1. NPCSheet.vue ainda usa modelo antigo
+O arquivo `app/components/campaign/master/NPCSheet.vue` **NÃO foi atualizado** nesta sessão. Ele ainda pode ter campos `healthLevels` e layout antigo. Se precisar atualizar a ficha de NPC para V5, usar PlayerSheet.vue como referência.
+
+### 2. Fluxo de dados do Dashboard do Jogador
+O `player.vue` lê os dados da ficha assim:
+```typescript
+// player.vue - leitura de dados
+const hunger = computed(() => playerData.value?.sheet?.hunger ?? 1)
+const humanity = computed(() => playerData.value?.sheet?.humanity ?? 7)
+const willpower = computed(() => playerData.value?.sheet?.willpower ?? 3)
+const conditions = computed(() => playerData.value?.sheet?.conditions ?? [])
+```
+
+O salvamento funciona assim:
+```typescript
+// player.vue - salvamento
+const saveCharacterSheet = async (updatedPlayer) => {
+  await savePlayerSheet(campaignId, playerId, updatedPlayer.sheet)
+  await loadCampaignData() // recarrega tudo do banco
+}
+```
+
+### 3. Padrões de desenvolvimento a seguir
+- **Imports**: Sempre explícitos, não confiar no auto-import do Nuxt 4
+- **Navegação**: Usar `navigateTo()` e nunca `$router.push()`
+- **Botões**: Sempre usar `<BaseButton>` com variantes
+- **Modais**: Sem `<Teleport>`, usar z-index adequado
+- **Salvamento**: Sempre filtrar dados vazios antes de salvar
+
+### 4. Build verificado
+O projeto compilou sem erros após todas as mudanças. Último build bem-sucedido (exit code 0).
+
+---
+
+##  ESTRUTURA DA FICHA V5 (PlayerSheet.vue)
+
+### Organização das seções no template:
+
+```
+
+ [Avatar] NOME DO PERSONAGEM    [ Salvar] []     Header sticky
+
+ Nome     Conceito  Clã                            Grid 3 colunas
+ Geração  Seita     Refúgio                        Grid 3 colunas
+
+ Atributos Físicos    Sociais     Mentais       
+ (3  5 bolinhas)                               
+
+ Talentos (9)   Perícias (9)  Conhecimentos (9) 
+ ( 5 bolinhas cada)                              
+
+ Disciplinas           Potência de Sangue        
+ (dropdown + nível)    (10 círculos + campos)    
+                                                 
+ Vantagens & Defeitos  Experiência               
+ (nome + 5 círculos)   (Total/Gasto/Disponível)  
+                                                 
+  Fome (5 bolinhas)                            
+
+ Virtudes              Humanidade (10 vermelhas)  
+ (3  5 amarelas)     Vontade (10 azuis)         
+                       Vitalidade (10 verdes)     
+
+ Ressonância           Princípios da Crônica      
+ Pilares & Convicções  Perdição do Clã            
+
+ Geração do Abraço [Cria ]                       
+
+ Aparência        Traços Distintivos              
+ Condições Narrativas (add/remove)                 
+ História (textarea)                               
+
+```
+
+---
+
+##  COMANDOS PARA CONTINUAR
+
+```bash
+# Iniciar o projeto
+npm run dev
+
+# Acessar o dashboard de jogador (testar ficha)
+http://localhost:3000/campaign/[id]/player
+
+# Build de verificação
+npm run build
+
+# Limpar cache se necessário
+rm -rf .nuxt ; npm run postinstall
+```
+
+---
+
+##  DICAS PARA O PRÓXIMO CHAT
+
+1. **PlayerSheet.vue** tem ~1206 linhas - leia por seções, não tudo de uma vez
+2. **player.vue** tem ~851 linhas - é o dashboard que consome os dados da ficha
+3. **types/index.ts** tem a interface `CharacterSheet` na linha ~170
+4. O projeto usa **Nuxt 4** (não Nuxt 3) com **Vue 3 Composition API**
+5. Todas as cores e estilos são **Tailwind CSS** com tema vampire customizado
+6. O banco é **Supabase** com a ficha salva como JSONB na coluna `sheet`
+7. **Não existe backend próprio** - tudo via Supabase direto dos composables

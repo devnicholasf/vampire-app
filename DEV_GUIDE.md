@@ -1,8 +1,12 @@
-# 🧛 VAMPIRE RPG - Guia de Desenvolvimento
+﻿#  VAMPIRE RPG - Guia de Desenvolvimento
 
-## 🚀 Como Começar
+**Versão:** 4.0.0 | **Atualizado:** Fevereiro 12, 2026
 
-### 1. Instalar Dependências (se necessário)
+---
+
+##  Como Começar
+
+### 1. Instalar Dependências
 ```bash
 npm install
 ```
@@ -11,433 +15,262 @@ npm install
 ```bash
 npm run dev
 ```
-
 Acesse: http://localhost:3000
 
-### 3. Estrutura de Arquivos Criados
-
-#### ✅ **Já Implementado**
-
-**Types** (`/types/index.ts`)
-- User, Campaign, Character, Timeline, NPC, MediaFile
-- Tipos de resposta da API
-- Permissões
-
-**Composables** (`/composables/`)
-- `useAuth.ts` - Login, registro, logout, sessão
-- `useCampaign.ts` - CRUD de campanhas, permissões
-- `useTimeline.ts` - Eventos da timeline
-- `useUpload.ts` - Upload e gerenciamento de arquivos
-
-**Middleware** (`/middleware/`)
-- `auth.global.ts` - Protege rotas privadas
-- `isMaster.ts` - Verifica se é mestre
-- `isPlayer.ts` - Verifica se é jogador/mestre
-
-**Páginas** (`/app/pages/`)
-- `index.vue` - Template inicial genérico
-- `login.vue` - Página de login
-- `register.vue` - Página de registro
-- `dashboard.vue` - Dashboard do usuário
-
-**Configurações**
-- `nuxt.config.ts` - Configuração do Nuxt
-- `tailwind.config.js` - Tema customizado rico
-
----
-
-## 📋 Próximos Passos de Desenvolvimento
-
-### **Etapa 1: Implementar Backend (APIs)**
-
-Criar os endpoints no `/server/api/`:
-
-#### Auth (`/server/api/auth/`)
-```typescript
-// login.post.ts
-export default defineEventHandler(async (event) => {
-  const { email, password } = await readBody(event)
-  // Validar credenciais
-  // Gerar JWT
-  // Retornar user + token
-})
-
-// register.post.ts
-export default defineEventHandler(async (event) => {
-  const { email, username, password } = await readBody(event)
-  // Validar dados
-  // Hash da senha
-  // Criar usuário no DB
-  // Gerar JWT
-  // Retornar user + token
-})
+### 3. Build de Produção
+```bash
+npm run build
+npm run preview
 ```
 
-#### Campaigns (`/server/api/campaigns/`)
-```typescript
-// user.get.ts - Buscar campanhas do usuário
-// [id].get.ts - Buscar campanha específica
-// create.post.ts - Criar campanha
-// join.post.ts - Entrar em campanha
-// [id]/media.patch.ts - Atualizar mídia atual
-```
-
-#### Timeline (`/server/api/timeline/`)
-```typescript
-// [campaignId].get.ts - Buscar eventos
-// [campaignId]/add.post.ts - Adicionar evento
-// [campaignId]/[eventId].patch.ts - Editar evento
-// [campaignId]/[eventId].delete.ts - Deletar evento
-```
-
-#### Upload (`/server/api/upload/`)
-```typescript
-// index.post.ts - Upload de arquivo
-// [fileId].delete.ts - Deletar arquivo
-// campaign/[campaignId].get.ts - Listar arquivos
-```
-
-#### NPCs (`/server/api/npcs/`) - NOVO
-```typescript
-// [campaignId].get.ts - Buscar NPCs da campanha
-// [campaignId]/create.post.ts - Criar NPC
-// [campaignId]/[npcId].get.ts - Buscar NPC específico
-// [campaignId]/[npcId].patch.ts - Editar NPC
-// [campaignId]/[npcId].delete.ts - Deletar NPC
-// [campaignId]/[npcId]/avatar.patch.ts - Upload avatar
+### 4. Limpar Cache (se necessário)
+```bash
+rm -rf .nuxt
+npm run postinstall
 ```
 
 ---
 
-### **ATUALIZAÇÃO: Sistema de Campanhas Implementado ✅**
+##  Stack Tecnológica
 
-> **📋 Status:** As páginas de campanha e o sistema de NPCs já foram implementados!
-> O próximo passo é implementar o backend (APIs) para persistência de dados.
-
-#### ✅ **Já Implementado:**
-- `/app/pages/campaign/[id]/index.vue` - Tela compartilhada da campanha
-- `/app/pages/campaign/[id]/master.vue` - Dashboard completo do mestre
-- `/app/pages/campaign/[id]/player.vue` - Tela específica do jogador
-- `/app/layouts/campaign.vue` - Layout para campanhas
-- Sistema completo de NPCs com modais funcionais
-- Timeline interativa de eventos
-- Media Player para música ambiente
-- Sistema de abas do mestre (NPCs, Players, Media, Notes, Settings)
-
-#### 🔥 **Funcionalidades Testadas:**
-- Criação e edição de NPCs via modal
-- Sistema de clãs Vampire implementado
-- Atributos VtM (Fome, Humanidade, Força de Vontade, Saúde)
-- Timeline com tipos de eventos
-- Upload simulado de avatares
-- Navegação entre abas do dashboard
+| Tecnologia | Uso |
+|-----------|-----|
+| Vue 3 | Framework frontend (Composition API) |
+| Nuxt 4 | Meta-framework com SSR e file-based routing |
+| TypeScript | Tipagem estática |
+| Tailwind CSS | Estilização com tema vampire customizado |
+| Supabase | Autenticação + Banco PostgreSQL + RLS |
 
 ---
 
-### **Etapa 2: Componentes da Campanha ✅ IMPLEMENTADOS**
+##  Estrutura Principal
 
-#### `/app/components/campaign/` - ✅ **CONCLUÍDOS**
+```
+app/
+ components/campaign/PlayerSheet.vue    Ficha V5 (~1206 linhas)
+ pages/campaign/[id]/player.vue         Dashboard jogador (~851 linhas)
+ pages/campaign/[id]/master.vue        Dashboard mestre
+ types/index.ts                        Interface CharacterSheet
+ composables/useCampaign.ts            CRUD campanhas + savePlayerSheet
+ composables/useAuth.ts                Autenticação Supabase
+```
 
-**PlayerAvatar.vue** ✅ **IMPLEMENTADO**
-- Avatar do personagem com upload
-- Nome, clã, geração
-- Barras de atributos VtM
-- Modo compacto e editável
-- Lista de disciplinas
+---
 
-**Timeline.vue** ✅ **IMPLEMENTADO**
-- Timeline interativa de eventos
-- Filtros por tipo e sessão
-- Adição de eventos (mestres)
-- Integração com composable useTimeline
+##  Ficha de Personagem V5 (PlayerSheet.vue)
 
-**TimelineItem.vue** ✅ **IMPLEMENTADO**
-- Item individual da timeline
-- Ícones por tipo de evento
-- Ações de edição/exclusão
-- Design responsivo
+### Visão Geral
+Componente modal que renderiza a ficha oficial do V5 com ~1206 linhas. Aberto a partir do dashboard do jogador (`player.vue`).
 
-**MediaPlayer.vue** ✅ **IMPLEMENTADO**
-- Player de música ambiente
-- Controles de play/pause/volume
-- Upload de música (mestres)
-- Integração com composable useUpload
+### Estrutura das Seções
+```
+Cabeçalho: Avatar + Nome vermelho uppercase + Salvar/Fechar
+Campos: Nome/Conceito/Clã | Geração/Seita/Refúgio (grid 3+3)
+Atributos: Físicos/Sociais/Mentais (3  3  5 bolinhas)
+Habilidades: Talentos/Perícias/Conhecimentos (3  9  5 bolinhas, ordem V5 PT-BR)
+Grid 1: Disciplinas+Vantagens+Fome | Potência+Experiência
+Grid 2: Virtudes | Humanidade+Vontade+Vitalidade
+Extras: Ressonância, Princípios, Pilares, Perdição, Geração do Abraço
+Final: Aparência, Traços, Condições, História
+```
 
-#### `/app/components/campaign/master/` - ✅ **NOVOS IMPLEMENTADOS**
-
-**NPCsTab.vue** ✅ **IMPLEMENTADO**
-- Gerenciador completo de NPCs
-- Botão de criar NPC funcional
-- Lista de NPCs existentes
-- Integração com modais
-
-**NPCModal.vue** ✅ **IMPLEMENTADO**
-- Modal de criação/edição
-- Formulário com validação
-- Seleção de clã vampire
-- Atributos VtM customizáveis
-- Upload de avatar
-
-**NPCDetailsModal.vue** ✅ **IMPLEMENTADO**
-- Modal de detalhes do NPC
-- Ações (editar, adicionar ao jogo, deletar)
-- Design consistente com tema vampire
-
-**PlayersTab.vue, MediaTab.vue, NotesTab.vue, SettingsTab.vue** ✅ **IMPLEMENTADOS**
-- Estrutura base para gestão do mestre
-- Design consistente com sistema de abas
-- Prontos para expansão de funcionalidades
-    <button v-if="isMaster" @click="uploadMusic">
-      Upload Música
-    </button>
-  </div>
-</template>
-
-<script setup lang="ts">
+### Props
+```typescript
 const props = defineProps<{
-  campaignId: string
-  isMaster: boolean
+  player: any       // Dados do jogador (com sheet)
+  canEdit: boolean  // Permissão de edição
 }>()
+```
 
-const audioRef = ref<HTMLAudioElement>()
-const volume = ref(50)
+### Emits
+```typescript
+const emit = defineEmits<{
+  save: [player: any]  // Jogador com sheet atualizada
+  close: []            // Fechar modal
+}>()
+```
 
-const play = () => audioRef.value?.play()
-const pause = () => audioRef.value?.pause()
-</script>
+### Fluxo de Salvamento
+```
+1. Usuário clica "Salvar"  saveSheet() valida campos obrigatórios
+2. Modal de confirmação aparece
+3. confirmSave() filtra condições vazias
+4. emit('save', { ...player, sheet: sheetData })
+5. player.vue recebe  saveCharacterSheet()  savePlayerSheet()  Supabase
+6. loadCampaignData() recarrega tudo  dashboard atualiza
+```
+
+### Campos da sheetData
+```typescript
+{
+  // Identificação
+  name, concept, clan, generation, sect, haven, player,
+  
+  // V5 específicos
+  resonance, chronicleTenets, touchstonesConvictions, clanBane,
+  advantages: [{ name, level }],  // Vantagens & Defeitos
+  bloodPotency,                   // 0-10
+  bloodSurge, powerBonus, feedingPenalty, baneSeverity,
+  xpTotal, xpSpent,
+  embraceGeneration,              // Cria/Neófito/Ancião
+  
+  // Pessoal
+  appearance, distinguishingFeatures, history,
+  
+  // Mecânicas
+  attributes: { physical, social, mental },
+  skills: { talents, skills, knowledges },
+  disciplines: [{ name, level }],
+  virtues: { conscience, selfControl, courage },
+  humanity, willpower, vitality,
+  hunger,      // Padrão: 1
+  conditions   // Array de strings
+}
 ```
 
 ---
 
-### **Etapa 3: Criar Dashboard do Mestre**
+##  Dashboard do Jogador (player.vue)
 
-#### `/app/pages/campaign/[id]/master.vue`
+### Como funciona
+- Exibe "Estado Atual do Vampiro" (Fome, Humanidade, Vontade, Condições)
+- Botão "Editar Ficha" abre PlayerSheet.vue como modal
+- Após salvar, recarrega dados do banco e atualiza todas as barras
 
+### Leitura de dados
+```typescript
+const hunger = computed(() => playerData.value?.sheet?.hunger ?? 1)
+const humanity = computed(() => playerData.value?.sheet?.humanity ?? 7)
+const willpower = computed(() => playerData.value?.sheet?.willpower ?? 3)
+const conditions = computed(() => playerData.value?.sheet?.conditions ?? [])
+```
+
+---
+
+##  Banco de Dados (Supabase)
+
+### Tabelas
+```sql
+campaigns (id, name, description, master_id, invite_code, is_active, timestamps)
+campaign_players (user_id, campaign_id, character_name, role, sheet JSONB, joined_at)
+```
+
+A coluna `sheet` armazena toda a ficha V5 como JSON.
+
+### Salvamento da Ficha
+```typescript
+// Em useCampaign.ts
+const savePlayerSheet = async (campaignId, playerId, sheetData) => {
+  await supabase
+    .from('campaign_players')
+    .update({ sheet: sheetData })
+    .eq('campaign_id', campaignId)
+    .eq('user_id', playerId)
+}
+```
+
+---
+
+##  Convenções e Padrões
+
+### Imports
 ```vue
-<template>
-  <div class="master-dashboard">
-    <h1>Dashboard do Mestre</h1>
-    
-    <!-- Tabs -->
-    <div class="tabs">
-      <button @click="tab = 'stats'">Estatísticas</button>
-      <button @click="tab = 'npcs'">NPCs</button>
-      <button @click="tab = 'notes'">Anotações</button>
-      <button @click="tab = 'combat'">Combate</button>
-    </div>
-
-    <!-- Conteúdo -->
-    <PlayerStats v-if="tab === 'stats'" :campaign="campaign" />
-    <NPCManager v-if="tab === 'npcs'" :campaignId="campaignId" />
-    <MasterNotes v-if="tab === 'notes'" :campaignId="campaignId" />
-    <CombatTracker v-if="tab === 'combat'" :campaignId="campaignId" />
-  </div>
-</template>
-
+<!-- SEMPRE usar imports explícitos -->
 <script setup lang="ts">
-definePageMeta({
-  middleware: ['auth', 'isMaster']
-})
-
-const route = useRoute()
-const campaignId = route.params.id as string
-const tab = ref('stats')
-
-const { campaign, fetchCampaign } = useCampaign(campaignId)
-
-onMounted(() => fetchCampaign(campaignId))
+import { ref, computed } from 'vue'
+import BaseButton from '~/components/ui/BaseButton.vue'
+import type { CharacterSheet } from '~/types'
 </script>
 ```
 
----
-
-### **Etapa 4: Implementar Banco de Dados**
-
-#### Opção 1: Supabase (Recomendado)
-```bash
-npm install @supabase/supabase-js
-```
-
+### Navegação
 ```typescript
-// utils/supabase.ts
-import { createClient } from '@supabase/supabase-js'
+// CORRETO
+navigateTo('/dashboard')
 
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!
-)
+// ERRADO (não usar)
+$router.push('/dashboard')
 ```
 
-#### Opção 2: Prisma + PostgreSQL
-```bash
-npm install @prisma/client prisma
-npx prisma init
-```
-
----
-
-### **Etapa 5: Implementar Realtime**
-
-#### Com Supabase Realtime
-```typescript
-// composables/useRealtimeCampaign.ts
-export const useRealtimeCampaign = (campaignId: string) => {
-  const supabase = useSupabaseClient()
-
-  supabase
-    .channel(`campaign:${campaignId}`)
-    .on('postgres_changes', 
-      { event: '*', schema: 'public', table: 'campaigns' },
-      (payload) => {
-        // Atualizar dados em tempo real
-      }
-    )
-    .subscribe()
-}
-```
-
----
-
-## 🎨 Componentes UI Reutilizáveis
-
-### BaseButton.vue (já existe)
-✅ Componente de botão genérico
-
-### Componentes a criar em `/app/components/ui/`:
-
-**BaseInput.vue**
+### Botões
 ```vue
-<template>
-  <input 
-    :type="type"
-    :value="modelValue"
-    @input="$emit('update:modelValue', $event.target.value)"
-    :class="inputClasses"
-  />
-</template>
+<!-- SEMPRE usar BaseButton -->
+<BaseButton variant="primary" size="sm" @click="action">Texto</BaseButton>
+<!-- Variantes: primary, secondary, ghost, danger, outline -->
 ```
 
-**BaseModal.vue**
+### Modais
 ```vue
-<template>
-  <Teleport to="body">
-    <div v-if="show" class="modal-overlay" @click.self="close">
-      <div class="modal-content">
-        <slot />
-      </div>
-    </div>
-  </Teleport>
-</template>
-```
-
-**BaseCard.vue**
-```vue
-<template>
-  <div class="bg-surface-card rounded-lg border border-border-primary p-4">
-    <slot />
-  </div>
-</template>
+<!-- Sem Teleport, usar z-index alto -->
+<div class="fixed inset-0 z-[9999]">
+  <!-- conteúdo do modal -->
+</div>
 ```
 
 ---
 
-## 🔧 Utils Úteis
+##  Tema Vampire (Tailwind)
 
-### `/utils/validators.ts`
+### Cores principais
+- **Vermelho**: `text-red-400`, `border-red-900`, `border-red-600`
+- **Superfícies**: `bg-surface-card`, `bg-surface-secondary`
+- **Texto**: `text-text-primary`, `text-text-secondary`
+- **Bolinhas de atributo**: `bg-white` (preenchida), `bg-gray-700` (vazia)
+- **Fome**: `bg-red-600` (vermelha)
+- **Humanidade**: `bg-red-500` (vermelha)
+- **Vontade**: `bg-blue-500` (azul)
+- **Vitalidade**: `bg-green-500` (verde)
+- **Virtudes**: `bg-yellow-500` (amarela)
+
+### Design Vampírico da Ficha
+```css
+/* Borda com glow */
+border-4 border-red-900
+box-shadow: 0 0 40px rgba(220, 38, 38, 0.3), inset 0 0 20px rgba(220, 38, 38, 0.1)
+
+/* Ornamentos nos cantos */
+border-t-4 border-l-4 border-red-600 opacity-60
+```
+
+---
+
+##  Autenticação e Permissões
+
+### Middleware
+- `auth.global.ts` - Protege rotas privadas
+- `is-master.ts` - Só mestres acessam /master
+- `is-player.ts` - Jogadores e mestres acessam campanha
+
+### Permissões no componente
 ```typescript
-export const validateEmail = (email: string) => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return re.test(email)
-}
-
-export const validatePassword = (password: string) => {
-  return password.length >= 6
-}
+const { permissions } = useCampaign(campaignId)
+// permissions.isMaster, permissions.isPlayer, permissions.canEdit
 ```
 
-### `/utils/helpers.ts`
-```typescript
-export const formatDate = (date: Date | string) => {
-  return new Date(date).toLocaleDateString('pt-BR')
-}
-
-export const truncate = (text: string, length: number) => {
-  return text.length > length 
-    ? text.substring(0, length) + '...' 
-    : text
-}
-```
+### PlayerSheet e permissões
+- `canEdit=true`  jogador editando própria ficha (botão salvar visível)
+- `canEdit=false`  mestre visualizando ficha de jogador (somente leitura)
 
 ---
 
-## 🧪 Testes
+##  Pontos de Atenção
 
-### Testar Fluxo Completo
-
-1. **Registro**
-   - Acessar `/register`
-   - Criar conta
-   - Verificar redirecionamento para `/dashboard`
-
-2. **Criar Campanha**
-   - No dashboard, clicar em "Nova Campanha"
-   - Preencher formulário
-   - Verificar se vira mestre automaticamente
-
-3. **Acessar Campanha**
-   - Clicar na campanha criada
-   - Verificar acesso à tela de campanha
-   - Testar upload de mídia (mestre)
-   - Testar criação de evento na timeline
-
-4. **Dashboard do Mestre**
-   - Acessar `/campaign/[id]/master`
-   - Verificar ferramentas do mestre
+1. **NPCSheet.vue** ainda usa modelo antigo - pode precisar atualizar para V5
+2. **Auto-import do Nuxt 4** nem sempre funciona - sempre usar imports explícitos
+3. **Condições vazias** são filtradas no `confirmSave()` antes de salvar
+4. **Fome padrão** é 1 (usando `??` nullish coalescing, não `||`)
+5. **Ornamentos da borda** ficam FORA do container com scroll (evita clipping)
+6. **Validação** exige Nome, Conceito, Clã e Geração (3-15) preenchidos
 
 ---
 
-## 📦 Variáveis de Ambiente
+##  Próximos Passos
 
-Criar `.env`:
-
-```bash
-# JWT
-JWT_SECRET=seu-secret-super-seguro-aqui
-
-# Database (Supabase)
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_KEY=seu-key-aqui
-
-# Storage (opcional)
-CLOUDINARY_URL=cloudinary://xxx
-```
-
----
-
-## 🚀 Deploy
-
-### Vercel (Recomendado)
-```bash
-npm install -g vercel
-vercel
-```
-
-### Netlify
-```bash
-npm run generate
-# Upload da pasta .output/public
-```
-
----
-
-## 📚 Recursos
-
-- [Nuxt 3 Docs](https://nuxt.com)
-- [Vue 3 Docs](https://vuejs.org)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Supabase Docs](https://supabase.com/docs)
-- [Vampire The Masquerade Wiki](https://whitewolf.fandom.com)
-
----
-
-**Boa sorte com o desenvolvimento! 🧛‍♂️🎲**
+### Pendente
+- [ ] Integrar NPCs com Supabase
+- [ ] Timeline persistente no banco
+- [ ] Upload real de mídia (Supabase Storage)
+- [ ] Completar jogo ao vivo
+- [ ] Combat Tracker funcional
+- [ ] Chat em tempo real
+- [ ] Atualizar NPCSheet.vue para V5

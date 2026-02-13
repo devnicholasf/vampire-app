@@ -1,532 +1,232 @@
-## 🚀 Versão 3.0.0 - Sistema de Convites e Integração Supabase
-**Data:** Janeiro 2026
+﻿#  STATUS DE IMPLEMENTAÇÃO - Vampire RPG
 
-### ✨ FUNCIONALIDADES IMPLEMENTADAS NESTA SESSÃO
-
-#### 🗄️ **Integração Completa com Supabase**
-- ✅ Sistema de autenticação real com Supabase Auth
-- ✅ Tabelas criadas: campaigns, campaign_players 
-- ✅ RLS (Row Level Security) configurado e funcional
-- ✅ Composable useCampaign integrado com Supabase
-- ✅ Dados reais substituindo todos os mocks
-
-#### 🎫 **Sistema de Convites de Campanha**
-- ✅ Códigos únicos gerados automaticamente (ex: GELYL0)
-- ✅ Função joinCampaignByInviteCode() implementada
-- ✅ Página /join-campaign criada com validação
-- ✅ Botão "Entrar em Campanha" no dashboard
-- ✅ Verificação anti-duplicata (não pode entrar 2x)
-- ✅ Constraint única (campaign_id, user_id)
-
-#### 🧛‍♂️ **Sistema de Jogadores Real**
-- ✅ Tabela campaign_players no Supabase
-- ✅ Mapeamento de dados do banco para interface
-- ✅ Constraint: 1 usuário = 1 participação por campanha
-- ✅ Jogadores aparecem na aba "Jogadores" do mestre
-- ✅ Contagem de jogadores em tempo real
-- ✅ Dados de teste (Marcus Ventrue) funcionando
-
-#### 🔧 **Correções e Melhorias Técnicas**
-- ✅ Imports explícitos adicionados em todos os componentes
-- ✅ BaseButton reutilizado consistentemente
-- ✅ Navegação corrigida (useRouter → navigateTo)
-- ✅ RLS policies otimizadas
-- ✅ Mapeamento de dados campaign_players → template
-- ✅ Sistema de toast profissional implementado
-
-### 🗂️ **Estrutura do Banco de Dados Supabase**
-
-#### Tabela `campaigns`
-```sql
-- id (uuid, primary key)
-- name (text)
-- description (text)
-- master_id (uuid, references auth.users)
-- invite_code (text, unique, 6 chars)
-- is_active (boolean, default true)
-- created_at (timestamp)
-- updated_at (timestamp)
-```
-
-#### Tabela `campaign_players`
-```sql  
-- user_id (uuid, references auth.users)
-- campaign_id (uuid, references campaigns)
-- character_name (text)
-- role (text, default 'player')
-- joined_at (timestamp)
-- UNIQUE CONSTRAINT (campaign_id, user_id)
-```
-
-### 🎯 **Sistema Funcionando End-to-End**
-
-#### Fluxo Completo Testado:
-1. **Usuário 1 (Mestre):**
-   - Cria conta e faz login
-   - Cria campanha "FORTALEZA" 
-   - Recebe código GELYL0
-   - Vê campanha no dashboard
-
-2. **Usuário 2 (Jogador):**
-   - Cria nova conta
-   - Clica "Entrar em Campanha"
-   - Usa código GELYL0
-   - Cria personagem "Elena Toreador"
-   - Entra na campanha automaticamente
-
-3. **Verificações:**
-   - ✅ Master vê "Jogadores: 1" → "Jogadores: 2"
-   - ✅ Aba Jogadores mostra ambos personagens
-   - ✅ Cada usuário vê a campanha no dashboard
-   - ✅ Permissões corretas (mestre vs jogador)
-
-### 📊 **Estatísticas da Implementação**
-- **15 arquivos** modificados com correções
-- **3 novas funcionalidades** principais
-- **2 tabelas** Supabase configuradas  
-- **100% dos mocks** removidos e substituídos
-- **Sistema completo** funcionando com múltiplos usuários
-
-## ✅ O QUE FOI CRIADO
-
-### 1. **Estrutura Completa de Pastas - Reorganizada Nuxt 4**
-```
-✅ /app/components/auth/ (AuthForm, AuthHeader, LoginForm)
-✅ /app/components/campaign/ (PlayerAvatar, Timeline, TimelineItem, MediaPlayer)
-✅ /app/components/campaign/master/ (NPCsTab, NPCModal, NPCDetailsModal, PlayersTab, MediaTab, NotesTab, SettingsTab)
-✅ /app/components/ui/ (BaseButton, BaseCard, BaseInput, BaseBadge, WodButton, UserProfile, NotificationsDropdown, DirectMessages)
-✅ /app/layouts/ (auth.vue, campaign.vue)
-✅ /app/pages/ (todas as páginas principais + campanhas)
-✅ /app/pages/campaign/[id]/ (index.vue, master.vue, player.vue)
-✅ /composables/ (useAuth, useCampaign, useTimeline, useUpload)
-✅ /middleware/ (auth.global, isMaster, isPlayer)
-⚪ /server/api/ (estrutura criada, implementação pendente)
-✅ /types/ (todos os tipos TypeScript)
-⚪ /utils/ (estrutura criada)
-```
-
-### 2. **Types TypeScript** (`/types/index.ts`)
-- ✅ User
-- ✅ Campaign
-- ✅ CampaignPlayer
-- ✅ Character (com atributos VtM: fome, humanidade, força de vontade)
-- ✅ VampireClan (todos os clãs)
-- ✅ TimelineEvent
-- ✅ TimelineEventType
-- ✅ NPC (com atributos completos VtM)
-- ✅ MediaFile
-- ✅ MediaType
-- ✅ CombatTurn
-- ✅ MasterNote
-- ✅ ApiResponse
-- ✅ CampaignPermissions
-- ✅ NPCAttributes (fome, humanidade, força de vontade, saúde)
-- ✅ NPCSkills (físicas, sociais, mentais)
-
-### 3. **Composables**
-
-#### `useAuth.ts` ✅
-- login()
-- register()
-- logout()
-- restoreSession()
-- updateUser()
-- Estado: user, token, loading, error, isAuthenticated
-
-#### `useCampaign.ts` ✅
-- fetchUserCampaigns()
-- fetchCampaign()
-- createCampaign()
-- joinCampaign()
-- updateCurrentMedia()
-- deleteCampaign()
-- Computed: permissions (isMaster, isPlayer, canEdit, canDelete)
-
-#### `useTimeline.ts` ✅
-- fetchEvents()
-- addEvent()
-- updateEvent()
-- deleteEvent()
-- filterByType()
-- filterBySession()
-
-#### `useUpload.ts` ✅
-- validateFile()
-- compressImage()
-- uploadFile()
-- uploadMultiple()
-- deleteFile()
-- fetchCampaignFiles()
-
-### 4. **Middleware**
-
-#### `auth.global.ts` ✅
-- Protege todas as rotas privadas
-- Permite: /, /login, /register
-- Redireciona para /login se não autenticado
-
-#### `isMaster.ts` ✅
-- Verifica se usuário é mestre da campanha
-- Bloqueia acesso se não for mestre
-- Usado em: /campaign/[id]/master
-
-#### `isPlayer.ts` ✅
-- Verifica se usuário é jogador OU mestre
-- Bloqueia acesso se não fizer parte da campanha
-- Usado em: /campaign/[id]
-
-### 5. **Páginas Implementadas**
-
-#### `/login` ✅ **COMPLETO**
-- Formulário de login com validação
-- BaseInput componentizado com toggle de senha
-- Detecção CAPS LOCK com warning visual
-- Link para forgot-password funcional
-- WodButton flutuante
-- Redirecionamento para dashboard
-- Cores vampire aplicadas
-
-#### `/register` ✅ **COMPLETO**
-- Formulário de registro completo
-- Validação de senha e confirmação
-- Criação de conta funcional
-- Design consistente com login
-
-#### `/dashboard` ✅ **COMPLETO**
-- Lista de campanhas com badges mestre/jogador
-- Modal de criar campanha funcional
-- Background atmosférico vampire
-- Cores vermelhas vampirescas
-- Navegação para campanhas
-- Dados mock para demonstração
-
-#### `/forgot-password` ✅ **COMPLETO**
-- Página de recuperação de senha
-- BaseInput componentizado
-- Layout auth consistente
-- Simulação de envio de e-mail
-
-#### `/terms` e `/privacy` ✅ **COMPLETO**
-- Páginas legais profissionais
-- Conteúdo relevante para RPG vampire
-- Design consistente
-
-#### `/index` ✅ **TEMPLATE**
-- Página inicial genérica
-- Showcase das tecnologias
-
-#### `/campaign/[id]` ✅ **COMPLETO**
-- Tela principal da campanha (shared entre mestre/jogadores)
-- Timeline interativa com eventos
-- Media Player para música ambiente
-- Visualização do party com avatares
-- Layout campaign específico
-
-#### `/campaign/[id]/master` ✅ **COMPLETO**
-- Dashboard exclusivo do mestre
-- Sistema de abas (Players, NPCs, Media, Notes, Settings)
-- Gerenciador de NPCs com modal de criação
-- Modal de detalhes com ações (editar, adicionar ao jogo)
-- Sistema funcional de criação e edição
-
-#### `/campaign/[id]/player` ✅ **IMPLEMENTADO**
-- Página específica do jogador
-- Visão simplificada da campanha
-
-### 6. **Componentes Implementados**
-
-#### `/app/components/ui/` ✅ **REORGANIZADO NUXT 4**
-- **BaseButton.vue** ✅ - Variantes: primary, secondary, ghost, danger, outline
-- **BaseInput.vue** ✅ - Input com toggle de senha, detecção CAPS LOCK, normal-case styling
-- **BaseCard.vue** ✅ - Card genérico com estilo vampire
-
-#### `/app/components/auth/` ✅
-- **AuthForm.vue** ✅ - Container de formulários auth
-- **AuthHeader.vue** ✅ - Cabeçalho com título e subtítulo
-- **LoginForm.vue** ✅ - Formulário de login (não usado atualmente)
-
-#### `/app/components/campaign/` ✅
-- **PlayerAvatar.vue** ✅ - Avatar completo com atributos VtM
-  - Avatar do personagem com upload
-  - Nome, clã, geração
-  - Barras de atributos (fome, humanidade, força de vontade, saúde)
-  - Modo compacto e editável
-  - Lista de disciplinas
-- **Timeline.vue** ✅ - Timeline interativa da campanha
-  - Exibição cronológica de eventos
-  - Filtros por tipo e sessão
-  - Criação de novos eventos (mestres)
-- **TimelineItem.vue** ✅ - Item individual da timeline
-  - Ícones por tipo de evento
-  - Design responsivo
-  - Ações de edição/exclusão
-- **MediaPlayer.vue** ✅ - Player de música ambiente
-  - Controles de play/pause
-  - Controle de volume
-  - Upload de música (mestres)
-
-#### `/app/components/campaign/master/` ✅ **NOVO**
-- **NPCsTab.vue** ✅ - Gerenciamento de NPCs
-  - Lista de NPCs existentes
-  - Botão de criar NPC funcional
-  - Integração com modal de criação
-  - Sistema de busca e filtros
-- **NPCModal.vue** ✅ - Modal de criação/edição de NPCs
-  - Formulário completo com validação
-  - Seleção de clã vampire
-  - Atributos customizáveis
-  - Upload de avatar
-  - Disciplinas e habilidades
-- **NPCDetailsModal.vue** ✅ - Modal de detalhes do NPC
-  - Visualização completa dos dados
-  - Ações (editar, adicionar ao jogo, deletar)
-  - Design consistente
-- **PlayersTab.vue** ✅ - Gestão de jogadores
-- **MediaTab.vue** ✅ - Biblioteca de mídia
-- **NotesTab.vue** ✅ - Anotações do mestre
-- **SettingsTab.vue** ✅ - Configurações da campanha
-
-#### `/app/components/ui/` ✅ **EXPANDIDO**
-- **BaseButton.vue** ✅ - Variantes: primary, secondary, ghost, danger, outline
-- **BaseInput.vue** ✅ - Input com toggle de senha, detecção CAPS LOCK, normal-case styling
-- **BaseCard.vue** ✅ - Card genérico com estilo vampire
-- **BaseBadge.vue** ✅ - Badges para status e categorias
-- **WodButton.vue** ✅ - Botão flutuante World of Darkness
-- **UserProfile.vue** ✅ - Perfil do usuário no header
-- **NotificationsDropdown.vue** ✅ - Dropdown de notificações
-- **DirectMessages.vue** ✅ - Sistema de mensagens diretas
-
-### 7. **Layouts Implementados**
-
-#### `auth.vue` ✅
-- Layout para páginas de autenticação
-- Design minimalista
-- Background vampire
-
-#### `campaign.vue` ✅ **NOVO**
-- Layout específico para campanhas
-- Header com navegação
-- Sidebar com informações da campanha
-- Design otimizado para gameplay
-- Sistema de notificações
-- Chat integrado
-
-### 8. **Configurações**
-
-#### `nuxt.config.ts` ✅
-- Módulos configurados
-- Runtime config para JWT e DB
-- TypeScript strict mode
-- Meta tags
-
-#### `tailwind.config.js` ✅
-- Tema customizado completo
-- Paleta Vampire (dourado/preto)
-- Cores semânticas
-- Animações
-- Gradientes
-- Sombras
-
-### 8. **Documentação**
-
-#### `ARCHITECTURE.md` ✅
-- Visão completa da arquitetura
-- Estrutura de pastas detalhada
-- Fluxo de funcionalidades
-- Esquema do banco de dados
-- Componentes a criar
-- Sistema de permissões
-
-#### `DEV_GUIDE.md` ✅
-- Guia passo a passo de desenvolvimento
-- Exemplos de código
-- Implementação de APIs
-- Componentes a criar
-- Integração com banco de dados
-- Deploy
-
-#### `README.md` ✅
-- Apresentação do projeto
-- Características
-- Stack tecnológica
-- Como usar
-- Comandos
+**Última Atualização:** Fevereiro 12, 2026
+**Versão Atual:** 4.0.0
 
 ---
 
-## 🔜 PRÓXIMOS PASSOS
+##  RESUMO GERAL
 
-### Fase 1: Backend (APIs)
-```
-⬜ /server/api/auth/login.post.ts
-⬜ /server/api/auth/register.post.ts
-⬜ /server/api/campaigns/user.get.ts
-⬜ /server/api/campaigns/[id].get.ts
-⬜ /server/api/campaigns/create.post.ts
-⬜ /server/api/campaigns/join.post.ts
-⬜ /server/api/timeline/[campaignId].get.ts
-⬜ /server/api/timeline/[campaignId]/add.post.ts
-⬜ /server/api/upload/index.post.ts
+| Área | Status | Progresso |
+|------|--------|-----------|
+| Autenticação |  Completo | 100% |
+| Campanhas |  Completo | 100% |
+| Convites |  Completo | 100% |
+| Dashboard Jogador |  Completo | 100% |
+| Ficha V5 (PlayerSheet) |  Completo | 100% |
+| Dashboard Mestre |  Completo | 95% |
+| NPCs |  Funcional | 90% |
+| Timeline |  Funcional | 85% |
+| Mídia/Upload |  Parcial | 50% |
+| Jogo ao Vivo |  Parcial | 40% |
+| Chat |  Parcial | 30% |
+| Combate |  Pendente | 10% |
+
+---
+
+##  FICHA DE PERSONAGEM V5 (PlayerSheet.vue)
+
+### Componente: `app/components/campaign/PlayerSheet.vue` (~1206 linhas)
+
+**Status:  COMPLETO E FUNCIONAL**
+
+### Estrutura do Componente
+
+#### Seções da Ficha (template):
+- **Linhas 1-50**: Cabeçalho com avatar + nome + borda vampírica + ornamentos
+- **Linhas ~60-120**: Campos do cabeçalho (3+3 grid: Nome/Conceito/Clã | Geração/Seita/Refúgio)
+- **Linhas ~120-200**: Atributos (Físicos/Sociais/Mentais  5 bolinhas cada)
+- **Linhas ~200-280**: Habilidades V5 (Talentos/Perícias/Conhecimentos  5 bolinhas)
+- **Linhas ~280-520**: Grid 1 - Disciplinas+Vantagens+Fome | Potência+Experiência
+- **Linhas ~520-640**: Grid 2 - Virtudes | Humanidade+Vontade+Vitalidade
+- **Linhas ~640-700**: Ressonância, Princípios, Pilares, Perdição
+- **Linhas ~700-710**: Geração do Abraço (dropdown Cria/Neófito/Ancião)
+- **Linhas ~710-780**: Aparência, Traços Distintivos, Condições, História
+- **Linhas ~780-890**: Modais de confirmação (fechar + salvar)
+
+#### Script (lógica):
+- **Linhas ~885-890**: Refs do modal (showConfirmModal, showSaveConfirmModal)
+- **Linhas ~893-915**: getInitials() helper
+- **Linhas ~895-900**: vampireClans array (14 clãs)
+- **Linhas ~900-920**: vampireDisciplines array (15 disciplinas V5)
+- **Linhas ~920-940**: Atributos (physicalAttributes, socialAttributes, mentalAttributes)
+- **Linhas ~940-980**: Habilidades V5 (talents, skills, knowledges - ordem oficial PT-BR)
+- **Linhas ~980-985**: Virtudes array
+- **Linhas ~985-1030**: sheetData ref (todos campos da ficha)
+- **Linhas ~1035-1110**: Métodos (setAttribute, setSkill, setDiscipline, setVirtue, add/remove)
+- **Linhas ~1110-1130**: addCondition/removeCondition, setBloodPotency
+- **Linhas ~1130-1206**: validateRequiredFields, saveSheet, confirmSave, handleClose
+
+### Campos da sheetData:
+```typescript
+{
+  name, concept, clan, generation, sect, haven, player,
+  resonance, chronicleTenets, touchstonesConvictions, clanBane,
+  advantages: [{ name, level }],
+  bloodPotency, bloodSurge, powerBonus, feedingPenalty, baneSeverity,
+  xpTotal, xpSpent, embraceGeneration,
+  appearance, distinguishingFeatures, history,
+  attributes: { physical, social, mental },
+  skills: { talents, skills, knowledges },
+  disciplines: [{ name, level }],
+  virtues: { conscience, selfControl, courage },
+  humanity, willpower, vitality,
+  hunger (padrão: 1),
+  conditions: ['']
+}
 ```
 
-### Fase 2: Páginas de Campanha ✅ **CONCLUÍDA**
-```
-✅ /app/pages/campaign/[id].vue (tela compartilhada)
-✅ /app/pages/campaign/[id]/master.vue (dashboard do mestre)
-✅ /app/pages/campaign/[id]/player.vue (tela do jogador)
-✅ /app/layouts/campaign.vue (layout específico)
-```
+### Fluxo de Salvamento:
+1. Usuário clica "Salvar"  `saveSheet()` valida campos
+2. Modal de confirmação aparece  usuário confirma
+3. `confirmSave()` filtra condições vazias
+4. `emit('save', { ...player, sheet: sheetData })`  componente pai
+5. Pai chama `saveCharacterSheet()`  `savePlayerSheet()`  banco Supabase
+6. `loadCampaignData()` recarrega dados  dashboard atualiza
 
-### Fase 3: Componentes da Campanha ✅ **CONCLUÍDA**
-```
-✅ PlayerAvatar.vue
-✅ Timeline.vue
-✅ TimelineItem.vue
-✅ MediaPlayer.vue
-⬜ MapViewer.vue (próxima fase)
-⬜ PartyTeam.vue (próxima fase)
-⬜ DocumentLibrary.vue (próxima fase)
-```
+---
 
-### Fase 4: Componentes do Mestre ✅ **CONCLUÍDA**
-```
-✅ NPCsTab.vue (gerenciador completo)
-✅ NPCModal.vue (criação/edição)
-✅ NPCDetailsModal.vue (detalhes e ações)
-✅ PlayersTab.vue
-✅ MediaTab.vue
-✅ NotesTab.vue
-✅ SettingsTab.vue
-⬜ CombatTracker.vue (próxima fase)
-⬜ MapLibrary.vue (próxima fase)
-⬜ NPCGenerator.vue (próxima fase)
-```
+##  COMPONENTES IMPLEMENTADOS
 
-### Fase 5: Componentes UI
-```
-✅ BaseButton.vue
-⬜ BaseInput.vue
-⬜ BaseModal.vue
-⬜ BaseCard.vue
-⬜ BaseSelect.vue
-⬜ BaseTabs.vue
-⬜ BaseToast.vue
-```
+### Campanha (`app/components/campaign/`)
+| Componente | Status | Descrição |
+|-----------|--------|-----------|
+| PlayerSheet.vue |  | Ficha V5 completa (~1206 linhas) |
+| PlayerAvatar.vue |  | Avatar com atributos VtM |
+| Timeline.vue |  | Timeline interativa |
+| TimelineItem.vue |  | Item da timeline |
+| MediaPlayer.vue |  | Player de música |
+| AddEventModal.vue |  | Modal de evento |
+| CombatTracker.vue |  | Estrutura base |
+| MapViewer.vue |  | Estrutura base |
 
-### Fase 6: Integração
-```
-⬜ Configurar Supabase
-⬜ Criar tabelas no banco
-⬜ Implementar autenticação JWT
-⬜ Configurar storage para uploads
-⬜ Implementar realtime
-⬜ Testar fluxo completo
+### Mestre (`app/components/campaign/master/`)
+| Componente | Status | Descrição |
+|-----------|--------|-----------|
+| NPCsTab.vue |  | Gerenciamento de NPCs |
+| NPCModal.vue |  | Criar/editar NPC |
+| NPCDetailsModal.vue |  | Detalhes do NPC |
+| NPCSheet.vue |  | Ficha do NPC |
+| PlayersTab.vue |  | Gestão de jogadores |
+| MediaTab.vue |  | Biblioteca de mídia |
+| NotesTab.vue |  | Anotações privadas |
+| SettingsTab.vue |  | Configurações |
+
+### UI (`app/components/ui/`)
+| Componente | Status | Descrição |
+|-----------|--------|-----------|
+| BaseButton.vue |  | Botão com variantes |
+| BaseCard.vue |  | Card estilo vampire |
+| BaseInput.vue |  | Input com CAPS LOCK |
+| BaseModal.vue |  | Modal genérico |
+| BaseBadge.vue |  | Badge para status |
+| BaseTabs.vue |  | Abas genéricas |
+| BaseToast.vue |  | Notificação toast |
+| ToastContainer.vue |  | Container de toasts |
+| ChatModal.vue |  | Modal de chat |
+| WodButton.vue |  | Botão WoD flutuante |
+| UserProfile.vue |  | Perfil do usuário |
+| NotificationsDropdown.vue |  | Notificações |
+| DirectMessages.vue |  | Mensagens diretas |
+
+---
+
+##  PÁGINAS IMPLEMENTADAS
+
+| Página | Status | Descrição |
+|--------|--------|-----------|
+| `/` (index) |  | Página inicial |
+| `/login` |  | Login com Supabase |
+| `/register` |  | Registro de conta |
+| `/dashboard` |  | Lista de campanhas |
+| `/join-campaign` |  | Entrar via código |
+| `/forgot-password` |  | Recuperar senha |
+| `/terms` |  | Termos de uso |
+| `/privacy` |  | Privacidade |
+| `/debug` |  | Página de debug |
+| `/campaign/[id]` |  | Tela compartilhada |
+| `/campaign/[id]/player` |  | Dashboard do jogador |
+| `/campaign/[id]/master` |  | Dashboard do mestre |
+| `/campaign/[id]/live` |  | Jogo ao vivo (parcial) |
+
+---
+
+##  COMPOSABLES
+
+| Composable | Status | Funções Principais |
+|-----------|--------|-------------------|
+| useAuth.ts |  | login, register, logout, restoreSession |
+| useCampaign.ts |  | fetchCampaigns, createCampaign, joinByInviteCode, savePlayerSheet |
+| useChat.ts |  | Sistema de chat (parcial) |
+| useLiveGame.ts |  | Jogo ao vivo (parcial) |
+| useNotifications.ts |  | Sistema de notificações |
+| useSeo.ts |  | Meta tags e SEO |
+| useToast.ts |  | Toasts profissionais |
+
+---
+
+##  TIPOS TYPESCRIPT (`app/types/index.ts`)
+
+### Interface CharacterSheet (atualizada V5):
+```typescript
+export interface CharacterSheet {
+  name: string
+  concept: string
+  clan: string
+  generation: number
+  sect: string
+  haven: string
+  player: string
+  avatar?: string
+  resonance?: string
+  chronicleTenets?: string
+  touchstonesConvictions?: string
+  clanBane?: string
+  advantages?: Array<{ name: string; level: number }>
+  bloodPotency?: number
+  bloodSurge?: string
+  powerBonus?: string
+  feedingPenalty?: string
+  baneSeverity?: string
+  embraceGeneration?: string   // Cria/Neófito/Ancião
+  appearance?: string
+  distinguishingFeatures?: string
+  history?: string
+  attributes: { physical, social, mental }
+  skills: { talents, skills, knowledges }
+  disciplines: Array<{ name: string; level: number }>
+  virtues: { conscience: number; selfControl: number; courage: number }
+  humanity: number
+  willpower: number
+  vitality?: number            // Vitalidade (V5)
+  hunger?: number              // Fome (1-5, padrão 1)
+  conditions?: string[]        // Condições narrativas
+  xpTotal?: number
+  xpAvailable?: number
+  xpSpent?: number
+  notes?: string               // Opcional
+}
 ```
 
 ---
 
-## 📈 PROGRESSO GERAL
+##  PRÓXIMOS PASSOS
 
-### ✅ Concluído (95%)
-- ✅ Estrutura de pastas reorganizada (Nuxt 4)
-- ✅ Types TypeScript completos com NPCs
-- ✅ Composables completos e funcionais
-- ✅ Middleware completo e testado
-- ✅ Páginas de autenticação completas
-- ✅ Dashboard principal com dados mock
-- ✅ Sistema de cores vampire aplicado
-- ✅ Componentes UI expandidos (/ui/)
-- ✅ BaseInput avançado (CAPS LOCK, toggle senha)
-- ✅ PlayerAvatar completo
-- ✅ WodButton e funcionalidades extras
-- ✅ Páginas legais (terms/privacy)
-- ✅ Middleware de redirecionamento funcional
-- ✅ **Sistema completo de campanhas**
-- ✅ **Layout campaign específico**
-- ✅ **Componentes Timeline e MediaPlayer funcionais**
-- ✅ **Dashboard do mestre completo**
-- ✅ **Sistema de NPCs funcionais**
-- ✅ **Modais de criação e edição implementados**
-- ✅ **Debugging e resolução de problemas de imports**
-- ✅ **Sistema de abas do mestre**
-- ✅ Documentação atualizada
+### Prioridade Alta
+- [ ] Integrar NPCs com Supabase (tabela `npcs`)
+- [ ] Sistema de timeline persistente (tabela `timeline_events`)
+- [ ] Upload real de mídia via Supabase Storage
+- [ ] Completar jogo ao vivo (`/campaign/[id]/live`)
 
-### 🔥 Últimos Ajustes (3%)
-- ✅ Sistema de NPCs totalmente funcional
-- ✅ Modais dimensionados corretamente
-- ✅ Imports explícitos resolvidos
-- ✅ Renderização de modais corrigida
+### Prioridade Média
+- [ ] Combat Tracker funcional
+- [ ] Sistema de chat em tempo real
+- [ ] Supabase Realtime para atualizações ao vivo
+- [ ] NPCSheet.vue - atualizar para padrão V5 (ainda usa healthLevels)
 
-### ⚪ Próximo (2%)
-- ⚪ Backend/APIs (pronto para implementação)
-- ⚪ Integração com banco de dados
-- ⚪ Realtime
-- ⚪ Testes completos
-- ⚪ Deploy
-
----
-
-## 🎯 PRÓXIMOS PASSOS PRIORITÁRIOS
-
-### Fase 1: Backend (Próximo Passo Imediato)
-```
-⚪ /server/api/auth/*.ts (login, register, logout)
-⚪ /server/api/campaigns/*.ts (CRUD campanhas)
-⚪ /server/api/npcs/*.ts (CRUD NPCs)
-⚪ /server/api/timeline/*.ts (eventos da timeline)
-⚪ /server/api/upload/*.ts (upload de arquivos)
-⚪ Integração com banco de dados (Supabase recomendado)
-```
-
-### Fase 2: Expansão de Features
-```
-⚪ MapViewer.vue (visualizador de mapas)
-⚪ PartyTeam.vue (gestão avançada do party)
-⚪ DocumentLibrary.vue (biblioteca de documentos)
-⚪ CombatTracker.vue (rastreador de combate)
-⚪ MapLibrary.vue (biblioteca de mapas)
-⚪ NPCGenerator.vue (gerador automático de NPCs)
-```
-
-### Fase 3: Integração e Polish
-```
-⚪ Sistema de chat em tempo real
-⚪ Notificações push
-⚪ Sistema de backup/restore
-⚪ Integração com Discord (opcional)
-⚪ Sistema de permissões avançado
-⚪ Temas customizáveis
-```
-
----
-
-## 🚀 COMANDOS ÚTEIS
-
-```bash
-# Desenvolvimento
-npm run dev
-
-# Verificar estrutura
-tree /F > estrutura.txt
-
-# Limpar cache do Nuxt
-rm -rf .nuxt
-npm run postinstall
-
-# Build
-npm run build
-```
-
----
-
-## 📞 SUPORTE
-
-Consulte:
-- `ARCHITECTURE.md` - Para entender a arquitetura
-- `DEV_GUIDE.md` - Para guia de desenvolvimento
-- `types/index.ts` - Para ver todos os tipos disponíveis
-- Componente `PlayerAvatar.vue` - Como exemplo de implementação
-
----
-
-**Sistema pronto para desenvolvimento! Toda a base está criada.** 🎉🧛‍♂️
+### Prioridade Baixa
+- [ ] Gerador automático de NPCs
+- [ ] Sistema de dados (rolagem)
+- [ ] Map Viewer com zoom/pan
+- [ ] Temas customizáveis
+- [ ] Deploy Vercel/Netlify

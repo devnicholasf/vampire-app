@@ -1,234 +1,114 @@
-# 📝 CHANGELOG - Vampire RPG
+﻿#  CHANGELOG - Vampire RPG
 
-## 🚀 Versão 3.0.0 - Sistema Completo Multi-Usuário
+##  Versão 4.0.0 - Ficha de Personagem V5 Completa
+**Data:** Fevereiro 12, 2026
+
+###  **FICHA DE PERSONAGEM V5 (PlayerSheet.vue)**
+Reformulação completa da ficha de personagem para seguir o padrão oficial do Vampire: The Masquerade 5ª Edição.
+
+####  **Campos Removidos (não-V5)**
+- Campo "Jogador" removido do cabeçalho
+- Seção "Notas Gerais" removida do final da ficha
+- Seção "Níveis de Saúde" removida (não existe no V5)
+- Campos "Idade Verdadeira", "Idade Aparente", "Data de Nascimento", "Data de Morte" substituídos
+
+####  **Campos Adicionados (V5)**
+- **Fome** (hunger): 5 bolinhas vermelhas com valor padrão 1
+- **Vitalidade** (vitality): 10 bolinhas verdes
+- **Condições Narrativas** (conditions): lista dinâmica com adicionar/remover
+- **Geração do Abraço** (embraceGeneration): dropdown com Cria/Neófito/Ancião
+- **Potência de Sangue** (bloodPotency): 10 círculos + campos texto (Surto, Bônus, Penalidade, Gravidade)
+- **Vantagens & Defeitos** (advantages): lista dinâmica nome + 5 círculos nível
+- **Ressonância**, **Princípios da Crônica**, **Pilares & Convicções**, **Perdição do Clã**
+
+####  **Habilidades na Ordem V5 Oficial (PT-BR)**
+- **Talentos**: Armas Brancas, Armas de Fogo, Atletismo, Briga, Condução, Furtividade, Ladroagem, Ofícios, Sobrevivência
+- **Perícias**: Empatia com Animais, Etiqueta, Intimidação, Liderança, Manha, Performance, Persuasão, Sagacidade, Subterfúgio
+- **Conhecimentos**: Ciência, Erudição, Finanças, Investigação, Medicina, Ocultismo, Percepção, Política, Tecnologia
+
+####  **Disciplinas como Dropdown V5**
+- 15 disciplinas disponíveis: Animalismo, Auspícios, Celeridade, Dominação, Feitiçaria de Sangue, Fortitude, Metamorfose, Ofuscação, Potência, Presença, Tenebrosidade, Serpentis, Quietus, Quimerismo, Vicissitude
+
+####  **Layout e Grid Reorganizados**
+- Cabeçalho 3+3 (Nome/Conceito/Clã | Geração/Seita/Refúgio)
+- Grid 2 colunas: Disciplinas+Vantagens+Fome | Potência+Experiência
+- Grid 2 colunas: Virtudes | Humanidade+Vontade+Vitalidade
+- Experiência movida para coluna da Potência (preenchendo espaço)
+
+####  **Design Visual Vampírico**
+- Avatar circular com iniciais ou imagem no cabeçalho
+- Nome do personagem em vermelho, grande, uppercase, tracking-wider
+- Borda vermelha (border-4 border-red-900) com sombra vermelha (box-shadow glow)
+- Ornamentos decorativos nos 4 cantos (fora do scroll, sem clipping)
+- Header sticky com botões Salvar/Fechar
+
+####  **Sincronização Dashboard**
+- Fome, Humanidade, Vontade e Condições salvam e aparecem no dashboard do jogador
+- Filtro de condições vazias no save
+- Fluxo: sheetData  emit('save')  pai salva no banco  loadCampaignData()  dashboard atualiza
+
+###  **Atualizações de Tipos (TypeScript)**
+- Interface `CharacterSheet` atualizada em `app/types/index.ts`
+- Campos removidos: `healthLevels`, `trueAge`, `apparentAge`, `dateOfBirth`, `dateOfDeath`
+- Campos adicionados: `embraceGeneration`, `hunger`, `conditions`, `vitality`, `bloodPotency`, `advantages`
+- `notes` agora é opcional
+
+###  **Correções**
+- `getInitials()` com optional chaining para evitar erros
+- `removeCondition(idx)` tipagem corrigida com `Number(idx)`
+- Ornamentos da borda movidos para div wrapper (correção de clipping no scroll)
+
+---
+
+##  Versão 3.0.0 - Sistema Completo Multi-Usuário
 **Data:** Janeiro 28, 2026
 
-### 🎯 **INTEGRAÇÃO SUPABASE COMPLETA**
-- ✅ **Autenticação Real**: Supabase Auth substituindo mocks
-- ✅ **Banco de Dados**: Tabelas campaigns + campaign_players funcionais
-- ✅ **RLS Policies**: Row Level Security implementado e testado
-- ✅ **Dados Reais**: 100% dos mocks removidos e substituídos
+###  **Integração Supabase Completa**
+-  Autenticação real com Supabase Auth substituindo mocks
+-  Tabelas campaigns + campaign_players funcionais
+-  Row Level Security (RLS) implementado e testado
+-  100% dos mocks removidos e substituídos por dados reais
 
-### 🎫 **SISTEMA DE CONVITES INOVADOR**  
-- ✅ **Códigos Únicos**: Geração automática (ex: GELYL0, XMPL8K)
-- ✅ **Página de Entrada**: `/join-campaign` com validação completa
-- ✅ **joinCampaignByInviteCode()**: Função integrada ao useCampaign
-- ✅ **Anti-Duplicata**: Constraint UNIQUE (campaign_id, user_id)
-- ✅ **Botão Dashboard**: "Entrar em Campanha" funcional
+###  **Sistema de Convites**
+-  Códigos únicos gerados automaticamente (ex: GELYL0)
+-  Página `/join-campaign` com validação completa
+-  `joinCampaignByInviteCode()` integrada ao useCampaign
+-  Constraint UNIQUE (campaign_id, user_id) anti-duplicata
 
-### 🧛‍♂️ **SISTEMA MULTI-USUÁRIO FUNCIONANDO**
-- ✅ **Fluxo Testado**: Mestre cria → Jogador entra → Ambos veem
-- ✅ **Permissões**: Diferenciação correta mestre vs jogador  
-- ✅ **Interface**: "Jogadores: X" em tempo real
-- ✅ **Aba Mestre**: Lista real de participantes
-- ✅ **Constraint**: 1 usuário = 1 participação por campanha
+###  **Sistema Multi-Usuário**
+-  Fluxo testado: Mestre cria  Jogador entra  Ambos veem
+-  Permissões mestre vs jogador funcionando
+-  Contagem de jogadores em tempo real
+-  1 usuário = 1 participação por campanha
 
-### 🔧 **OTIMIZAÇÕES TÉCNICAS**
-- ✅ **Imports Explícitos**: Todos componentes com imports manuais
-- ✅ **BaseButton Reutilizado**: Consistência em toda aplicação
-- ✅ **Navegação Nuxt**: vue-router → navigateTo em todos locais
-- ✅ **Mapeamento Dados**: campaign_players → formato template
-- ✅ **Código Limpo**: Redundâncias removidas, estrutura otimizada
-
-### 🐛 **PROBLEMAS CRÍTICOS RESOLVIDOS**
-- ✅ **RLS Recursion**: Policies otimizadas, sem loops infinitos
-- ✅ **Navigation Conflicts**: Middleware simplificado funcionando  
-- ✅ **Data Mapping**: user_id→id, character_name→name correto
-- ✅ **Toast System**: Notificações profissionais implementadas
-- ✅ **Campaign Loading**: Dados carregam corretamente nas páginas
-
-### 📊 **ESTATÍSTICAS DA SESSÃO**
-- **25+ arquivos** modificados com correções
-- **2 tabelas** Supabase configuradas e funcionais
-- **5 funcionalidades** principais implementadas  
-- **100% mocks** substituídos por dados reais
-- **Sistema completo** testado com múltiplos usuários
-
-### 🎮 **FLUXO VALIDADO**
-```
-Teste Completo Realizado:
-├── Usuário A: Cria conta → Cria campanha FORTALEZA → Código GELYL0
-├── Usuário B: Cria conta → Join campaign → GELYL0 + "Elena Toreador"  
-├── Verificação: Ambos veem campanha no dashboard
-├── Master View: "Jogadores: 2" na interface
-└── Aba Jogadores: Marcus Ventrue + Elena Toreador listados
-```
+###  **Otimizações Técnicas**
+-  Imports explícitos em todos os componentes
+-  BaseButton reutilizado consistentemente
+-  vue-router  navigateTo do Nuxt
+-  Mapeamento campaign_players  formato template
 
 ---
 
-## 🚀 Versão 2.0.0 - Sistema de Campanhas Implementado
+##  Versão 2.0.0 - Sistema de Campanhas
 **Data:** Dezembro 2024
 
-### ✨ Principais Funcionalidades Adicionadas
-
-#### 🏰 **Sistema Completo de Campanhas**
-- ✅ Páginas de campanha implementadas:
-  - `/campaign/[id]/index.vue` - Tela compartilhada (mestre + jogadores)
-  - `/campaign/[id]/master.vue` - Dashboard exclusivo do mestre
-  - `/campaign/[id]/player.vue` - Tela específica do jogador
-- ✅ Layout `campaign.vue` específico para campanhas
-- ✅ Navegação entre diferentes seções da campanha
-- ✅ Sistema de permissões baseado em roles (mestre/jogador)
-
-#### 👹 **Sistema de NPCs**
-- ✅ **NPCsTab.vue** - Gerenciador principal de NPCs
-  - Lista de NPCs existentes
-  - Botão de criar NPC funcional
-  - Integração com modais de criação/edição
-  - Sistema de busca e filtros (preparado)
-
-- ✅ **NPCModal.vue** - Modal de criação/edição de NPCs
-  - Formulário completo com validação
-  - Seleção de clã vampire (todos os 13 clãs)
-  - Atributos VtM customizáveis:
-    - Fome (0-5)
-    - Humanidade (0-10)
-    - Força de Vontade (0-10)
-    - Saúde (0-10)
-  - Upload de avatar simulado
-  - Disciplinas vampire
-  - Background e personalidade
-
-- ✅ **NPCDetailsModal.vue** - Modal de detalhes
-  - Visualização completa dos dados do NPC
-  - Ações disponíveis:
-    - Editar NPC
-    - Adicionar ao jogo
-    - Deletar NPC
-  - Design consistente com tema vampire
-
-#### 📜 **Sistema de Timeline**
-- ✅ **Timeline.vue** - Timeline interativa
-  - Exibição cronológica de eventos
-  - Filtros por tipo de evento
-  - Filtros por sessão
-  - Adição de novos eventos (apenas mestres)
-
-- ✅ **TimelineItem.vue** - Componente de evento
-  - Ícones específicos por tipo de evento
-  - Design responsivo e acessível
-  - Ações de edição/exclusão (mestres)
-  - Timestamps e informações detalhadas
-
-#### 🎵 **Sistema de Mídia**
-- ✅ **MediaPlayer.vue** - Player de música ambiente
-  - Controles de reprodução (play/pause)
-  - Controle de volume
-  - Upload de música (apenas mestres)
-  - Lista de músicas disponíveis
-
-#### 🗂️ **Sistema de Abas do Mestre**
-- ✅ **Dashboard completo implementado com abas:**
-  - **Players Tab** - Gerenciamento de jogadores
-  - **NPCs Tab** - Sistema completo de NPCs (totalmente funcional)
-  - **Media Tab** - Biblioteca de mídia
-  - **Notes Tab** - Anotações privadas do mestre
-  - **Settings Tab** - Configurações da campanha
-
-### 🔧 Melhorias Técnicas
-
-#### 🧩 **Componentes UI Expandidos**
-- ✅ **BaseBadge.vue** - Sistema de badges para status
-- ✅ **WodButton.vue** movido para `/ui/`
-- ✅ **UserProfile.vue** - Perfil do usuário
-- ✅ **NotificationsDropdown.vue** - Sistema de notificações
-- ✅ **DirectMessages.vue** - Mensagens diretas
-
-#### 🛠️ **Correções e Debugging**
-- ✅ **Problemas de auto-import resolvidos**
-  - Adicionados imports explícitos onde necessário
-  - Verificação de funcionamento do Nuxt 4 auto-imports
-
-- ✅ **Problemas de renderização de modal corrigidos**
-  - Removido `Teleport` que causava problemas
-  - Modal renderiza corretamente no DOM
-  - Z-index e styling ajustados
-
-- ✅ **CSS e styling otimizados**
-  - Sintaxe webkit corrigida para scrollbars customizadas
-  - Dimensões de modal ajustadas (max-w-xl, max-h-85vh)
-  - Cores vampire consistentes aplicadas
-
-#### 🎨 **Sistema de Types Expandido**
-- ✅ **Tipos NPC aprimorados:**
-  - `NPCAttributes` - atributos específicos VtM
-  - `NPCSkills` - habilidades físicas/sociais/mentais
-  - `VampireClan` - enumeração completa dos clãs
-  - Interfaces para criação e edição de NPCs
-
-### 🚫 Problemas Resolvidos
-
-#### ⚡ **Imports e Auto-loading**
-- **Problema:** Auto-imports do Nuxt 4 não funcionavam consistentemente
-- **Solução:** Imports explícitos adicionados onde necessário
-- **Resultado:** Componentes carregam corretamente
-
-#### 🖼️ **Renderização de Modal**
-- **Problema:** NPCModal não aparecia quando chamado
-- **Solução:** Removido `Teleport` problemático, ajustado z-index
-- **Resultado:** Modal funcional com debugging completo
-
-#### 🎨 **CSS e Styling**
-- **Problema:** Sintaxe CSS incorreta, modal muito grande
-- **Solução:** Correção webkit, ajuste de dimensões
-- **Resultado:** Interface polida e responsiva
-
-### 📊 Estatísticas da Implementação
-
-#### 📁 **Arquivos Criados/Modificados:**
-- **7 novos componentes** de campanha
-- **4 novos componentes** de master dashboard
-- **3 páginas** de campanha completas
-- **1 layout** específico para campanhas
-- **Múltiplas atualizações** de tipos TypeScript
-
-#### 🎯 **Funcionalidades Testadas:**
-- ✅ Navegação entre páginas de campanha
-- ✅ Sistema completo de NPCs (CRUD)
-- ✅ Timeline interativa
-- ✅ Media Player funcional
-- ✅ Sistema de abas responsivo
-- ✅ Modal de criação/edição de NPCs
-- ✅ Upload simulado de avatares
-
-### 🔮 Próximos Passos Planejados
-
-#### 🗄️ **Backend Implementation**
-- APIs REST para NPCs
-- APIs para Timeline
-- Sistema de upload real
-- Integração com Supabase
-
-#### 🎮 **Expansões de Features**
-- Combat Tracker
-- Map Viewer com zoom/pan
-- Sistema de chat em tempo real
-- Gerador automático de NPCs
+###  **Funcionalidades**
+-  Páginas de campanha (index, master, player)
+-  Sistema completo de NPCs (CRUD com modais)
+-  Timeline interativa com filtros
+-  Media Player para música ambiente
+-  Dashboard do mestre com 5 abas
+-  Layout campaign dedicado
 
 ---
 
-## 📋 Versão 1.0.0 - Base do Sistema
+##  Versão 1.0.0 - Base do Sistema
 **Data:** Novembro 2024
 
-### ✨ Funcionalidades Iniciais
-- ✅ Sistema de autenticação completo
-- ✅ Dashboard principal
-- ✅ Composables (useAuth, useCampaign, useTimeline, useUpload)
-- ✅ Middleware de proteção
-- ✅ Sistema de tipos TypeScript
-- ✅ Tema vampire customizado
-- ✅ Componentes UI base
-
----
-
-## 🎯 Resumo do Progresso
-
-**Sistema 95% implementado:**
-- ✅ Frontend completo funcional
-- ✅ Sistema de campanhas operacional
-- ✅ Dashboard do mestre funcional
-- ✅ NPCs totalmente implementados
-- ⚪ Backend APIs (próximo passo)
-- ⚪ Banco de dados (próximo passo)
-
-**Pronto para próxima fase:** Implementação do backend e persistência de dados.
+###  **Base**
+-  Sistema de autenticação completo
+-  Dashboard principal
+-  Composables (useAuth, useCampaign)
+-  Middleware de proteção de rotas
+-  Tipos TypeScript completos
+-  Tema vampire customizado com Tailwind

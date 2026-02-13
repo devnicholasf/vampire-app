@@ -1,222 +1,160 @@
-# 📋 RELATÓRIO DE MUDANÇAS ARQUITETURAIS
+﻿#  RELATÓRIO DE MUDANÇAS ARQUITETURAIS
 
-**Data**: 28 de janeiro de 2026  
-**Status**: Sistema Completo com Supabase e Múltiplos Usuários  
-
----
-
-## 🔄 MUDANÇAS IMPLEMENTADAS NESTA SESSÃO
-
-### 1. **Integração Completa com Supabase**
-
-#### ✅ **Backend Real Implementado**:
-```
-Supabase Configuration:
-├── Authentication         ✅ Supabase Auth
-├── Database Tables        ✅ campaigns, campaign_players  
-├── Row Level Security     ✅ RLS policies funcionais
-├── Real-time Updates      ✅ Preparado
-└── Storage               ⚪ Próxima fase
-```
-
-#### ✅ **Mocks → Dados Reais**:
-- **ANTES**: Dados hardcoded em composables
-- **DEPOIS**: Dados carregados do Supabase
-- **Resultado**: Sistema persistente e multi-usuário
-
-### 2. **Sistema de Convites Inovador**
-
-#### 🎯 **Fluxo Implementado**:
-1. **Mestre cria campanha** → Código único gerado (ex: GELYL0)
-2. **Jogador usa /join-campaign** → Insere código + nome do personagem
-3. **Sistema valida** → Adiciona à tabela campaign_players
-4. **Ambos veem campanha** → Dashboard atualizado em tempo real
-
-#### ✅ **Constraint de Negócio**:
-- **Regra**: 1 usuário = 1 participação por campanha
-- **Implementação**: UNIQUE (campaign_id, user_id)
-- **Benefício**: Evita duplicações e mantém integridade
-
-### 3. **Páginas e Navegação Otimizadas**
-
-#### ✅ **Sistema de Roteamento**:
-- `/dashboard` - Lista campanhas (mestre + jogador)
-- `/join-campaign` - Entrar via código convite
-- `/campaign/[id]` - Tela compartilhada
-- `/campaign/[id]/master` - Dashboard exclusivo mestre
-
-#### ✅ **Correções Técnicas**:
-- **vue-router** → **nuxt/app** em todos arquivos
-- **$router.push()** → **navigateTo()** 
-- **Imports explícitos** adicionados consistentemente
-
-### 4. **Componentes Otimizados**
-
-#### ✅ **BaseButton Reutilizado**:
-```vue
-<!-- ANTES (múltiplos padrões) -->
-<button class="custom-styles">
-
-<!-- DEPOIS (consistente) -->
-<BaseButton variant="primary">
-```
-
-#### ✅ **Imports Explícitos**:
-```vue
-<!-- ANTES (auto-import não confiável) -->
-<script setup>
-// Dependia do Nuxt auto-import
-
-<!-- DEPOIS (explícito sempre) -->
-<script setup lang="ts">
-import { ref } from 'vue'
-import BaseButton from '~/components/ui/BaseButton.vue'
-```
+**Data:** Fevereiro 12, 2026
+**Versão:** 4.0.0 - Ficha V5 Completa
 
 ---
 
-## 🗄️ ESTRUTURA DO BANCO DE DADOS
+##  MUDANÇAS DA SESSÃO ATUAL (Fevereiro 2026)
 
-### **Tabelas Implementadas**:
+### 1. Reformulação Completa da Ficha de Personagem V5
 
-#### `campaigns`
+#### Componente: `PlayerSheet.vue` (~1206 linhas)
+
+**ANTES (v3.0):**
+- Ficha genérica com campos misturados (V20 + V5)
+- Campo "Jogador" no cabeçalho
+- Seção "Notas Gerais" no final
+- Seção "Níveis de Saúde" (estilo V20)
+- 4 campos de Idade e Datas
+- Habilidades em ordem alfabética inglesa
+- Disciplinas como campo de texto livre
+- Sem Fome, Condições, Vitalidade
+- Sem design visual vampírico
+
+**DEPOIS (v4.0):**
+- Ficha 100% V5 com layout oficial
+- Campo "Jogador" removido
+- "Notas Gerais" e "Níveis de Saúde" removidos
+- "Geração do Abraço" (dropdown Cria/Neófito/Ancião) substituiu 4 campos
+- Habilidades na ordem oficial V5 em PT-BR
+- Disciplinas como dropdown (15 opções V5)
+- Fome (5 bolinhas vermelhas, padrão 1)
+- Condições Narrativas (lista dinâmica)
+- Vitalidade (10 bolinhas verdes)
+- Potência de Sangue (10 círculos + campos de modificadores)
+- Vantagens & Defeitos (lista dinâmica com níveis)
+- Avatar circular + nome vermelho grande no cabeçalho
+- Borda vampírica vermelha com ornamentos nos cantos
+- Sombra vermelha (glow) com box-shadow
+
+### 2. Atualização da Interface TypeScript
+
+#### Arquivo: `app/types/index.ts`
+
+**Campos removidos:**
+- `healthLevels` (não existe no V5)
+- `trueAge` (substituído por embraceGeneration)
+- `apparentAge` (substituído)
+- `dateOfBirth` (substituído)
+- `dateOfDeath` (substituído)
+
+**Campos adicionados:**
+- `embraceGeneration?: string`
+- `hunger?: number`
+- `conditions?: string[]`
+- `vitality?: number`
+- `bloodPotency?: number`
+- `advantages?: Array<{ name: string; level: number }>`
+- `bloodSurge?: string`
+- `powerBonus?: string`
+- `feedingPenalty?: string`
+- `baneSeverity?: string`
+- `resonance?: string`
+- `chronicleTenets?: string`
+- `touchstonesConvictions?: string`
+- `clanBane?: string`
+- `appearance?: string`
+- `distinguishingFeatures?: string`
+
+### 3. Layout Responsivo Reorganizado
+
+**Grid do cabeçalho:**
+```
+ANTES: grid-cols-2 sm:grid-cols-4 (4 campos por linha)
+DEPOIS: sm:grid-cols-3 (3 campos por linha, 2 linhas)
+  Linha 1: Nome / Conceito / Clã
+  Linha 2: Geração / Seita / Refúgio
+```
+
+**Grid principal (2 colunas):**
+```
+Grid 1:
+  Esquerda: Disciplinas + Vantagens & Defeitos + Fome
+  Direita:  Potência de Sangue + Experiência
+
+Grid 2:
+  Esquerda: Virtudes (3  5 amarelas)
+  Direita:  Humanidade (10 vermelhas) + Vontade (10 azuis) + Vitalidade (10 verdes)
+```
+
+### 4. Design Visual Vampírico
+
+```css
+/* Borda principal */
+border-4 border-red-900
+box-shadow: 0 0 40px rgba(220, 38, 38, 0.3), inset 0 0 20px rgba(220, 38, 38, 0.1)
+
+/* Ornamentos nos cantos (fora do scroll) */
+border-t-4 border-l-4 border-red-600 opacity-60
+
+/* Nome do personagem */
+text-xl sm:text-2xl md:text-4xl font-bold text-red-400 tracking-wider uppercase
+```
+
+---
+
+##  MUDANÇAS DA SESSÃO ANTERIOR (Janeiro 2026)
+
+### Integração Supabase
+- Autenticação real com Supabase Auth
+- Tabelas campaigns + campaign_players
+- RLS policies implementadas
+- 100% dos mocks removidos
+
+### Sistema de Convites
+- Códigos únicos de 6 caracteres
+- Página /join-campaign
+- Constraint UNIQUE anti-duplicata
+
+### Otimizações Técnicas
+- Imports explícitos em todos os componentes
+- BaseButton reutilizado consistentemente
+- vue-router substituído por navigateTo do Nuxt
+
+---
+
+##  BANCO DE DADOS
+
+### Tabelas Supabase:
+
 ```sql
-CREATE TABLE campaigns (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  description text,
-  master_id uuid REFERENCES auth.users NOT NULL,
-  invite_code text UNIQUE NOT NULL,
-  is_active boolean DEFAULT true,
-  created_at timestamp DEFAULT now(),
-  updated_at timestamp DEFAULT now()
-);
-```
+campaigns (
+  id uuid PK, name text, description text,
+  master_id uuid FK, invite_code text UNIQUE,
+  is_active boolean, created_at timestamp, updated_at timestamp
+)
 
-#### `campaign_players`
-```sql  
-CREATE TABLE campaign_players (
-  user_id uuid REFERENCES auth.users,
-  campaign_id uuid REFERENCES campaigns,
-  character_name text NOT NULL,
-  role text DEFAULT 'player',
-  joined_at timestamp DEFAULT now(),
+campaign_players (
+  user_id uuid FK, campaign_id uuid FK,
+  character_name text, role text DEFAULT 'player',
+  sheet jsonb,        -- Ficha V5 completa como JSON
+  joined_at timestamp,
   UNIQUE(campaign_id, user_id)
-);
+)
 ```
 
-### **RLS Policies Ativas**:
-- ✅ **campaigns**: Usuários veem apenas suas campanhas (mestre/jogador)
-- ✅ **campaign_players**: Temporariamente aberta para desenvolvimento
+### RLS Policies:
+- campaigns: usuários veem apenas suas campanhas
+- campaign_players: permissões por papel (mestre/jogador)
 
 ---
 
-## 📊 ESTADO ATUAL DO SISTEMA
+##  ESTADO VALIDADO
 
-### ✅ **100% Funcional**:
-- Sistema de autenticação Supabase
-- Criação de campanhas com códigos únicos  
-- Sistema de convites funcionando
-- Dashboard com dados reais
-- Navegação entre mestre/jogador
-- Aba jogadores mostrando participantes reais
-- Sistema de toast profissional
-- Múltiplos usuários testado com sucesso
-
-### ✅ **Componentes Organizados**:
-```
-app/components/
-├── ui/                    ✅ BaseButton, BaseInput, BaseBadge
-├── auth/                  ✅ Formulários autenticação
-├── campaign/              ✅ PlayerAvatar, Timeline, MediaPlayer
-└── campaign/master/       ✅ NPCsTab, PlayersTab, SettingsTab
-```
-
-### ✅ **Composables Funcionais**:
-```
-app/composables/
-├── useAuth.ts            ✅ Supabase Auth integrado
-├── useCampaign.ts        ✅ CRUD + joinCampaignByInviteCode()
-├── useSupabase.ts        ✅ Cliente configurado
-└── useToast.ts           ✅ Notificações profissionais
-```
-
----
-
-## 🎯 ARQUITETURA VALIDADA
-
-### **Fluxo End-to-End Testado**:
-
-```
-Usuário A (Mestre):
-  Registra → Cria "FORTALEZA" → Recebe GELYL0
-        ↓
-Usuário B (Jogador):  
-  Registra → /join-campaign → GELYL0 + "Elena Toreador"
-        ↓
-Sistema:
-  Valida código → Insere campaign_players → Atualiza dashboard
-        ↓
-Resultado:
-  Ambos veem campanha → Mestre vê "Jogadores: 2"
-```
-
-### **Segurança e Integridade**:
-- ✅ **RLS Policies**: Dados protegidos por usuário
-- ✅ **Unique Constraints**: Previne duplicações  
-- ✅ **Foreign Keys**: Relacionamentos garantidos
-- ✅ **Validation**: Códigos e dados validados
-
-### **Performance e Escalabilidade**:
-- ✅ **Queries Otimizadas**: LEFT JOIN para campanha + jogadores
-- ✅ **Indexes Implícitos**: PKs e FKs automaticamente indexadas
-- ✅ **Realtime Ready**: Estrutura preparada para updates live
-
----
-
-## ✅ VALIDAÇÕES FINAIS
-
-### **✅ Funcionalidades Críticas**:
-- Multi-usuário funcionando perfeitamente
-- Sistema de convites inovador e seguro
-- Dados persistentes no Supabase
-- Interface profissional e responsiva
-- Navegação intuitiva e correta
-- Sistema de permissões robusto
-
-### **✅ Qualidade do Código**:
-- Imports explícitos em todos componentes
-- BaseButton reutilizado consistentemente  
-- Navegação Nuxt (não Vue Router)
-- TypeScript strict mode funcionando
-- Composables bem estruturados
-
-### **✅ Documentação**:
-- Arquitetura documentada e validada
-- Fluxos de usuário testados
-- Próximos passos definidos claramente
-- Guias de desenvolvimento atualizados
-
----
-
-## 🚀 PRÓXIMOS PASSOS DEFINIDOS
-
-### **Fase 1: NPCs Real (Próximo Imediato)**
-- Criar tabela `npcs` no Supabase
-- Integrar NPCsTab com banco real
-- CRUD completo funcionando
-
-### **Fase 2: Timeline Persistente**
-- Tabela `timeline_events`
-- Sistema de eventos compartilhado
-- Realtime updates
-
-### **Fase 3: Media & Files**
-- Supabase Storage configurado
-- Upload real de arquivos
-- Media Player com arquivos reais
-
----
-
-**Sistema arquitetado e funcionando perfeitamente!**  
-**Pronto para expansão das funcionalidades avançadas.** 🧛‍♂️✨
+- Build sem erros (exit code 0)
+- Nenhum campo antigo (trueAge, healthLevels etc.) restante nos arquivos
+- TypeScript sem erros de tipo
+- Ficha V5 funcional com salvamento e sync para dashboard
+- Borda vampírica sem clipping no scroll
+- Condições filtradas (vazias removidas) no salvamento

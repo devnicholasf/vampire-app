@@ -3,11 +3,38 @@
     class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999] p-2 sm:p-4"
     @click.self="handleClose"
   >
-    <div class="bg-surface-card rounded-lg border border-primary p-3 sm:p-4 md:p-6 w-full max-w-7xl max-h-[98vh] overflow-y-auto shadow-2xl">
-      <div class="flex justify-between items-center mb-3 sm:mb-4 sticky top-0 bg-surface-card z-10 pb-2 border-b border-primary">
-        <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-text-primary">
-          📋 Ficha de {{ player.characterName || player.character_name || 'Personagem' }}
-        </h2>
+    <div class="relative w-full max-w-7xl max-h-[98vh]">
+      <!-- Ornamentos decorativos nos cantos (fora do scroll) -->
+      <div class="absolute top-0 left-0 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-l-4 border-red-600 opacity-60 pointer-events-none z-20"></div>
+      <div class="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-r-4 border-red-600 opacity-60 pointer-events-none z-20"></div>
+      <div class="absolute bottom-0 left-0 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-l-4 border-red-600 opacity-60 pointer-events-none z-20"></div>
+      <div class="absolute bottom-0 right-0 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-r-4 border-red-600 opacity-60 pointer-events-none z-20"></div>
+      
+      <!-- Container principal com scroll -->
+      <div class="bg-surface-card rounded-lg border-4 border-red-900 p-3 sm:p-4 md:p-6 w-full max-h-[98vh] overflow-y-auto shadow-2xl" style="box-shadow: 0 0 40px rgba(220, 38, 38, 0.3), inset 0 0 20px rgba(220, 38, 38, 0.1);">
+      
+      <!-- Header com Avatar e Nome -->
+      <div class="flex items-center justify-between mb-3 sm:mb-4 sticky top-0 bg-surface-card z-10 pb-3 border-b-2 border-red-900">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <!-- Avatar Circular -->
+          <div class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full border-4 border-red-600 overflow-hidden bg-gradient-to-br from-red-900 to-gray-900 flex items-center justify-center flex-shrink-0 shadow-lg">
+            <img 
+              v-if="player.sheet?.avatar" 
+              :src="player.sheet.avatar" 
+              :alt="player.characterName || player.character_name"
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-white font-bold text-xl sm:text-2xl md:text-3xl">
+              {{ getInitials(player.characterName || player.character_name || 'P') }}
+            </span>
+          </div>
+          
+          <!-- Nome do Personagem -->
+          <h2 class="text-xl sm:text-2xl md:text-4xl font-bold text-red-400 tracking-wider uppercase">
+            {{ sheetData.name || player.characterName || player.character_name || 'Personagem' }}
+          </h2>
+        </div>
+        
         <div class="flex space-x-1 sm:space-x-2">
           <BaseButton 
             v-if="canEdit"
@@ -409,7 +436,7 @@
 
           <div class="flex flex-col">
             <!-- Potência de Sangue -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary h-full">
+            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
               <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Potência de Sangue</h3>
               
               <!-- Nível de Potência -->
@@ -478,6 +505,46 @@
                     @input="hasUnsavedChanges = true"
                     :disabled="!canEdit"
                     class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Experiência -->
+            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary mt-3 sm:mt-4 md:mt-6">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">💎 Experiência</h3>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Total</label>
+                  <input
+                    v-model.number="sheetData.xpTotal"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Gasto</label>
+                  <input
+                    v-model.number="sheetData.xpSpent"
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs text-text-muted mb-1">Disponível</label>
+                  <input
+                    :value="(sheetData.xpTotal || 0) - (sheetData.xpSpent || 0)"
+                    type="number"
+                    disabled
+                    class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface-hover text-text-primary opacity-60 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -582,29 +649,6 @@
           </div>
         </div>
 
-        <!-- Saúde -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">💊 Níveis de Saúde</h3>
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3 md:gap-4">
-            <div v-for="(health, index) in healthLevels" :key="index" class="text-center">
-              <label class="block text-[10px] sm:text-xs text-text-muted mb-1">{{ health.name }}</label>
-              <button
-                type="button"
-                @click="toggleHealthLevel(index)"
-                :class="[
-                  'w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full border-2 transition-colors mx-auto',
-                  sheetData.healthLevels[index]
-                    ? 'bg-red-600 border-red-600'
-                    : 'border-red-600 hover:bg-red-600 hover:bg-opacity-30'
-                ]"
-              >
-                <span class="sr-only">{{ health.name }}</span>
-              </button>
-              <div class="text-[10px] sm:text-xs text-text-muted mt-0.5 sm:mt-1">{{ health.penalty }}</div>
-            </div>
-          </div>
-        </div>
-
         <!-- Ressonância -->
         <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
           <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🎭 Ressonância</h3>
@@ -657,95 +701,20 @@
           ></textarea>
         </div>
 
-        <!-- Experiência -->
+        <!-- Geração do Abraço -->
         <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">💎 Experiência</h3>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Total</label>
-              <input
-                v-model.number="sheetData.xpTotal"
-                type="number"
-                min="0"
-                placeholder="0"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Gasto</label>
-              <input
-                v-model.number="sheetData.xpSpent"
-                type="number"
-                min="0"
-                placeholder="0"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Disponível</label>
-              <input
-                :value="(sheetData.xpTotal || 0) - (sheetData.xpSpent || 0)"
-                type="number"
-                disabled
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface-hover text-text-primary opacity-60 cursor-not-allowed"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Idade e Datas -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📅 Idade e Datas</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Idade Verdadeira</label>
-              <input
-                v-model="sheetData.trueAge"
-                type="text"
-                placeholder="250 anos"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Idade Aparente</label>
-              <input
-                v-model="sheetData.apparentAge"
-                type="text"
-                placeholder="30 anos"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Data de Nascimento</label>
-              <input
-                v-model="sheetData.dateOfBirth"
-                type="text"
-                placeholder="15/03/1774"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-            <div>
-              <label class="block text-xs text-text-muted mb-1">Data de Morte (Abraço)</label>
-              <input
-                v-model="sheetData.dateOfDeath"
-                type="text"
-                placeholder="20/11/1804"
-                @input="hasUnsavedChanges = true"
-                :disabled="!canEdit"
-                class="w-full px-2 py-1.5 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Geração do Abraço</h3>
+          <select
+            v-model="sheetData.embraceGeneration"
+            @change="hasUnsavedChanges = true"
+            :disabled="!canEdit"
+            class="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-primary rounded-md bg-surface text-text-primary focus:border-accent focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <option value="">Selecionar</option>
+            <option value="childer">[Cria] Abraçado nos últimos 15 anos</option>
+            <option value="neonate">[Neófito] Abraçado entre 15 - 50 anos atrás</option>
+            <option value="ancilla">[Ancião] Abraçado entre 50 - 100 anos atrás</option>
+          </select>
         </div>
 
         <!-- Aparência e Traços -->
@@ -882,6 +851,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -910,6 +880,16 @@ const hasUnsavedChanges = ref(false)
 // Confirmation modal
 const showConfirmModal = ref(false)
 const showSaveConfirmModal = ref(false)
+
+// Helper para iniciais do avatar
+const getInitials = (name: string) => {
+  if (!name) return 'P'
+  const words = name.split(' ').filter(w => w.length > 0)
+  if (words.length >= 2 && words[0]?.[0] && words[1]?.[0]) {
+    return (words[0][0] + words[1][0]).toUpperCase()
+  }
+  return words[0]?.[0]?.toUpperCase() || 'P'
+}
 
 // Vampiro clãs
 const vampireClans = [
@@ -1000,17 +980,6 @@ const virtues = [
   { key: 'courage', name: 'Coragem' }
 ]
 
-// Níveis de saúde
-const healthLevels = [
-  { name: 'Escoriado', penalty: '-0' },
-  { name: 'Machucado', penalty: '-1' },
-  { name: 'Ferido', penalty: '-1' },
-  { name: 'Ferido Gravemente', penalty: '-2' },
-  { name: 'Espancado', penalty: '-2' },
-  { name: 'Aleijado', penalty: '-5' },
-  { name: 'Incapacitado', penalty: 'Inconsciente' }
-]
-
 // Sheet data structure
 const sheetData = ref({
   name: props.player.character_name || props.player.characterName || '',
@@ -1034,10 +1003,7 @@ const sheetData = ref({
   baneSeverity: props.player.sheet?.baneSeverity || '0',
   xpTotal: props.player.sheet?.xpTotal || 0,
   xpSpent: props.player.sheet?.xpSpent || 0,
-  trueAge: props.player.sheet?.trueAge || '',
-  apparentAge: props.player.sheet?.apparentAge || '',
-  dateOfBirth: props.player.sheet?.dateOfBirth || '',
-  dateOfDeath: props.player.sheet?.dateOfDeath || '',
+  embraceGeneration: props.player.sheet?.embraceGeneration || '',
   appearance: props.player.sheet?.appearance || '',
   distinguishingFeatures: props.player.sheet?.distinguishingFeatures || '',
   history: props.player.sheet?.history || '',
@@ -1058,9 +1024,7 @@ const sheetData = ref({
   willpower: props.player.sheet?.willpower || 3,
   vitality: props.player.sheet?.vitality || 10,
   hunger: props.player.sheet?.hunger ?? 1,
-  conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : [''],
-  healthLevels: props.player.sheet?.healthLevels || [false, false, false, false, false, false, false],
-  notes: props.player.sheet?.notes || ''
+  conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : ['']
 })
 
 // Methods
@@ -1145,12 +1109,6 @@ const removeCondition = (index: number) => {
 const setBloodPotency = (level: number) => {
   if (!props.canEdit) return
   sheetData.value.bloodPotency = level
-  hasUnsavedChanges.value = true
-}
-
-const toggleHealthLevel = (index: number) => {
-  if (!props.canEdit) return
-  sheetData.value.healthLevels[index] = !sheetData.value.healthLevels[index]
   hasUnsavedChanges.value = true
 }
 

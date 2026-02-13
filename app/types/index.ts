@@ -190,10 +190,7 @@ export interface CharacterSheet {
   baneSeverity?: string // Gravidade da Perdição
   
   // Informações pessoais
-  trueAge?: string // Idade Verdadeira
-  apparentAge?: string // Idade Aparente
-  dateOfBirth?: string // Data de Nascimento
-  dateOfDeath?: string // Data de Morte (abraço)
+  embraceGeneration?: string // Geração do Abraço (childer, neonate, ancilla)
   appearance?: string // Aparência (descrição física)
   distinguishingFeatures?: string // Traços Distintivos
   history?: string // História completa
@@ -218,8 +215,7 @@ export interface CharacterSheet {
   xpTotal?: number // Experiência Total
   xpAvailable?: number // XP disponível
   xpSpent?: number // XP gasto
-  healthLevels: boolean[]
-  notes: string
+  notes?: string // Notas diversas
 }
 
 export interface MediaFile {
