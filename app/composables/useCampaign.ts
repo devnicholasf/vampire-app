@@ -308,7 +308,53 @@ export const useCampaign = () => {
         throw new Error('Você já faz parte desta campanha')
       }
 
-      // Entrar na campanha
+      // Ficha padrão com 1 ponto em todos os atributos/habilidades
+      const defaultSheet = {
+        name: characterName,
+        concept: '',
+        clan: '',
+        generation: 13,
+        sect: '',
+        haven: '',
+        player: '',
+        avatar: '',
+        resonance: '',
+        chronicleTenets: '',
+        touchstonesConvictions: '',
+        clanBane: '',
+        advantages: [{ name: '', level: 0 }],
+        bloodPotency: 0,
+        bloodSurge: '+2',
+        powerBonus: '0',
+        feedingPenalty: 'Sem Penalidade',
+        baneSeverity: '0',
+        xpTotal: 0,
+        xpSpent: 0,
+        embraceGeneration: '',
+        appearance: '',
+        distinguishingFeatures: '',
+        history: '',
+        attributes: {
+          physical: { strength: 1, dexterity: 1, stamina: 1 },
+          social: { charisma: 1, manipulation: 1, appearance: 1 },
+          mental: { perception: 1, intelligence: 1, wits: 1 }
+        },
+        skills: {
+          talents: { alertness: 1, athletics: 1, awareness: 1, brawl: 1, empathy: 1, expression: 1, intimidation: 1, leadership: 1, streetwise: 1, subterfuge: 1 },
+          skills: { animalKen: 1, craft: 1, drive: 1, etiquette: 1, firearms: 1, larceny: 1, melee: 1, performance: 1, stealth: 1, survival: 1 },
+          knowledges: { academics: 1, computer: 1, finance: 1, investigation: 1, law: 1, medicine: 1, occult: 1, politics: 1, science: 1, technology: 1 }
+        },
+        disciplines: [{ name: '', level: 0 }],
+        virtues: { conscience: 1, selfControl: 1, courage: 1 },
+        humanity: 7,
+        willpower: 3,
+        vitality: 10,
+        hunger: 1,
+        conditions: [''],
+        notes: ''
+      }
+
+      // Entrar na campanha com ficha padrão
       const { data: player, error: joinError } = await supabase
         .from('campaign_players')
         .insert({
@@ -316,7 +362,8 @@ export const useCampaign = () => {
           campaign_id: campaign.id,
           character_name: characterName,
           role: 'player',
-          joined_at: new Date().toISOString()
+          joined_at: new Date().toISOString(),
+          sheet: defaultSheet
         })
         .select()
         .single()
@@ -408,8 +455,11 @@ export const useCampaign = () => {
 
       console.log('Jogador removido com sucesso')
       
-      // Recarregar a campanha para atualizar a lista de jogadores
-      await getCampaignById(campaignId)
+      // Só recarregar a campanha se quem foi removido NÃO é o usuário atual
+      // (quando o próprio jogador sai, ele perde acesso via RLS e .single() falha)
+      if (userId !== user.value.id) {
+        await getCampaignById(campaignId)
+      }
       
       return true
 

@@ -103,6 +103,11 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// Emits
+const emit = defineEmits<{
+  refresh: []
+}>()
+
 // Use real players from campaign_players
 const players = computed(() => {
   console.log('Campaign data:', props.campaign)
@@ -161,15 +166,15 @@ const kickPlayer = (playerId: string) => {
 const confirmKickPlayer = async () => {
   if (playerToKick.value) {
     try {
-      const { removePlayerFromCampaign, getCampaignById } = useCampaign()
+      const { removePlayerFromCampaign } = useCampaign()
       
       // Remover jogador
       await removePlayerFromCampaign(props.campaignId, playerToKick.value.id)
       
-      // Recarregar campanha para atualizar lista de jogadores
-      await getCampaignById(props.campaignId)
-      
       showToastMessage(`${playerToKick.value.name} foi removido da campanha`, 'success')
+      
+      // Emitir evento para o pai recarregar os dados
+      emit('refresh')
     } catch (error: any) {
       console.error('Erro ao remover jogador:', error)
       showToastMessage(`Erro ao remover jogador: ${error.message}`, 'error')

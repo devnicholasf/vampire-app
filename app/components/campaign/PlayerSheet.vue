@@ -11,7 +11,7 @@
       <div class="absolute bottom-0 right-0 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-r-4 border-red-600 opacity-60 pointer-events-none z-20"></div>
       
       <!-- Container principal com scroll -->
-      <div class="bg-surface-card rounded-lg border-4 border-red-900 p-3 sm:p-4 md:p-6 w-full max-h-[98vh] overflow-y-auto shadow-2xl" style="box-shadow: 0 0 40px rgba(220, 38, 38, 0.3), inset 0 0 20px rgba(220, 38, 38, 0.1);">
+      <div class="bg-surface-card rounded-lg border-4 border-red-900 p-3 w-full max-h-[98vh] overflow-y-auto shadow-2xl" style="box-shadow: 0 0 40px rgba(220, 38, 38, 0.3), inset 0 0 20px rgba(220, 38, 38, 0.1);">
       
       <!-- Header com Avatar e Nome -->
       <div class="flex items-center justify-between mb-3 sm:mb-4 sticky top-0 bg-surface-card z-10 pb-3 border-b-2 border-red-900">
@@ -57,8 +57,8 @@
 
       <form @submit.prevent="saveSheet" class="space-y-4 sm:space-y-6">
         <!-- Header da Ficha -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label class="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">Nome <span class="text-red-500">*</span></label>
               <input
@@ -94,7 +94,7 @@
             </div>
           </div>
           
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mt-3 sm:mt-4 md:mt-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
             <div>
               <label class="block text-xs sm:text-sm font-medium text-text-primary mb-1 sm:mb-2">Geração <span class="text-red-500">*</span></label>
               <input
@@ -134,11 +134,11 @@
         </div>
 
         <!-- Atributos -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <!-- Físicos -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🏋️ Físicos</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🏋️ Físicos</h3>
+            <div class="space-y-2">
               <div v-for="attr in physicalAttributes" :key="attr.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm font-medium text-text-primary">{{ attr.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -164,9 +164,9 @@
           </div>
 
           <!-- Sociais -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🎭 Sociais</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🎭 Sociais</h3>
+            <div class="space-y-2">
               <div v-for="attr in socialAttributes" :key="attr.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm font-medium text-text-primary">{{ attr.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -192,9 +192,9 @@
           </div>
 
           <!-- Mentais -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🧠 Mentais</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🧠 Mentais</h3>
+            <div class="space-y-2">
               <div v-for="attr in mentalAttributes" :key="attr.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm font-medium text-text-primary">{{ attr.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -221,11 +221,11 @@
         </div>
 
         <!-- Habilidades -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <!-- Talentos -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚡ Talentos</h3>
-            <div class="space-y-1.5 sm:space-y-2 md:space-y-3">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">⚡ Talentos</h3>
+            <div class="space-y-3">
               <div v-for="skill in talents" :key="skill.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm text-text-primary">{{ skill.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -249,9 +249,9 @@
           </div>
 
           <!-- Perícias -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🛠️ Perícias</h3>
-            <div class="space-y-1.5 sm:space-y-2 md:space-y-3">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🛠️ Perícias</h3>
+            <div class="space-y-3">
               <div v-for="skill in skills" :key="skill.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm text-text-primary">{{ skill.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -275,9 +275,9 @@
           </div>
 
           <!-- Conhecimentos -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📚 Conhecimentos</h3>
-            <div class="space-y-1.5 sm:space-y-2 md:space-y-3">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">📚 Conhecimentos</h3>
+            <div class="space-y-3">
               <div v-for="skill in knowledges" :key="skill.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm text-text-primary">{{ skill.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -302,12 +302,12 @@
         </div>
 
         <!-- Campos com Bolinhas: Grid 2 colunas -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:items-start">
-          <div class="space-y-3 sm:space-y-4 md:space-y-6 flex flex-col">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:items-start">
+          <div class="space-y-3 flex flex-col">
             <!-- Disciplinas -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Disciplinas</h3>
-              <div class="space-y-2 sm:space-y-3 md:space-y-4">
+            <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🩸 Disciplinas</h3>
+              <div class="space-y-2">
                 <div v-for="(discipline, index) in sheetData.disciplines" :key="index" class="flex items-center space-x-2 sm:space-x-3">
                   <select
                     v-model="discipline.name"
@@ -360,8 +360,8 @@
             </div>
 
             <!-- Vantagens & Defeitos -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⭐ Vantagens & Defeitos</h3>
+            <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">⭐ Vantagens & Defeitos</h3>
               <div class="space-y-2">
                 <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="flex items-center gap-2">
                   <input
@@ -412,8 +412,8 @@
             </div>
 
             <!-- Fome -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Fome</h3>
+            <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🩸 Fome</h3>
               <div class="flex gap-1">
                 <button
                   v-for="level in 5"
@@ -436,8 +436,8 @@
 
           <div class="flex flex-col">
             <!-- Potência de Sangue -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Potência de Sangue</h3>
+            <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🩸 Potência de Sangue</h3>
               
               <!-- Nível de Potência -->
               <div class="mb-4">
@@ -462,7 +462,7 @@
               </div>
 
               <!-- Mecânicas de Potência -->
-              <div class="space-y-2 sm:space-y-3 md:space-y-4">
+              <div class="space-y-2">
                 <div>
                   <label class="block text-xs text-text-muted mb-1">Surto de Sangue</label>
                   <input
@@ -511,8 +511,8 @@
             </div>
 
             <!-- Experiência -->
-            <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary mt-3 sm:mt-4 md:mt-6">
-              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">💎 Experiência</h3>
+            <div class="bg-surface-dark p-3 rounded-lg border border-primary mt-3">
+              <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">💎 Experiência</h3>
               <div class="grid grid-cols-3 gap-3">
                 <div>
                   <label class="block text-xs text-text-muted mb-1">Total</label>
@@ -553,11 +553,11 @@
         </div>
 
         <!-- Virtudes e Humanidade -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
           <!-- Virtudes -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">✨ Virtudes</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">✨ Virtudes</h3>
+            <div class="space-y-2">
               <div v-for="virtue in virtues" :key="virtue.key" class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm font-medium text-text-primary">{{ virtue.name }}</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -582,9 +582,9 @@
           </div>
 
           <!-- Humanidade, Vontade & Vitalidade -->
-          <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">❤️ Humanidade, Vontade & Vitalidade</h3>
-            <div class="space-y-2 sm:space-y-3 md:space-y-4">
+          <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+            <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">❤️ Humanidade, Vontade & Vitalidade</h3>
+            <div class="space-y-2">
               <div class="flex justify-between items-center">
                 <label class="text-xs sm:text-sm font-medium text-text-primary">Humanidade</label>
                 <div class="flex space-x-0.5 sm:space-x-1">
@@ -650,8 +650,8 @@
         </div>
 
         <!-- Ressonância -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🎭 Ressonância</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🎭 Ressonância</h3>
           <input
             v-model="sheetData.resonance"
             type="text"
@@ -663,8 +663,8 @@
         </div>
 
         <!-- Princípios da Crônica -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📜 Princípios da Crônica</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">📜 Princípios da Crônica</h3>
           <textarea
             v-model="sheetData.chronicleTenets"
             rows="3"
@@ -676,8 +676,8 @@
         </div>
 
         <!-- Pilares & Convicções -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚖️ Pilares & Convicções</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">⚖️ Pilares & Convicções</h3>
           <textarea
             v-model="sheetData.touchstonesConvictions"
             rows="3"
@@ -689,8 +689,8 @@
         </div>
 
         <!-- Perdição do Clã -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚠️ Perdição do Clã</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">⚠️ Perdição do Clã</h3>
           <textarea
             v-model="sheetData.clanBane"
             rows="2"
@@ -702,8 +702,8 @@
         </div>
 
         <!-- Geração do Abraço -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">🩸 Geração do Abraço</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">🩸 Geração do Abraço</h3>
           <select
             v-model="sheetData.embraceGeneration"
             @change="hasUnsavedChanges = true"
@@ -718,8 +718,8 @@
         </div>
 
         <!-- Aparência e Traços -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">👤 Aparência</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">👤 Aparência</h3>
           <textarea
             v-model="sheetData.appearance"
             rows="3"
@@ -741,8 +741,8 @@
         </div>
 
         <!-- Condições Narrativas -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">⚠️ Condições Narrativas</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">⚠️ Condições Narrativas</h3>
           <div class="space-y-2">
             <div v-for="(condition, idx) in sheetData.conditions" :key="idx" class="flex items-center gap-2">
               <input
@@ -776,8 +776,8 @@
         </div>
 
         <!-- História -->
-        <div class="bg-surface-dark p-3 sm:p-4 md:p-6 rounded-lg border border-primary">
-          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2 sm:mb-3 md:mb-4">📖 História do Personagem</h3>
+        <div class="bg-surface-dark p-3 rounded-lg border border-primary">
+          <h3 class="text-sm sm:text-base md:text-lg font-semibold text-accent mb-2">📖 História do Personagem</h3>
           <textarea
             v-model="sheetData.history"
             rows="6"
@@ -989,6 +989,7 @@ const sheetData = ref({
   sect: props.player.sheet?.sect || '',
   haven: props.player.sheet?.haven || '',
   player: props.player.name || '',
+  avatar: props.player.sheet?.avatar || '', // Avatar do personagem
   
   // Novos campos da ficha oficial V5
   resonance: props.player.sheet?.resonance || '',

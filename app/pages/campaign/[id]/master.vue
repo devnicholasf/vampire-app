@@ -145,6 +145,7 @@
           :campaign="campaign"
           :campaign-id="campaignId"
           ref="playersTabRef"
+          @refresh="refreshCampaignData"
         />
 
         <!-- NPCs Tab -->
@@ -239,6 +240,38 @@ const tabs = ref([
 ])
 
 // Methods
+const refreshCampaignData = async () => {
+  console.log('🔄 MASTER.VUE: Recarregando dados da campanha...')
+  try {
+    const campaignData = await getCampaignById(campaignId)
+    
+    if (campaignData) {
+      campaign.value = {
+        id: campaignData.id,
+        name: campaignData.name,
+        description: campaignData.description,
+        masterId: campaignData.master_id,
+        inviteCode: campaignData.invite_code,
+        players: (campaignData.campaign_players || []).map((player: any) => ({
+          id: player.user_id,
+          name: player.character_name,
+          email: `User: ${player.user_id.substring(0, 8)}...`,
+          role: player.role,
+          joinedAt: new Date(player.joined_at)
+        })),
+        createdAt: new Date(campaignData.created_at),
+        updatedAt: new Date(campaignData.updated_at),
+        isPremium: campaignData.is_premium || false
+      } as any
+      
+      ;(campaign.value as any).campaign_players = campaignData.campaign_players || []
+      console.log('✅ MASTER.VUE: Dados recarregados com sucesso')
+    }
+  } catch (err) {
+    console.error('❌ MASTER.VUE: Erro ao recarregar dados:', err)
+  }
+}
+
 const goBackToDashboard = () => {
   router.push('/dashboard')
 }
