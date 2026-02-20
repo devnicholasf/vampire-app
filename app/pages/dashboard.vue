@@ -180,7 +180,7 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-red-400">Nova Campanha</h3>
-              <p class="text-sm df-text-muted">Crie sua cronica vampirica</p>
+              <p class="text-sm df-text-muted">Crie sua crônica vampírica</p>
             </div>
           </div>
 
@@ -191,20 +191,20 @@
                 v-model="newCampaign.name"
                 type="text"
                 required
-                placeholder="Ex: Cronicas de Chicago"
+                placeholder="Ex: Crônicas de Chicago"
                 class="df-input"
               />
             </div>
             <div>
-              <label class="df-label">Descricao <span class="text-red-400">*</span></label>
+              <label class="df-label">Descrição <span class="text-red-400">*</span></label>
               <textarea
                 v-model="newCampaign.description"
                 required
                 rows="4"
-                placeholder="Descreva a ambientacao, o tema e o que os jogadores podem esperar..."
+                placeholder="Descreva a ambientação, o tema e o que os jogadores podem esperar..."
                 class="df-input df-textarea"
               ></textarea>
-              <p class="text-xs df-text-muted mt-1">Uma boa descricao atrai os melhores jogadores</p>
+              <p class="text-xs df-text-muted mt-1">Uma boa descrição atrai os melhores jogadores</p>
             </div>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="showCreateModal = false" class="df-btn-outline flex-1">
@@ -240,19 +240,19 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-red-400">Deletar Campanha</h3>
-              <p class="text-sm df-text-muted">Esta acao nao pode ser desfeita</p>
+              <p class="text-sm df-text-muted">Esta ação não pode ser desfeita</p>
             </div>
           </div>
 
           <div class="mb-6">
-            <p class="df-text-silver mb-4">Voce tem certeza que deseja deletar permanentemente a campanha:</p>
+            <p class="df-text-silver mb-4">Você tem certeza que deseja deletar permanentemente a campanha:</p>
             <div class="df-highlight-box">
               <h4 class="font-bold df-card-title">{{ campaignToDelete.name }}</h4>
               <p class="text-sm df-text-muted mt-1">{{ campaignToDelete.description }}</p>
             </div>
             <p class="text-red-400 text-sm mt-4 font-medium flex items-center gap-1.5">
               <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Todos os NPCs, notas e sessoes desta campanha tambem serao removidos
+              Todos os NPCs, notas e sessões desta campanha também serão removidos
             </p>
           </div>
 
@@ -287,19 +287,19 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-amber-400">Sair da Campanha</h3>
-              <p class="text-sm df-text-muted">Voce sera removido como jogador</p>
+              <p class="text-sm df-text-muted">Você será removido como jogador</p>
             </div>
           </div>
 
           <div class="mb-6">
-            <p class="df-text-silver mb-4">Voce tem certeza que deseja sair da campanha:</p>
+            <p class="df-text-silver mb-4">Você tem certeza que deseja sair da campanha:</p>
             <div class="df-highlight-box">
               <h4 class="font-bold df-card-title">{{ campaignToLeave.name }}</h4>
               <p class="text-sm df-text-muted mt-1">{{ campaignToLeave.description }}</p>
             </div>
             <p class="text-amber-400 text-sm mt-4 font-medium flex items-center gap-1.5">
               <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Sua ficha de personagem sera mantida, mas voce precisara de um novo convite para voltar
+              Sua ficha de personagem será mantida, mas você precisará de um novo convite para voltar
             </p>
           </div>
 
@@ -944,6 +944,17 @@ const handleProfileUpdate = (updatedUser: any) => {
 
 /* ─── Modal ─── */
 .df-modal-overlay {
+  --df-bg-deep: #050510;
+  --df-bg-card: #0a0a1a;
+  --df-bg-input: #0d0d20;
+  --df-border-red: #7f1d1d;
+  --df-border-silver: #4a4a5a;
+  --df-accent-red: #dc2626;
+  --df-accent-crimson: #991b1b;
+  --df-text-silver: #c0c0d0;
+  --df-text-gold: #d4a647;
+  --df-glow-red: rgba(220, 38, 38, 0.3);
+
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
@@ -953,6 +964,7 @@ const handleProfileUpdate = (updatedUser: any) => {
   justify-content: center;
   z-index: 50;
   padding: 1rem;
+  color: var(--df-text-silver);
 }
 
 .df-modal-panel {
