@@ -11,78 +11,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Sistema de cores baseado na arte oficial do Vampire: The Masquerade
-        // Paleta extraída da imagem: roxos profundos, vermelhos sangue, magentas vibrantes
-        
-        vampire: {
-          // Roxo Profundo - Backgrounds e bases
-          purple: {
-            DEFAULT: '#2D1B69',
-            50: '#F8F6FF',
-            100: '#EFEBFF', 
-            200: '#DDD4FF',
-            300: '#C4B1FF',
-            400: '#A688FF',
-            500: '#855CFF',
-            600: '#7C3AED',
-            700: '#6D28D9',
-            800: '#4C2B85',
-            900: '#2D1B69',
-            950: '#1A0F3D',
-          },
+        // ─── Dark Fantasy UI System ───
+        // Core palette used across all pages and components
+        df: {
+          deep:    '#050510', // Deepest backgrounds
+          card:    '#0a0a1a', // Card/panel backgrounds
+          input:   '#0d0d20', // Input field backgrounds
           
-          // Vermelho Sangue - Ações críticas e alertas
-          blood: {
-            DEFAULT: '#8B0000',
-            50: '#FFF5F5',
-            100: '#FED7D7',
-            200: '#FEB2B2',
-            300: '#FC8181',
-            400: '#F56565',
-            500: '#E53E3E',
-            600: '#C53030',
-            700: '#9B2C2C',
-            800: '#8B0000',
-            900: '#742A2A',
-            950: '#2D0A0A',
-          },
+          red:     '#dc2626', // Primary accent red
+          crimson: '#991b1b', // Darker crimson accent
           
-          // Magenta Vibrante - Destaques e ações primárias
-          magenta: {
-            DEFAULT: '#E91E63',
-            50: '#FDF2F8',
-            100: '#FCE7F3',
-            200: '#FBCFE8',
-            300: '#F9A8D4',
-            400: '#F472B6',
-            500: '#EC4899',
-            600: '#E91E63',
-            700: '#BE185D',
-            800: '#9D174D',
-            900: '#831843',
-            950: '#500724',
-          },
+          silver:  '#c0c0d0', // Primary text
+          gold:    '#d4a647', // Gold accent text
+          muted:   '#6b6b80', // Muted text
           
-          // Rosa Neon - Acentos e highlights
-          neon: {
-            DEFAULT: '#FF1744',
-            50: '#FFF0F3',
-            100: '#FFDDDD',
-            200: '#FFC0CB',
-            300: '#FF94A3',
-            400: '#FF5722',
-            500: '#FF1744',
-            600: '#E00025',
-            700: '#C1001D',
-            800: '#A3001A',
-            900: '#85001A',
-            950: '#4A0009',
-          }
+          'border-red':    '#7f1d1d', // Red border
+          'border-silver': '#4a4a5a', // Silver/grey border
         },
         
-        // Cores semânticas usando azul escuro profissional
+        // Legacy semantic colors (kept for compatibility)
         primary: {
-          DEFAULT: '#020618', // azul escuro profissional
+          DEFAULT: '#050510',
           50: '#F8FAFC',
           100: '#F1F5F9',
           200: '#E2E8F0',
@@ -93,10 +42,9 @@ export default {
           700: '#334155',
           800: '#1E293B',
           900: '#0F172A',
-          950: '#020618',
+          950: '#050510',
         },
         
-        // Vermelho elegante para botões
         red: {
           DEFAULT: '#DC2626',
           50: '#FEF2F2',
@@ -113,95 +61,68 @@ export default {
         },
         
         secondary: {
-          DEFAULT: '#4C2B85', // roxo mais claro e visível
-          50: '#F8F6FF',
-          100: '#EFEBFF',
-          200: '#DDD4FF', 
-          300: '#C4B1FF',
-          400: '#A688FF',
-          500: '#855CFF',
-          600: '#7C3AED',
-          700: '#6D28D9',
+          DEFAULT: '#4C2B85',
           800: '#4C2B85',
           900: '#2D1B69',
           950: '#1A0F3D',
         },
         
         accent: {
-          DEFAULT: '#E91E63', // magenta para destaques
-          50: '#FDF2F8',
-          100: '#FCE7F3',
-          200: '#FBCFE8',
-          300: '#F9A8D4', 
-          400: '#F472B6',
-          500: '#E91E63',
-          600: '#BE185D',
-          700: '#9D174D',
-          800: '#831843',
-          900: '#4A0009',
+          DEFAULT: '#dc2626',
         },
         
-        // Cores de superfície usando harmonia roxo escuro + preto profundo
+        // Dark Fantasy surface system
         background: {
-          DEFAULT: '#000000', // preto profundo
-          secondary: '#0A061F', // roxo muito escuro
-          tertiary: '#120B2E', // roxo escuro
-          dark: '#000000', // preto absoluto
+          DEFAULT: '#050510',
+          secondary: '#0a0a1a',
+          tertiary: '#0d0d20',
+          dark: '#020208',
         },
         
         surface: {
-          DEFAULT: '#0A061F', // roxo muito escuro
-          dark: '#000000', // preto profundo
-          card: '#120B2E', // roxo escuro para cards
-          hover: '#1A0F3D', // roxo médio para hover
-          light: '#2D1B69', // roxo claro para elementos de destaque
+          DEFAULT: '#0a0a1a',
+          dark: '#050510',
+          card: '#0a0a1a',
+          hover: '#0d0d20',
+          light: '#14142a',
         },
         
-        // Sistema de bordas com tons roxos
         border: {
-          primary: '#2D1B69', // roxo vampire principal
-          secondary: '#4C2B85', // roxo mais claro
-          accent: '#E91E63', // magenta para destaques
-          dark: '#1A0F3D', // roxo escuro para bordas sutis
+          primary: '#7f1d1d',
+          secondary: '#4a4a5a',
+          accent: '#dc2626',
+          dark: '#2a2a3a',
         },
         
-        // Sistema de texto com melhor contraste
         text: {
           primary: '#FFFFFF',
-          secondary: '#CBD5E1', // mais claro para melhor visibilidade
-          muted: '#94A3B8', // mais claro que antes
-          accent: '#E91E63',
+          secondary: '#c0c0d0',
+          muted: '#6b6b80',
+          accent: '#dc2626',
         },
       },
       
-      // Gradientes baseados na nova paleta
       backgroundImage: {
-        'gradient-vampire': 'linear-gradient(135deg, #000000 0%, #020618 50%, #4C2B85 100%)',
-        'gradient-professional': 'linear-gradient(135deg, #020618 0%, #0F172A 100%)',
-        'gradient-purple': 'linear-gradient(135deg, #000000 0%, #2D1B69 100%)',
-        'gradient-accent': 'linear-gradient(135deg, #E91E63 0%, #4C2B85 100%)',
-        'gradient-dark': 'linear-gradient(135deg, #000000 0%, #020618 50%, #0F172A 100%)',
-        'gradient-atmospheric': 'linear-gradient(180deg, #000000 0%, #020618 50%, #0F172A 100%)',
+        'gradient-vampire': 'linear-gradient(135deg, #050510 0%, #0a0a1a 50%, #0d0d20 100%)',
+        'gradient-dark': 'linear-gradient(135deg, #050510 0%, #0a0a1a 100%)',
+        'gradient-atmospheric': 'linear-gradient(180deg, #050510 0%, #0a0a1a 50%, #0d0d20 100%)',
+        'gradient-red-subtle': 'radial-gradient(ellipse at 50% 30%, rgba(127, 29, 29, 0.08) 0%, transparent 70%)',
       },
       
-      // Sombras com as novas cores
       boxShadow: {
-        'glow-primary': '0 0 20px rgba(2, 6, 24, 0.6)',
-        'glow-purple': '0 0 20px rgba(76, 43, 133, 0.5)', 
-        'glow-accent': '0 0 20px rgba(233, 30, 99, 0.5)',
-        'glow-blue': '0 0 30px rgba(2, 6, 24, 0.7)',
-        'glow-red': '0 0 25px rgba(220, 38, 38, 0.6)',
-        'glow-red-hover': '0 0 35px rgba(239, 68, 68, 0.8)',
-        'card-vampire': '0 4px 20px rgba(76, 43, 133, 0.3)',
-        'card-hover': '0 8px 30px rgba(233, 30, 99, 0.4)',
+        'glow-red': '0 0 20px rgba(220, 38, 38, 0.3)',
+        'glow-red-lg': '0 0 40px rgba(220, 38, 38, 0.12)',
+        'glow-red-hover': '0 0 24px rgba(220, 38, 38, 0.3)',
+        'card-df': '0 0 0 1px #4a4a5a, inset 0 1px 6px rgba(0, 0, 0, 0.5)',
+        'card-df-hover': '0 0 0 1px #dc2626, 0 0 24px rgba(220, 38, 38, 0.3), inset 0 1px 6px rgba(0, 0, 0, 0.5)',
+        'panel-df': '0 0 0 1px #4a4a5a, 0 0 40px rgba(220, 38, 38, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)',
       },
       
-      // Animações mantidas
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
-        'scale-hover': 'scaleHover 0.2s ease-in-out',
-        'pulse-vampire': 'pulseVampire 2s infinite',
+        'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+        'spin': 'spin 1s linear infinite',
       },
       
       keyframes: {
@@ -213,17 +134,16 @@ export default {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
-        scaleHover: {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.05)' },
-        },
-        pulseVampire: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.7' },
+        pulseGlow: {
+          '0%, 100%': { boxShadow: '0 0 14px rgba(220, 38, 38, 0.3)' },
+          '50%': { boxShadow: '0 0 24px rgba(220, 38, 38, 0.3), 0 0 40px rgba(220, 38, 38, 0.1)' },
         },
       },
       
-      // Fontes mantidas
+      borderRadius: {
+        'vampire': '0.5rem',
+      },
+      
       fontFamily: {
         'cinzel': ['Cinzel', 'serif'],
         'sans': ['Inter', 'system-ui', 'sans-serif'],
@@ -232,4 +152,3 @@ export default {
   },
   plugins: [],
 }
-
