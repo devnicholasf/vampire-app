@@ -64,7 +64,6 @@
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
                 Meu Personagem
               </h2>
-              <p class="df-text-muted text-sm mt-1">{{ campaign?.name }}</p>
             </div>
 
             <div v-if="myCharacter" class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -329,15 +328,6 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Main Content -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Campaign Overview -->
-            <div class="df-card">
-              <h2 class="df-section-title text-lg flex items-center gap-2 mb-4">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                Sobre a Campanha
-              </h2>
-              <p class="df-text-silver leading-relaxed">{{ campaign?.description }}</p>
-            </div>
-
             <!-- Session Notes -->
             <div class="df-card">
               <h2 class="df-section-title text-lg flex items-center gap-2 mb-4">
@@ -389,64 +379,6 @@
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
                   Ver Regras
                 </button>
-              </div>
-            </div>
-
-            <!-- Other Players -->
-            <div class="df-card">
-              <h3 class="df-section-title text-base flex items-center gap-2 mb-4">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                Outros Jogadores
-              </h3>
-
-              <div v-if="otherPlayers.length > 0" class="space-y-3">
-                <div v-for="player in otherPlayers" :key="player.id" class="df-player-row">
-                  <div class="df-player-avatar">
-                    {{ getPlayerInitials(player.name) }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium df-text-silver truncate">{{ player.name }}</p>
-                    <p v-if="player.character && player.character.clan" class="text-xs df-text-muted">{{ player.character.clan }}</p>
-                    <p v-else class="text-xs df-text-muted italic">Ficha não preenchida</p>
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="text-center py-8">
-                <svg class="w-10 h-10 text-red-900 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <p class="df-text-muted text-sm">Você é o único jogador por enquanto</p>
-              </div>
-            </div>
-
-            <!-- Campaign Stats -->
-            <div class="df-card">
-              <h3 class="df-section-title text-base flex items-center gap-2 mb-4">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-                Estatísticas
-              </h3>
-
-              <div class="space-y-3">
-                <div class="df-stat-row">
-                  <span class="df-text-muted text-sm flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Sessões jogadas:
-                  </span>
-                  <span class="font-bold text-white">{{ playedSessions }}</span>
-                </div>
-                <div class="df-stat-row">
-                  <span class="df-text-muted text-sm flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                    Total de jogadores:
-                  </span>
-                  <span class="font-bold text-white">{{ totalPlayers }}</span>
-                </div>
-                <div class="df-stat-row">
-                  <span class="df-text-muted text-sm flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Campanha ativa há:
-                  </span>
-                  <span class="font-bold text-white">{{ campaignDuration }}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -503,12 +435,6 @@ interface Character {
   }
 }
 
-interface Player {
-  id: string
-  name: string
-  character?: Character
-}
-
 interface SessionNote {
   id: string
   title: string
@@ -539,7 +465,6 @@ const toast = useToast()
 const loading = ref(true)
 const campaign = ref<Campaign | null>(null)
 const myCharacter = ref<any>(null)
-const otherPlayers = ref<Player[]>([])
 const sessionNotes = ref<SessionNote[]>([])
 const showCharacterSheet = ref(false)
 const sheetKey = ref(0)
@@ -548,18 +473,6 @@ const sheetKey = ref(0)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastVariant = ref<'success' | 'error' | 'warning' | 'info'>('success')
-
-// ============================================
-// Computed
-// ============================================
-const playedSessions = computed(() => sessionNotes.value.length)
-const totalPlayers = computed(() => otherPlayers.value.length + 1)
-const campaignDuration = computed(() => {
-  if (!campaign.value) return '0 dias'
-  const diffTime = Math.abs(new Date().getTime() - campaign.value.createdAt.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return `${diffDays} dias`
-})
 
 // ============================================
 // Methods
@@ -596,24 +509,9 @@ const loadCampaignData = async () => {
         }
       }
 
-      otherPlayers.value = (campaignData.campaign_players || [])
-        .filter((player: any) => player.user_id !== user?.value?.id)
-        .map((player: any) => ({
-          id: player.user_id,
-          name: player.character_name || 'Jogador',
-          character: player.sheet ? {
-            id: player.user_id,
-            name: player.character_name,
-            clan: player.sheet.clan || null,
-            generation: player.sheet.generation || null,
-            attributes: player.sheet.attributes || null
-          } : null
-        }))
-      
       console.log('PLAYER.VUE: Dados carregados:', {
         campaign: campaign.value,
-        myCharacter: myCharacter.value,
-        otherPlayers: otherPlayers.value
+        myCharacter: myCharacter.value
       })
     }
 
@@ -698,14 +596,6 @@ const calculateAttributeSum = (attributes: any) => {
 }
 
 const getCharacterInitials = (name: string) => {
-  const words = name.split(' ').filter((word: string) => word.length > 0)
-  if (words.length >= 2 && words[0]?.[0] && words[1]?.[0]) {
-    return (words[0][0] + words[1][0]).toUpperCase()
-  }
-  return words[0]?.[0]?.toUpperCase() || '?'
-}
-
-const getPlayerInitials = (name: string) => {
   const words = name.split(' ').filter((word: string) => word.length > 0)
   if (words.length >= 2 && words[0]?.[0] && words[1]?.[0]) {
     return (words[0][0] + words[1][0]).toUpperCase()
@@ -1047,44 +937,6 @@ useSeoMeta({
   padding: 0.25rem 0.75rem;
   font-size: 0.8rem;
   color: #fbbf24;
-}
-
-/* ─── Player Row ─── */
-.df-player-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(5, 5, 16, 0.5);
-  border-radius: 0.5rem;
-  border: 1px solid rgba(127, 29, 29, 0.2);
-  transition: border-color 0.2s;
-}
-.df-player-row:hover {
-  border-color: var(--df-border-red);
-}
-.df-player-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
-  background: linear-gradient(135deg, var(--df-accent-crimson), #450a0a);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fca5a5;
-  font-weight: 700;
-  font-size: 0.8rem;
-  flex-shrink: 0;
-}
-
-/* ─── Stat Row ─── */
-.df-stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: rgba(5, 5, 16, 0.5);
-  border-radius: 0.375rem;
 }
 
 /* ─── Spinner ─── */

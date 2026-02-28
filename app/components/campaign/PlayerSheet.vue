@@ -97,6 +97,20 @@
               <input v-model="sheetData.haven" placeholder="Local do refúgio" :disabled="!canEdit" class="df-input">
             </div>
           </div>
+          <div class="grid grid-cols-3 gap-3 mt-3">
+            <div>
+              <label class="df-label">Comportamento</label>
+              <input v-model="sheetData.demeanor" placeholder="Ex: Rebelde" :disabled="!canEdit" class="df-input">
+            </div>
+            <div>
+              <label class="df-label">Natureza</label>
+              <input v-model="sheetData.nature" placeholder="Ex: Sobrevivente" :disabled="!canEdit" class="df-input">
+            </div>
+            <div>
+              <label class="df-label">Jogador</label>
+              <input v-model="sheetData.player" :disabled="!canEdit" class="df-input">
+            </div>
+          </div>
         </div>
 
         <!-- Atributos -->
@@ -1023,7 +1037,9 @@ const sheetData = ref({
   generation: props.player.sheet?.generation || 13,
   sect: props.player.sheet?.sect || '',
   haven: props.player.sheet?.haven || '',
-  player: props.player.name || '',
+  demeanor: props.player.sheet?.demeanor || '',
+  nature: props.player.sheet?.nature || '',
+  player: props.player.sheet?.player || '',
   avatar: props.player.sheet?.avatar || '', // Avatar do personagem
   
   // Novos campos da ficha oficial V5
