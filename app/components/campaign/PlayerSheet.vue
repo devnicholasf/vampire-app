@@ -454,19 +454,19 @@
                 <label class="df-sub-label">Nível de Potência (0-10)</label>
                 <div class="flex gap-1 flex-wrap">
                   <button
-                    v-for="level in 11"
-                    :key="level - 1"
+                    v-for="level in 10"
+                    :key="level"
                     type="button"
-                    @click="setBloodPotency(level - 1)"
+                    @click="setBloodPotency(level)"
                     :disabled="!canEdit"
                     :class="[
                       'df-dot df-dot-md',
-                      sheetData.bloodPotency >= level - 1
+                      sheetData.bloodPotency >= level
                         ? 'df-dot-filled'
                         : 'df-dot-empty'
                     ]"
                   >
-                    <span class="sr-only">{{ level - 1 }}</span>
+                    <span class="sr-only">{{ level }}</span>
                   </button>
                 </div>
               </div>
@@ -1160,7 +1160,7 @@ const removeCondition = (index: number) => {
 // Método para Potência de Sangue
 const setBloodPotency = (level: number) => {
   if (!props.canEdit) return
-  sheetData.value.bloodPotency = level
+  sheetData.value.bloodPotency = sheetData.value.bloodPotency === level ? level - 1 : level
   hasUnsavedChanges.value = true
 }
 

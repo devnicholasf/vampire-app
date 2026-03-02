@@ -137,6 +137,20 @@
                   </div>
                 </div>
 
+                <!-- Blood Potency -->
+                <div class="df-inner-card mb-5">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-semibold text-df-silver flex items-center gap-2">
+                      <svg class="w-4 h-4 text-df-red" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
+                      Potência de Sangue
+                    </span>
+                    <span class="text-2xl font-bold text-df-red">{{ myCharacter.sheet.bloodPotency || 0 }} / 10</span>
+                  </div>
+                  <div class="flex gap-1">
+                    <div v-for="i in 10" :key="i" class="flex-1 h-3 rounded-sm transition-all" :class="i <= (myCharacter.sheet.bloodPotency || 0) ? 'bg-gradient-to-r from-df-crimson to-df-red' : 'bg-df-input'"></div>
+                  </div>
+                </div>
+
                 <div class="text-center">
                   <button @click="openCharacterSheet" class="df-btn-primary">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -260,7 +274,7 @@
                       <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                       XP Disponível
                     </p>
-                    <p class="text-3xl font-bold text-red-400">{{ myCharacter.sheet.xpAvailable || 0 }}</p>
+                    <p class="text-3xl font-bold text-red-400">{{ (myCharacter.sheet.xpTotal || 0) - (myCharacter.sheet.xpSpent || 0) }}</p>
                   </div>
                   <div>
                     <p class="text-xs df-text-muted mb-1 flex items-center gap-1">
@@ -272,7 +286,7 @@
                 </div>
                 <div class="mt-3 pt-3 border-t border-[var(--df-border-red)]">
                   <p class="text-xs df-text-muted">Total Acumulado</p>
-                  <p class="text-lg font-bold text-[var(--df-text-gold)]">{{ (myCharacter.sheet.xpAvailable || 0) + (myCharacter.sheet.xpSpent || 0) }} XP</p>
+                  <p class="text-lg font-bold text-[var(--df-text-gold)]">{{ myCharacter.sheet.xpTotal || 0 }} XP</p>
                 </div>
               </div>
 
