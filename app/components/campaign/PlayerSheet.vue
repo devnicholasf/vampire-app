@@ -1,7 +1,6 @@
 <template>
   <div 
     class="fixed inset-0 flex items-center justify-center z-[9999] p-2 sm:p-4 df-overlay"
-    @click.self="handleClose"
   >
     <div class="relative w-full max-w-7xl max-h-[98vh]">
       <!-- Ornamentos decorativos estilo dark fantasy nos cantos -->
