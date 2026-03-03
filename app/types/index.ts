@@ -174,6 +174,8 @@ export interface CharacterSheet {
   generation: number
   sect: string
   haven: string
+  demeanor?: string // Comportamento
+  nature?: string // Natureza
   player: string
   avatar?: string // Avatar base64
   

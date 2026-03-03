@@ -1,332 +1,369 @@
 <template>
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h3 class="text-lg font-semibold">NPCs da Campanha</h3>
-      <BaseButton variant="primary" size="sm" @click="createNPC">
-        + Criar NPC
-      </BaseButton>
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <h3 class="df-section-title text-xl flex items-center gap-2">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
+        NPCs da Campanha
+      </h3>
+      <div class="flex items-center gap-3">
+        <span class="df-text-muted text-sm">{{ npcs.length }} NPC(s)</span>
+        <button @click="createNPC" class="df-btn-primary">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Criar NPC
+        </button>
+      </div>
     </div>
-    
+
     <!-- Loading State -->
-    <div v-if="loading" class="text-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mb-4 mx-auto"></div>
-      <p class="text-text-muted">Carregando NPCs...</p>
+    <div v-if="loading" class="flex items-center justify-center py-16">
+      <div class="text-center">
+        <div class="df-spinner"></div>
+        <p class="df-text-muted mt-4">Carregando NPCs...</p>
+      </div>
     </div>
-    
+
     <!-- NPCs Grid -->
-    <div v-else-if="npcs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
-        v-for="npc in npcs" 
+    <div v-else-if="npcs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div
+        v-for="npc in sortedNPCs"
         :key="npc.id"
-        class="bg-surface-card p-6 rounded-lg border border-primary hover:border-accent transition-colors relative group"
+        class="df-card group hover:border-df-red/40 transition-all duration-300"
       >
-        <!-- Delete Button -->
-        <BaseButton 
-          variant="ghost" 
-          size="sm" 
-          @click="confirmDeleteNPC(npc)"
-          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:bg-red-600 hover:text-white"
-        >
-          🗑️
-        </BaseButton>
-        
-        <!-- NPC Avatar/Photo -->
-        <div class="flex items-center mb-4">
-          <div class="w-16 h-16 rounded-full bg-surface flex items-center justify-center mr-4">
-            <img 
-              v-if="npc.photo" 
-              :src="npc.photo" 
-              :alt="npc.name"
-              class="w-full h-full rounded-full object-cover"
-            />
-            <span v-else class="text-2xl">🎭</span>
-          </div>
-          <div class="flex-1">
-            <h4 class="font-semibold text-text-primary">{{ npc.name }}</h4>
-            <p class="text-sm text-accent">{{ npc.clan }}</p>
-            <p class="text-xs text-text-muted">Geração {{ npc.generation }}</p>
-          </div>
-        </div>
+        <div class="df-card-corner df-card-corner-tl"></div>
+        <div class="df-card-corner df-card-corner-tr"></div>
+        <div class="df-card-corner df-card-corner-bl"></div>
+        <div class="df-card-corner df-card-corner-br"></div>
 
-        <!-- Bio (truncated) -->
-        <div class="mb-4">
-          <p class="text-sm text-text-secondary line-clamp-3">
-            {{ npc.bio || 'Sem biografia definida' }}
-          </p>
-        </div>
-
-        <!-- Key Points -->
-        <div v-if="npc.keyPoints && npc.keyPoints.length > 0" class="mb-4">
-          <h5 class="text-xs font-medium text-text-muted mb-2">PONTOS CHAVE:</h5>
-          <div class="flex flex-wrap gap-1">
-            <span 
-              v-for="point in npc.keyPoints.slice(0, 3)" 
-              :key="point"
-              class="inline-block px-2 py-1 bg-secondary rounded text-xs text-white"
-            >
-              {{ point }}
-            </span>
-            <span 
-              v-if="npc.keyPoints.length > 3"
-              class="inline-block px-2 py-1 bg-surface rounded text-xs text-text-muted"
-            >
-              +{{ npc.keyPoints.length - 3 }}
-            </span>
+        <div class="relative z-10">
+          <!-- NPC Header -->
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-14 h-14 rounded-full border-2 border-df-border-red bg-df-input flex items-center justify-center overflow-hidden flex-shrink-0">
+              <img v-if="npc.photo" :src="npc.photo" :alt="npc.name" class="w-full h-full object-cover" />
+              <svg v-else class="w-7 h-7 text-df-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h4 class="text-lg font-bold text-white truncate">{{ npc.name }}</h4>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span v-if="npc.clan" class="text-sm text-df-red font-medium">{{ npc.clan }}</span>
+                <span v-if="npc.generation" class="text-xs text-df-muted">{{ npc.generation }}ª Geração</span>
+              </div>
+            </div>
+            <button @click="confirmDeleteNPC(npc as any)" class="df-btn-icon opacity-0 group-hover:opacity-100 transition-opacity" title="Remover NPC">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
           </div>
-        </div>
 
-        <!-- Actions -->
-        <div class="flex justify-between items-center pt-4 border-t border-border-dark">
-          <div class="flex flex-wrap gap-2">
-            <BaseButton variant="ghost" size="sm" @click="editNPC(npc)">
-              ✏️ Editar
-            </BaseButton>
-            <BaseButton variant="ghost" size="sm" @click="viewDetails(npc)">
-              👁️ Ver Detalhes
-            </BaseButton>
-            <BaseButton variant="ghost" size="sm" @click="openSheet(npc)">
-              📋 Ficha
-            </BaseButton>
+          <!-- Bio -->
+          <p class="text-sm text-df-silver line-clamp-3 mb-3">{{ npc.bio || 'Sem biografia definida' }}</p>
+
+          <!-- Key Points -->
+          <div v-if="npc.keyPoints && npc.keyPoints.length > 0" class="mb-4">
+            <div class="flex flex-wrap gap-1.5">
+              <span v-for="point in npc.keyPoints.slice(0, 3)" :key="point" class="inline-block px-2 py-0.5 bg-df-input border border-df-border-red rounded text-xs text-df-silver">{{ point }}</span>
+              <span v-if="npc.keyPoints.length > 3" class="inline-block px-2 py-0.5 bg-df-input border border-df-border-silver rounded text-xs text-df-muted">+{{ npc.keyPoints.length - 3 }}</span>
+            </div>
           </div>
-          <BaseButton 
-            variant="ghost" 
-            size="sm" 
-            @click="addToGame(npc)"
-            :class="isGameLive ? 'text-accent hover:bg-accent hover:text-white' : 'text-text-muted'"
-            :disabled="!isGameLive"
-          >
-            🎲 {{ isGameLive ? 'Usar no Jogo' : 'Jogo Inativo' }}
-          </BaseButton>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 pt-3 border-t border-df-border-red/50">
+            <button @click="editNPC(npc as any)" class="df-btn-ghost text-xs px-2.5 py-1.5 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+            <button @click="viewDetails(npc as any)" class="df-btn-ghost text-xs px-2.5 py-1.5 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Detalhes
+            </button>
+            <button @click="openSheet(npc as any)" class="df-btn-ghost text-xs px-2.5 py-1.5 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Ficha
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!loading" class="text-center py-12">
-      <div class="text-6xl mb-4">🎭</div>
-      <h4 class="text-lg font-semibold text-text-primary mb-2">Nenhum NPC criado</h4>
-      <p class="text-text-muted mb-6">Crie seu primeiro NPC para começar a popular sua campanha</p>
-      <BaseButton variant="primary" @click="createNPC">
-        + Criar Primeiro NPC
-      </BaseButton>
+    <div v-else class="df-card text-center py-16">
+      <div class="df-card-corner df-card-corner-tl"></div>
+      <div class="df-card-corner df-card-corner-tr"></div>
+      <div class="df-card-corner df-card-corner-bl"></div>
+      <div class="df-card-corner df-card-corner-br"></div>
+      <div class="relative z-10">
+        <svg class="w-16 h-16 text-df-border-red mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
+        <h4 class="text-lg font-bold text-white mb-2">Nenhum NPC criado</h4>
+        <p class="text-df-muted text-sm mb-6">Crie seu primeiro NPC para popular sua campanha.</p>
+        <button @click="createNPC" class="df-btn-primary mx-auto">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Criar Primeiro NPC
+        </button>
+      </div>
     </div>
 
     <!-- NPC Creation/Edit Modal -->
-    <NPCModal
-      v-if="showCreateModal || editingNPC"
-      :npc="editingNPC"
-      @close="closeModal"
-      @save="saveNPC"
-    />
+    <Teleport to="body">
+      <NPCModal v-if="showCreateModal || editingNPC" :npc="editingNPC" @close="closeModal" @save="saveNPC" />
+    </Teleport>
 
     <!-- NPC Details Modal -->
-    <NPCDetailsModal
-      v-if="viewingNPC"
-      :npc="viewingNPC"
-      @close="closeDetailsModal"
-      @edit="editNPC"
-      @add-to-game="addToGame"
-    />
+    <Teleport to="body">
+      <NPCDetailsModal v-if="viewingNPC" :npc="viewingNPC" @close="closeDetailsModal" @edit="editNPC" @add-to-game="addToGame" />
+    </Teleport>
 
     <!-- NPC Sheet Modal -->
-    <NPCSheet
-      v-if="viewingSheet"
-      :npc="viewingSheet"
-      @close="closeSheet"
-      @save="saveNPCSheet"
-    />
+    <Teleport to="body">
+      <NPCSheet v-if="viewingSheet" :npc="viewingSheet" @close="closeSheet" @save="saveNPCSheet" />
+    </Teleport>
 
-    <!-- Delete NPC Confirmation Modal -->
-    <div
-      v-if="showDeleteModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
-      @click="closeDeleteModal"
-    >
-      <div
-        class="bg-surface-card p-6 rounded-lg border-2 border-primary max-w-sm mx-4"
-        @click.stop
-      >
-        <h3 class="text-lg font-semibold mb-4 text-text-primary">Deletar NPC</h3>
-        <p class="text-text-muted mb-6">
-          Tem certeza que deseja deletar <strong>{{ npcToDelete?.name }}</strong>?
-        </p>
-        <div class="flex justify-end space-x-3">
-          <BaseButton variant="ghost" @click="closeDeleteModal">
-            Cancelar
-          </BaseButton>
-          <BaseButton variant="danger" @click="executeDeleteNPC">
-            Deletar
-          </BaseButton>
+    <!-- Delete Confirmation -->
+    <Teleport to="body">
+      <div v-if="showDeleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999]" @click="closeDeleteModal">
+        <div class="df-modal-card max-w-sm mx-4 w-full" @click.stop>
+          <div class="df-card-corner df-card-corner-tl"></div>
+          <div class="df-card-corner df-card-corner-tr"></div>
+          <div class="df-card-corner df-card-corner-bl"></div>
+          <div class="df-card-corner df-card-corner-br"></div>
+          <div class="relative z-10 text-center">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full border-2 border-red-500/50 bg-red-500/10 flex items-center justify-center">
+              <svg class="w-8 h-8 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Remover NPC</h3>
+            <p class="text-df-muted mb-6">Tem certeza que deseja remover <strong class="text-df-silver">{{ npcToDelete?.name }}</strong>? Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-3">
+              <button @click="closeDeleteModal" class="df-btn-ghost px-6 py-2">Cancelar</button>
+              <button @click="executeDeleteNPC" class="px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg border border-red-500 transition-all font-medium">Remover</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { NPC } from '~/types'
-import BaseButton from '~/components/ui/BaseButton.vue'
 import NPCModal from '~/components/campaign/master/NPCModal.vue'
 import NPCDetailsModal from '~/components/campaign/master/NPCDetailsModal.vue'
 import NPCSheet from '~/components/campaign/master/NPCSheet.vue'
+import { useCampaign } from '~/composables/useCampaign'
+import { useLiveGame } from '~/composables/useLiveGame'
+import { useToast } from '~/composables/useToast'
 
-// Props
-interface Props {
-  campaignId: string
-}
-
+interface Props { campaignId: string }
 const props = defineProps<Props>()
 
-// Usar composable de campanha e jogo ao vivo
 const { campaignNPCs: npcs, loadCampaignNPCs, createNPC: createNPCInCampaign, updateNPC, deleteNPC, subscribeToNPCs, loading } = useCampaign()
 const { addNPCToGame, isGameLive } = useLiveGame()
 const toast = useToast()
 
-// Estados locais para UI
+const sortedNPCs = computed(() => [...npcs.value].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')))
+
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
 const viewingSheet = ref<NPC | null>(null)
-
-// Delete confirmation states
 const showDeleteModal = ref(false)
 const npcToDelete = ref<NPC | null>(null)
-
-// Subscription para real-time updates
 let npcSubscription: any = null
 
-// Carregar NPCs quando componente for montado
 onMounted(async () => {
   await loadCampaignNPCs(props.campaignId)
-  
-  // Ativar subscrição para tempo real
   npcSubscription = subscribeToNPCs(props.campaignId)
 })
+onUnmounted(() => { npcSubscription?.unsubscribe() })
 
-// Limpar subscrição quando componente for desmontado
-onUnmounted(() => {
-  if (npcSubscription) {
-    npcSubscription.unsubscribe()
-  }
-})
-
-// Methods
-const createNPC = () => {
-  showCreateModal.value = true
-}
-
-const editNPC = (npc: NPC) => {
-  editingNPC.value = npc
-  showCreateModal.value = true
-}
-
-const viewDetails = (npc: NPC) => {
-  viewingNPC.value = npc
-}
-
-const openSheet = (npc: NPC) => {
-  viewingSheet.value = npc
-}
-
-const closeModal = () => {
-  showCreateModal.value = false
-  editingNPC.value = null
-}
-
-const closeDetailsModal = () => {
-  viewingNPC.value = null
-}
-
-const closeSheet = () => {
-  viewingSheet.value = null
-}
+const createNPC = () => { showCreateModal.value = true }
+const editNPC = (npc: any) => { viewingNPC.value = null; editingNPC.value = npc; showCreateModal.value = true }
+const viewDetails = (npc: any) => { viewingNPC.value = npc }
+const openSheet = (npc: any) => { viewingSheet.value = npc }
+const closeModal = () => { showCreateModal.value = false; editingNPC.value = null }
+const closeDetailsModal = () => { viewingNPC.value = null }
+const closeSheet = () => { viewingSheet.value = null }
 
 const saveNPC = async (npcData: any) => {
   try {
     if (editingNPC.value) {
-      // Update existing NPC
-      await updateNPC(editingNPC.value.id, npcData)
-      toast.success('NPC atualizado!', `${npcData.name} foi atualizado com sucesso`)
-    } else {
-      // Create new NPC
-      await createNPCInCampaign({
-        campaignId: props.campaignId,
-        ...npcData
-      })
-      toast.success('NPC criado!', `${npcData.name} foi adicionado à campanha`)
+      // Sync photo → sheet.avatar so both stay in sync
+      if (npcData.photo !== undefined && editingNPC.value.sheet) {
+        npcData.sheet = { ...editingNPC.value.sheet, avatar: npcData.photo }
+      }
+      await updateNPC(editingNPC.value.id, npcData); toast.success('NPC atualizado!', `${npcData.name} foi atualizado com sucesso`)
     }
-  } catch (error: any) {
-    console.error('Erro ao salvar NPC:', error)
-    toast.error('Erro ao salvar NPC', error?.message || 'Tente novamente')
-  }
-  
+    else { await createNPCInCampaign({ campaignId: props.campaignId, ...npcData }); toast.success('NPC criado!', `${npcData.name} foi adicionado à campanha`) }
+  } catch (error: any) { console.error('Erro ao salvar NPC:', error); toast.error('Erro ao salvar NPC', error?.message || 'Tente novamente') }
   closeModal()
 }
 
 const saveNPCSheet = async (npcData: any) => {
-  try {
-    await updateNPC(npcData.id, npcData)
-    toast.success('Ficha salva!', 'Ficha do NPC foi atualizada com sucesso')
-  } catch (error: any) {
-    console.error('Erro ao salvar ficha do NPC:', error)
-    toast.error('Erro ao salvar ficha', error?.message || 'Tente novamente')
-  }
+  try { await updateNPC(npcData.id, npcData); toast.success('Ficha salva!', 'Ficha do NPC foi atualizada') }
+  catch (error: any) { console.error('Erro ao salvar ficha:', error); toast.error('Erro ao salvar ficha', error?.message || 'Tente novamente') }
   closeSheet()
 }
 
-const addToGame = async (npc: NPC) => {
-  if (!isGameLive.value) {
-    toast.error('Jogo inativo', 'Nenhum jogo está ativo no momento')
-    return
-  }
-  
-  try {
-    await addNPCToGame(npc, true) // true = visível para jogadores
-    toast.success('NPC adicionado!', `${npc.name} entrou no jogo ao vivo`)
-  } catch (error: any) {
-    console.error('Erro ao adicionar NPC ao jogo:', error)
-    toast.error('Erro ao adicionar ao jogo', error?.message || 'Tente novamente')
-  }
+const addToGame = async (npc: any) => {
+  if (!isGameLive.value) { toast.error('Jogo inativo', 'Nenhum jogo está ativo'); return }
+  try { await addNPCToGame(npc, true); toast.success('NPC adicionado!', `${npc.name} entrou no jogo ao vivo`) }
+  catch (error: any) { console.error('Erro:', error); toast.error('Erro ao adicionar ao jogo', error?.message || 'Tente novamente') }
 }
 
-const confirmDeleteNPC = (npc: NPC) => {
-  npcToDelete.value = npc
-  showDeleteModal.value = true
-}
-
+const confirmDeleteNPC = (npc: any) => { npcToDelete.value = npc; showDeleteModal.value = true }
 const executeDeleteNPC = async () => {
   if (npcToDelete.value) {
-    try {
-      await deleteNPC(npcToDelete.value.id)
-      toast.success('NPC removido!', `${npcToDelete.value.name} foi removido da campanha`)
-    } catch (error: any) {
-      console.error('Erro ao deletar NPC:', error)
-      toast.error('Erro ao remover NPC', error?.message || 'Tente novamente')
-    }
+    try { await deleteNPC(npcToDelete.value.id); toast.success('NPC removido!', `${npcToDelete.value.name} foi removido`) }
+    catch (error: any) { console.error('Erro:', error); toast.error('Erro ao remover NPC', error?.message || 'Tente novamente') }
   }
   closeDeleteModal()
 }
+const closeDeleteModal = () => { showDeleteModal.value = false; npcToDelete.value = null }
 
-const closeDeleteModal = () => {
-  showDeleteModal.value = false
-  npcToDelete.value = null
-}
-
-// Expose data to parent if needed
-defineExpose({
-  npcs
-})
-
-
+defineExpose({ npcs })
 </script>
 
 <style scoped>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* ═══ DF Variables ═══ */
+:deep() {
+  --df-bg-card: #0a0a1a;
+  --df-bg-input: #0d0d20;
+  --df-border-red: #7f1d1d;
+  --df-border-silver: #4a4a5a;
+  --df-accent-red: #dc2626;
+  --df-accent-crimson: #991b1b;
+  --df-text-silver: #c0c0d0;
+  --df-text-gold: #d4a647;
+  --df-glow-red: rgba(220, 38, 38, 0.3);
 }
+
+/* ═══ Line Clamp ═══ */
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ═══ Section Title ═══ */
+.df-section-title {
+  color: #dc2626;
+  font-weight: 800;
+  text-shadow: 0 0 16px rgba(220, 38, 38, 0.3);
+}
+
+/* ═══ Text Helpers ═══ */
+.df-text-muted { color: #6b6b80; }
+
+/* ═══ Card ═══ */
+.df-card {
+  position: relative;
+  background: #0a0a1a;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 0 1px #4a4a5a, inset 0 1px 6px rgba(0,0,0,0.5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* ═══ Corner Decorations ═══ */
+.df-card-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  z-index: 2;
+  pointer-events: none;
+}
+.df-card-corner::before,
+.df-card-corner::after {
+  content: '';
+  position: absolute;
+  background: #991b1b;
+}
+.df-card-corner::before { width: 16px; height: 1px; }
+.df-card-corner::after  { width: 1px;  height: 16px; }
+.df-card-corner-tl { top: -1px; left: -1px; }
+.df-card-corner-tl::before { top: 0; left: 0; }
+.df-card-corner-tl::after  { top: 0; left: 0; }
+.df-card-corner-tr { top: -1px; right: -1px; }
+.df-card-corner-tr::before { top: 0; right: 0; }
+.df-card-corner-tr::after  { top: 0; right: 0; }
+.df-card-corner-bl { bottom: -1px; left: -1px; }
+.df-card-corner-bl::before { bottom: 0; left: 0; }
+.df-card-corner-bl::after  { bottom: 0; left: 0; }
+.df-card-corner-br { bottom: -1px; right: -1px; }
+.df-card-corner-br::before { bottom: 0; right: 0; }
+.df-card-corner-br::after  { bottom: 0; right: 0; }
+
+/* ═══ Buttons ═══ */
+.df-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: linear-gradient(135deg, #991b1b, #450a0a);
+  border: 1px solid #7f1d1d;
+  color: #fca5a5;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.df-btn-primary:hover {
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+  box-shadow: 0 0 16px rgba(220, 38, 38, 0.3);
+  color: #fff;
+}
+
+.df-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #c0c0d0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.df-btn-ghost:hover {
+  color: #dc2626;
+  border-color: #7f1d1d;
+  background: rgba(127, 29, 29, 0.1);
+}
+
+.df-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #6b6b80;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.df-btn-icon:hover { color: #dc2626; border-color: #7f1d1d; background: rgba(127,29,29,0.15); }
+
+/* ═══ Modal Card (Teleported) ═══ */
+.df-modal-card {
+  background: #0a0a1a;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  position: relative;
+  box-shadow: 0 0 40px rgba(220,38,38,0.15), inset 0 1px 6px rgba(0,0,0,0.5);
+}
+
+/* ═══ Spinner ═══ */
+.df-spinner {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #7f1d1d;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

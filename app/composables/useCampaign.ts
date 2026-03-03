@@ -834,6 +834,23 @@ export const useCampaign = () => {
   // NPCs Management
   // ============================================
 
+  // Mapear dados do Supabase (snake_case) para tipos TypeScript (camelCase)
+  const mapSupabaseNPC = (raw: any): NPC => ({
+    id: raw.id,
+    campaignId: raw.campaign_id,
+    name: raw.name,
+    type: raw.type,
+    clan: raw.clan,
+    generation: raw.generation,
+    bio: raw.bio,
+    keyPoints: raw.key_points || [],
+    photo: raw.photo_url,
+    sheet: raw.sheet_data || undefined,
+    isVisible: raw.is_visible_to_players ?? false,
+    createdAt: new Date(raw.created_at),
+    updatedAt: raw.updated_at ? new Date(raw.updated_at) : undefined
+  })
+
   const loadCampaignNPCs = async (campaignId: string) => {
     loading.value = true
     error.value = null
@@ -847,7 +864,7 @@ export const useCampaign = () => {
 
       if (npcsError) throw npcsError
 
-      campaignNPCs.value = npcs || []
+      campaignNPCs.value = (npcs || []).map(mapSupabaseNPC)
       return campaignNPCs.value
 
     } catch (err: any) {
@@ -881,22 +898,12 @@ export const useCampaign = () => {
 
       if (npcError) throw npcError
 
-      // Adicionar à lista local
-      const formattedNPC: NPC = {
-        id: npc.id,
-        campaignId: npc.campaign_id,
-        name: npc.name,
-        type: npc.type,
-        clan: npc.clan,
-        generation: npc.generation,
-        bio: npc.bio,
-        keyPoints: npc.key_points || [],
-        photo: npc.photo_url,
-        createdAt: new Date(npc.created_at),
-        updatedAt: new Date(npc.updated_at)
+      // Adicionar à lista local (realtime subscription pode duplicar, mas verificamos)
+      const formattedNPC = mapSupabaseNPC(npc)
+      // Evitar duplicata: só adicionar se não existir
+      if (!campaignNPCs.value.some(n => n.id === formattedNPC.id)) {
+        campaignNPCs.value.push(formattedNPC)
       }
-      
-      campaignNPCs.value.push(formattedNPC)
       return formattedNPC
 
     } catch (err: any) {
@@ -915,13 +922,15 @@ export const useCampaign = () => {
     try {
       const updateData: any = {}
       
-      if (npcData.name) updateData.name = npcData.name
-      if (npcData.type) updateData.type = npcData.type
-      if (npcData.clan) updateData.clan = npcData.clan
-      if (npcData.generation) updateData.generation = npcData.generation
-      if (npcData.bio) updateData.bio = npcData.bio
-      if (npcData.keyPoints) updateData.key_points = npcData.keyPoints
-      if (npcData.photo) updateData.photo_url = npcData.photo
+      if (npcData.name !== undefined) updateData.name = npcData.name
+      if (npcData.type !== undefined) updateData.type = npcData.type
+      if (npcData.clan !== undefined) updateData.clan = npcData.clan
+      if (npcData.generation !== undefined) updateData.generation = npcData.generation
+      if (npcData.bio !== undefined) updateData.bio = npcData.bio
+      if (npcData.keyPoints !== undefined) updateData.key_points = npcData.keyPoints
+      if (npcData.photo !== undefined) updateData.photo_url = npcData.photo
+      if (npcData.sheet !== undefined) updateData.sheet_data = npcData.sheet
+      if (npcData.isVisible !== undefined) updateData.is_visible_to_players = npcData.isVisible
 
       const { data: npc, error: npcError } = await supabase
         .from('npcs')
@@ -935,20 +944,7 @@ export const useCampaign = () => {
       // Atualizar na lista local
       const index = campaignNPCs.value.findIndex(n => n.id === npcId)
       if (index !== -1) {
-        const formattedNPC: NPC = {
-          id: npc.id,
-          campaignId: npc.campaign_id,
-          name: npc.name,
-          type: npc.type,
-          clan: npc.clan,
-          generation: npc.generation,
-          bio: npc.bio,
-          keyPoints: npc.key_points || [],
-          photo: npc.photo_url,
-          createdAt: new Date(npc.created_at),
-          updatedAt: new Date(npc.updated_at)
-        }
-        campaignNPCs.value[index] = formattedNPC
+        campaignNPCs.value[index] = mapSupabaseNPC(npc)
       }
 
       return npc
@@ -1005,41 +1001,21 @@ export const useCampaign = () => {
           console.log('NPC changed:', payload)
           
           switch (payload.eventType) {
-            case 'INSERT':
-              const newNPC: NPC = {
-                id: payload.new.id,
-                campaignId: payload.new.campaign_id,
-                name: payload.new.name,
-                type: payload.new.type,
-                clan: payload.new.clan,
-                generation: payload.new.generation,
-                bio: payload.new.bio,
-                keyPoints: payload.new.key_points || [],
-                photo: payload.new.photo_url,
-                createdAt: new Date(payload.new.created_at),
-                updatedAt: new Date(payload.new.updated_at)
+            case 'INSERT': {
+              const newNPC = mapSupabaseNPC(payload.new)
+              // Evitar duplicata (createNPC já pode ter adicionado localmente)
+              if (!campaignNPCs.value.some(n => n.id === newNPC.id)) {
+                campaignNPCs.value.push(newNPC)
               }
-              campaignNPCs.value.push(newNPC)
               break
-            case 'UPDATE':
+            }
+            case 'UPDATE': {
               const updateIndex = campaignNPCs.value.findIndex(n => n.id === payload.new.id)
               if (updateIndex !== -1) {
-                const updatedNPC: NPC = {
-                  id: payload.new.id,
-                  campaignId: payload.new.campaign_id,
-                  name: payload.new.name,
-                  type: payload.new.type,
-                  clan: payload.new.clan,
-                  generation: payload.new.generation,
-                  bio: payload.new.bio,
-                  keyPoints: payload.new.key_points || [],
-                  photo: payload.new.photo_url,
-                  createdAt: new Date(payload.new.created_at),
-                  updatedAt: new Date(payload.new.updated_at)
-                }
-                campaignNPCs.value[updateIndex] = updatedNPC
+                campaignNPCs.value[updateIndex] = mapSupabaseNPC(payload.new)
               }
               break
+            }
             case 'DELETE':
               campaignNPCs.value = campaignNPCs.value.filter(n => n.id !== payload.old.id)
               break

@@ -190,7 +190,7 @@
 // ============================================
 // Vue imports
 // ============================================
-import { ref, computed, onMounted, h, type FunctionalComponent } from 'vue'
+import { ref, computed, onMounted, watch, h, type FunctionalComponent } from 'vue'
 
 // ============================================
 // Nuxt imports
@@ -276,7 +276,14 @@ const campaignId = route.params.id as string
 const campaign = ref<Campaign | null>(null)
 const error = ref<string | null>(null)
 const localLoading = ref(false)
-const currentTab = ref('players')
+// Persist tab via URL hash
+const validTabs = ['players', 'npcs', 'notes', 'settings', 'media']
+const hashTab = route.hash?.replace('#', '')
+const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'players')
+
+watch(currentTab, (tab) => {
+  router.replace({ hash: `#${tab}` })
+})
 
 // Tab refs for accessing child data
 const playersTabRef = ref()
