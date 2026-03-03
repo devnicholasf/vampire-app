@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <h3 class="df-section-title text-xl flex items-center gap-2">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
         NPCs da Campanha
       </h3>
       <div class="flex items-center gap-3">
@@ -237,13 +237,6 @@ defineExpose({ npcs })
 
 /* ═══ Line Clamp ═══ */
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-
-/* ═══ Section Title ═══ */
-.df-section-title {
-  color: #dc2626;
-  font-weight: 800;
-  text-shadow: 0 0 16px rgba(220, 38, 38, 0.3);
-}
 
 /* ═══ Text Helpers ═══ */
 .df-text-muted { color: #6b6b80; }
