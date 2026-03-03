@@ -473,6 +473,334 @@ export const useCampaign = () => {
   }
 
   // ============================================
+  // Campaign Invites
+  // ============================================
+
+  /**
+   * Check if an email is registered in the system
+   */
+  const checkUserByEmail = async (email: string): Promise<{ userId: string; email: string } | null> => {
+    try {
+      const { data, error: rpcError } = await supabase
+        .rpc('check_user_by_email', { email_param: email.toLowerCase().trim() })
+
+      if (rpcError) {
+        console.error('Erro ao verificar email:', rpcError)
+        throw new Error('Erro ao verificar email')
+      }
+
+      if (data && data.length > 0) {
+        return { userId: data[0].user_id, email: data[0].user_email }
+      }
+
+      return null
+    } catch (err: any) {
+      console.error('Erro ao verificar email:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Send a campaign invite to a user by email.
+   * Validates: email exists, user is not already in campaign, no pending invite exists.
+   * Invite expires in 15 minutes.
+   */
+  const sendCampaignInvite = async (campaignId: string, email: string): Promise<{ success: boolean; message: string }> => {
+    if (!user.value) throw new Error('Usuário não autenticado')
+
+    try {
+      // 1. Check if email is registered
+      const targetUser = await checkUserByEmail(email)
+      if (!targetUser) {
+        return { success: false, message: 'Este email não está cadastrado no sistema.' }
+      }
+
+      // 2. Cannot invite yourself
+      if (targetUser.userId === user.value.id) {
+        return { success: false, message: 'Você não pode convidar a si mesmo.' }
+      }
+
+      // 3. Check if user is already in the campaign
+      const { data: existingPlayer } = await supabase
+        .from('campaign_players')
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', targetUser.userId)
+        .maybeSingle()
+
+      if (existingPlayer) {
+        return { success: false, message: 'Este jogador já faz parte da campanha.' }
+      }
+
+      // 4. Check if there's already a pending invite
+      const { data: existingInvite } = await supabase
+        .from('campaign_invites')
+        .select('id, expires_at')
+        .eq('campaign_id', campaignId)
+        .eq('invited_user_id', targetUser.userId)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+      if (existingInvite) {
+        const expiresAt = new Date(existingInvite.expires_at)
+        if (expiresAt > new Date()) {
+          return { success: false, message: 'Já existe um convite pendente para este jogador.' }
+        }
+        // If expired, update it
+        await supabase
+          .from('campaign_invites')
+          .update({ status: 'expired' })
+          .eq('id', existingInvite.id)
+      }
+
+      // 5. Get campaign name for the invite
+      const { data: campaignData } = await supabase
+        .from('campaigns')
+        .select('name')
+        .eq('id', campaignId)
+        .single()
+
+      // 6. Create the invite (15 minute expiry)
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+
+      const { error: insertError } = await supabase
+        .from('campaign_invites')
+        .insert({
+          campaign_id: campaignId,
+          invited_by: user.value.id,
+          invited_email: email.toLowerCase().trim(),
+          invited_user_id: targetUser.userId,
+          status: 'pending',
+          expires_at: expiresAt.toISOString(),
+          campaign_name: campaignData?.name || 'Campanha'
+        })
+
+      if (insertError) {
+        console.error('Erro ao criar convite:', insertError)
+        // Handle unique constraint violation
+        if (insertError.code === '23505') {
+          return { success: false, message: 'Já existe um convite pendente para este jogador.' }
+        }
+        throw new Error(`Erro ao enviar convite: ${insertError.message}`)
+      }
+
+      return { success: true, message: `Convite enviado para ${email}!` }
+
+    } catch (err: any) {
+      console.error('Erro ao enviar convite:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Accept a campaign invite (client-side: update invite + add player)
+   */
+  const acceptCampaignInvite = async (inviteId: string): Promise<{ campaignId: string; campaignName: string }> => {
+    if (!user.value) throw new Error('Usuário não autenticado')
+
+    try {
+      // 1. Get the invite
+      const { data: invite, error: fetchError } = await supabase
+        .from('campaign_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .eq('invited_user_id', user.value.id)
+        .eq('status', 'pending')
+        .single()
+
+      if (fetchError || !invite) {
+        console.error('Convite não encontrado:', fetchError)
+        throw new Error('Convite não encontrado ou já respondido')
+      }
+
+      // 2. Check if expired
+      if (new Date(invite.expires_at) < new Date()) {
+        await supabase
+          .from('campaign_invites')
+          .update({ status: 'expired' })
+          .eq('id', inviteId)
+        throw new Error('Este convite expirou')
+      }
+
+      // 3. Check if already in campaign
+      const { data: existingPlayer } = await supabase
+        .from('campaign_players')
+        .select('id')
+        .eq('campaign_id', invite.campaign_id)
+        .eq('user_id', user.value.id)
+        .maybeSingle()
+
+      if (!existingPlayer) {
+        // 4. Add player to campaign with default sheet
+        const defaultSheet = {
+          name: 'Novo Personagem',
+          concept: '',
+          clan: '',
+          generation: 13,
+          sect: '',
+          haven: '',
+          player: '',
+          avatar: '',
+          bloodPotency: 0,
+          humanity: 7,
+          willpower: 3,
+          hunger: 1,
+          xpTotal: 0,
+          xpSpent: 0,
+          attributes: {
+            physical: { strength: 1, dexterity: 1, stamina: 1 },
+            social: { charisma: 1, manipulation: 1, appearance: 1 },
+            mental: { perception: 1, intelligence: 1, wits: 1 }
+          },
+          skills: {
+            talents: { alertness: 1, athletics: 1, awareness: 1, brawl: 1, empathy: 1, expression: 1, intimidation: 1, leadership: 1, streetwise: 1, subterfuge: 1 },
+            skills: { animalKen: 1, craft: 1, drive: 1, etiquette: 1, firearms: 1, larceny: 1, melee: 1, performance: 1, stealth: 1, survival: 1 },
+            knowledges: { academics: 1, computer: 1, finance: 1, investigation: 1, law: 1, medicine: 1, occult: 1, politics: 1, science: 1, technology: 1 }
+          },
+          disciplines: [{ name: '', level: 0 }],
+          virtues: { conscience: 1, selfControl: 1, courage: 1 },
+          conditions: [''],
+          notes: ''
+        }
+
+        const { error: insertError } = await supabase
+          .from('campaign_players')
+          .insert({
+            campaign_id: invite.campaign_id,
+            user_id: user.value.id,
+            character_name: 'Novo Personagem',
+            role: 'player',
+            joined_at: new Date().toISOString(),
+            sheet: defaultSheet
+          })
+
+        if (insertError) {
+          console.error('Erro ao entrar na campanha:', insertError)
+          throw new Error(`Erro ao entrar na campanha: ${insertError.message}`)
+        }
+      }
+
+      // 5. Mark invite as accepted
+      const { error: updateError } = await supabase
+        .from('campaign_invites')
+        .update({ status: 'accepted', responded_at: new Date().toISOString() })
+        .eq('id', inviteId)
+
+      if (updateError) {
+        console.error('Erro ao atualizar convite:', updateError)
+        // Player was already added, so don't throw - just log
+      }
+
+      // 6. Reload campaigns
+      await loadCampaigns()
+
+      return {
+        campaignId: invite.campaign_id,
+        campaignName: invite.campaign_name || 'Campanha'
+      }
+
+    } catch (err: any) {
+      console.error('Erro ao aceitar convite:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Decline a campaign invite
+   */
+  const declineCampaignInvite = async (inviteId: string): Promise<boolean> => {
+    if (!user.value) throw new Error('Usuário não autenticado')
+
+    try {
+      const { error: updateError } = await supabase
+        .from('campaign_invites')
+        .update({ status: 'declined', responded_at: new Date().toISOString() })
+        .eq('id', inviteId)
+        .eq('invited_user_id', user.value.id)
+        .eq('status', 'pending')
+
+      if (updateError) {
+        console.error('Erro ao recusar convite:', updateError)
+        throw new Error('Erro ao recusar convite')
+      }
+
+      return true
+
+    } catch (err: any) {
+      console.error('Erro ao recusar convite:', err)
+      throw err
+    }
+  }
+
+  /**
+   * Load pending invites for the current user
+   */
+  const loadPendingInvites = async () => {
+    if (!user.value) return []
+
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('campaign_invites')
+        .select('*')
+        .eq('invited_user_id', user.value.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (fetchError) {
+        console.error('Erro ao carregar convites:', fetchError)
+        return []
+      }
+
+      // Filter out expired invites and mark them
+      const now = new Date()
+      const valid: any[] = []
+      for (const invite of data || []) {
+        if (new Date(invite.expires_at) <= now) {
+          // Auto-expire
+          await supabase
+            .from('campaign_invites')
+            .update({ status: 'expired' })
+            .eq('id', invite.id)
+        } else {
+          valid.push(invite)
+        }
+      }
+
+      return valid
+
+    } catch (err: any) {
+      console.error('Erro ao carregar convites:', err)
+      return []
+    }
+  }
+
+  /**
+   * Subscribe to realtime invite changes for current user
+   */
+  const subscribeToInvites = (callback: (invite: any) => void) => {
+    if (!user.value) return null
+
+    const channel = supabase
+      .channel('campaign_invites_' + user.value.id)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'campaign_invites',
+          filter: `invited_user_id=eq.${user.value.id}`
+        },
+        (payload) => {
+          console.log('Novo convite recebido:', payload)
+          callback(payload.new)
+        }
+      )
+      .subscribe()
+
+    return channel
+  }
+
+  // ============================================
   // NPCs Management
   // ============================================
 
@@ -836,6 +1164,14 @@ export const useCampaign = () => {
     findCampaignByInviteCode,
     joinCampaignByInviteCode,
     removePlayerFromCampaign,
+
+    // Invite methods
+    checkUserByEmail,
+    sendCampaignInvite,
+    acceptCampaignInvite,
+    declineCampaignInvite,
+    loadPendingInvites,
+    subscribeToInvites,
 
     // NPC methods
     loadCampaignNPCs,

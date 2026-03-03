@@ -124,9 +124,10 @@
               size="md"
             />
           </div>
-          <BaseButton variant="primary" @click="invitePlayer">
-            <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            Convidar
+          <BaseButton variant="primary" @click="invitePlayer" :disabled="inviteLoading">
+            <svg v-if="!inviteLoading" class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg v-else class="w-4 h-4 mr-1 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity="0.3"/><path d="M12 2a10 10 0 019.8 8" stroke-linecap="round"/></svg>
+            {{ inviteLoading ? 'Enviando...' : 'Convidar' }}
           </BaseButton>
         </div>
       </div>
@@ -223,6 +224,7 @@ const players = computed(() => {
 })
 
 const inviteEmail = ref('')
+const inviteLoading = ref(false)
 
 // Toast states
 const toastMessage = ref('')
@@ -300,12 +302,38 @@ const closeKickModal = () => {
   playerToKick.value = null
 }
 
-const invitePlayer = () => {
-  if (inviteEmail.value) {
-    console.log('Convidando jogador:', inviteEmail.value)
-    // Future: Send invitation
-    showToastMessage(`Convite enviado para ${inviteEmail.value}`, 'success')
-    inviteEmail.value = ''
+const invitePlayer = async () => {
+  const email = inviteEmail.value.trim()
+  
+  if (!email) {
+    showToastMessage('Digite um email para convidar.', 'warning')
+    return
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    showToastMessage('Formato de email inválido.', 'error')
+    return
+  }
+
+  inviteLoading.value = true
+
+  try {
+    const { sendCampaignInvite } = useCampaign()
+    const result = await sendCampaignInvite(props.campaignId, email)
+
+    if (result.success) {
+      showToastMessage(result.message, 'success')
+      inviteEmail.value = ''
+    } else {
+      showToastMessage(result.message, 'error')
+    }
+  } catch (error: any) {
+    console.error('Erro ao convidar jogador:', error)
+    showToastMessage(error.message || 'Erro ao enviar convite.', 'error')
+  } finally {
+    inviteLoading.value = false
   }
 }
 
