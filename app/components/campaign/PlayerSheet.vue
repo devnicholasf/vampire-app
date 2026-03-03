@@ -16,6 +16,15 @@
       <!-- Header com Avatar e Nome -->
       <div class="flex items-center justify-between mb-3 sticky top-0 z-10 pb-3 pt-1 df-header-bar">
         <div class="flex items-center gap-3">
+          <!-- Botão Voltar -->
+          <button 
+            type="button"
+            @click="handleClose"
+            class="df-btn-back flex-shrink-0"
+            title="Voltar"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
           <!-- Avatar Circular com borda ornamental -->
           <div class="df-avatar-frame flex-shrink-0">
             <div class="df-avatar-inner rounded-full overflow-hidden bg-gradient-to-br from-red-950 via-red-900 to-gray-900 flex items-center justify-center">
@@ -51,6 +60,7 @@
             type="button"
             @click="handleClose"
             class="df-btn df-btn-close"
+            title="Fechar"
           >
             <svg class="w-4 h-4" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
@@ -1066,15 +1076,15 @@ const sheetData = ref({
     mental: { perception: 1, intelligence: 1, wits: 1 }
   },
   skills: props.player.sheet?.skills || {
-    talents: { alertness: 1, athletics: 1, awareness: 1, brawl: 1, empathy: 1, expression: 1, intimidation: 1, leadership: 1, streetwise: 1, subterfuge: 1 },
-    skills: { animalKen: 1, craft: 1, drive: 1, etiquette: 1, firearms: 1, larceny: 1, melee: 1, performance: 1, stealth: 1, survival: 1 },
-    knowledges: { academics: 1, computer: 1, finance: 1, investigation: 1, law: 1, medicine: 1, occult: 1, politics: 1, science: 1, technology: 1 }
+    talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
+    skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
+    knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
   },
   disciplines: props.player.sheet?.disciplines || [{ name: '', level: 0 }],
   virtues: props.player.sheet?.virtues || { conscience: 1, selfControl: 1, courage: 1 },
-  humanity: props.player.sheet?.humanity || 7,
-  willpower: props.player.sheet?.willpower || 3,
-  vitality: props.player.sheet?.vitality || 10,
+  humanity: props.player.sheet?.humanity || 1,
+  willpower: props.player.sheet?.willpower || 1,
+  vitality: props.player.sheet?.vitality || 1,
   hunger: props.player.sheet?.hunger ?? 1,
   conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : ['']
 })
@@ -1339,6 +1349,26 @@ const cancelClose = () => {
   margin-right: -12px;
   padding-left: 12px;
   padding-right: 12px;
+}
+
+/* ─── Back Button ─── */
+.df-btn-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--df-text-silver);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.df-btn-back:hover {
+  color: var(--df-accent-red);
+  border-color: var(--df-border-red);
+  background: rgba(127, 29, 29, 0.15);
 }
 
 /* ─── Avatar Frame ─── */

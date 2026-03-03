@@ -185,13 +185,15 @@
     </Teleport>
 
     <!-- Player Sheet Modal -->
-    <PlayerSheet
-      v-if="viewingPlayerSheet"
-      :player="viewingPlayerSheet"
-      :canEdit="false"
-      @close="closePlayerSheet"
-      @save="savePlayerSheet"
-    />
+    <Teleport to="body">
+      <PlayerSheet
+        v-if="viewingPlayerSheet"
+        :player="viewingPlayerSheet"
+        :canEdit="false"
+        @close="closePlayerSheet"
+        @save="savePlayerSheet"
+      />
+    </Teleport>
   </div>
 </template>
 

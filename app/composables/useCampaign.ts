@@ -340,15 +340,15 @@ export const useCampaign = () => {
           mental: { perception: 1, intelligence: 1, wits: 1 }
         },
         skills: {
-          talents: { alertness: 1, athletics: 1, awareness: 1, brawl: 1, empathy: 1, expression: 1, intimidation: 1, leadership: 1, streetwise: 1, subterfuge: 1 },
-          skills: { animalKen: 1, craft: 1, drive: 1, etiquette: 1, firearms: 1, larceny: 1, melee: 1, performance: 1, stealth: 1, survival: 1 },
-          knowledges: { academics: 1, computer: 1, finance: 1, investigation: 1, law: 1, medicine: 1, occult: 1, politics: 1, science: 1, technology: 1 }
+          talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
+          skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
+          knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
         },
         disciplines: [{ name: '', level: 0 }],
         virtues: { conscience: 1, selfControl: 1, courage: 1 },
-        humanity: 7,
-        willpower: 3,
-        vitality: 10,
+        humanity: 1,
+        willpower: 1,
+        vitality: 1,
         hunger: 1,
         conditions: [''],
         notes: ''
@@ -642,8 +642,8 @@ export const useCampaign = () => {
           player: '',
           avatar: '',
           bloodPotency: 0,
-          humanity: 7,
-          willpower: 3,
+          humanity: 1,
+          willpower: 1,
           hunger: 1,
           xpTotal: 0,
           xpSpent: 0,
@@ -653,12 +653,13 @@ export const useCampaign = () => {
             mental: { perception: 1, intelligence: 1, wits: 1 }
           },
           skills: {
-            talents: { alertness: 1, athletics: 1, awareness: 1, brawl: 1, empathy: 1, expression: 1, intimidation: 1, leadership: 1, streetwise: 1, subterfuge: 1 },
-            skills: { animalKen: 1, craft: 1, drive: 1, etiquette: 1, firearms: 1, larceny: 1, melee: 1, performance: 1, stealth: 1, survival: 1 },
-            knowledges: { academics: 1, computer: 1, finance: 1, investigation: 1, law: 1, medicine: 1, occult: 1, politics: 1, science: 1, technology: 1 }
+            talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
+            skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
+            knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
           },
           disciplines: [{ name: '', level: 0 }],
           virtues: { conscience: 1, selfControl: 1, courage: 1 },
+          vitality: 1,
           conditions: [''],
           notes: ''
         }
@@ -680,15 +681,19 @@ export const useCampaign = () => {
         }
       }
 
-      // 5. Mark invite as accepted
-      const { error: updateError } = await supabase
-        .from('campaign_invites')
-        .update({ status: 'accepted', responded_at: new Date().toISOString() })
-        .eq('id', inviteId)
+      // 5. Mark invite as accepted (with retry)
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { error: updateError } = await supabase
+          .from('campaign_invites')
+          .update({ status: 'accepted', responded_at: new Date().toISOString() })
+          .eq('id', inviteId)
 
-      if (updateError) {
-        console.error('Erro ao atualizar convite:', updateError)
-        // Player was already added, so don't throw - just log
+        if (!updateError) {
+          console.log('Convite marcado como aceito com sucesso')
+          break
+        }
+        console.error(`Tentativa ${attempt + 1} de atualizar convite falhou:`, updateError)
+        if (attempt < 2) await new Promise(r => setTimeout(r, 300))
       }
 
       // 6. Reload campaigns
@@ -763,6 +768,31 @@ export const useCampaign = () => {
             .eq('id', invite.id)
         } else {
           valid.push(invite)
+        }
+      }
+
+      // Filter out invites for campaigns the user already joined
+      if (valid.length > 0 && user.value) {
+        const { data: myPlayers } = await supabase
+          .from('campaign_players')
+          .select('campaign_id')
+          .eq('user_id', user.value.id)
+
+        if (myPlayers && myPlayers.length > 0) {
+          const joinedCampaignIds = new Set(myPlayers.map((p: any) => p.campaign_id))
+          const filtered = valid.filter((invite: any) => !joinedCampaignIds.has(invite.campaign_id))
+
+          // Mark already-joined invites as accepted
+          for (const invite of valid) {
+            if (joinedCampaignIds.has(invite.campaign_id)) {
+              await supabase
+                .from('campaign_invites')
+                .update({ status: 'accepted', responded_at: new Date().toISOString() })
+                .eq('id', invite.id)
+            }
+          }
+
+          return filtered
         }
       }
 

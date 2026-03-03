@@ -102,24 +102,19 @@ export const useNotifications = () => {
           try {
             const result = await acceptCampaignInvite(inviteId)
             console.log('Convite aceito, resultado:', result)
-            
-            // Remove the notification
-            removeNotification(notification.id)
-            showNotifications.value = false
-            
-            // Force navigate to dashboard
-            if (process.client) {
-              window.location.href = '/dashboard'
-            }
           } catch (acceptError: any) {
             console.error('Erro ao aceitar convite:', acceptError)
-            // Still remove notification and try to navigate
-            removeNotification(notification.id)
-            showNotifications.value = false
-            if (process.client) {
-              window.location.href = '/dashboard'
-            }
           }
+          
+          // Always remove notification and close dropdown
+          removeNotification(notification.id)
+          showNotifications.value = false
+          
+          // Reload campaigns to show the new one (no page reload needed)
+          try {
+            const { loadCampaigns } = useCampaign()
+            await loadCampaigns()
+          } catch (_) {}
           break
         }
         case 'decline': {
