@@ -162,10 +162,10 @@
           ref="npcsTabRef"
         />
 
-        <NotesTab
+        <PoliticsTab
           v-if="currentTab === 'notes'"
           :campaign-id="campaignId"
-          ref="notesTabRef"
+          ref="politicsTabRef"
         />
 
         <SettingsTab
@@ -214,7 +214,7 @@ import type { Campaign } from '~/types'
 import ToastContainer from '~/components/ui/ToastContainer.vue'
 import PlayersTab from '~/components/campaign/master/PlayersTab.vue'
 import NPCsTab from '~/components/campaign/master/NPCsTab.vue'
-import NotesTab from '~/components/campaign/master/NotesTab.vue'
+import PoliticsTab from '~/components/campaign/master/PoliticsTab.vue'
 import SettingsTab from '~/components/campaign/master/SettingsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
 
@@ -234,12 +234,12 @@ const IconNPCs: FunctionalComponent = () =>
     h('path', { d: 'M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z' })
   ])
 
-const IconNotes: FunctionalComponent = () =>
+const IconPolitics: FunctionalComponent = () =>
   h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('path', { d: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z' }),
-    h('polyline', { points: '14 2 14 8 20 8' }),
-    h('line', { x1: '16', y1: '13', x2: '8', y2: '13' }),
-    h('line', { x1: '16', y1: '17', x2: '8', y2: '17' })
+    h('path', { d: 'M2 20h20' }),
+    h('path', { d: 'M5 20V10l7-6 7 6v10' }),
+    h('path', { d: 'M9 20v-6h6v6' }),
+    h('path', { d: 'M3 10l9-7 9 7' })
   ])
 
 const IconSettings: FunctionalComponent = () =>
@@ -288,7 +288,7 @@ watch(currentTab, (tab) => {
 // Tab refs for accessing child data
 const playersTabRef = ref()
 const npcsTabRef = ref()
-const notesTabRef = ref()
+const politicsTabRef = ref()
 
 // Mock data for now
 const sessions = ref<any[]>([])
@@ -299,7 +299,7 @@ const events = ref<any[]>([])
 // ============================================
 const playersCount = computed(() => playersTabRef.value?.count || 0)
 const sessionCount = computed(() => sessions.value.length)
-const eventsCount = computed(() => events.value.length || notesTabRef.value?.count || 0)
+const eventsCount = computed(() => events.value.length || politicsTabRef.value?.count || 0)
 const npcsCount = computed(() => npcsTabRef.value?.npcs?.length || 0)
 
 // ============================================
@@ -308,7 +308,7 @@ const npcsCount = computed(() => npcsTabRef.value?.npcs?.length || 0)
 const tabs = ref([
   { id: 'players', label: 'Jogadores', iconComponent: IconPlayers },
   { id: 'npcs', label: 'NPCs', iconComponent: IconNPCs },
-  { id: 'notes', label: 'Anotações', iconComponent: IconNotes },
+  { id: 'notes', label: 'Política', iconComponent: IconPolitics },
   { id: 'settings', label: 'Configurações', iconComponent: IconSettings },
   { id: 'media', label: 'Mídia', iconComponent: IconMedia }
 ])
