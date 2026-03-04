@@ -435,6 +435,7 @@
           </button>
         </div>
 
+        <!-- ── Text Territories (primary) ── -->
         <div class="space-y-3">
           <div v-for="(territory, ti) in politics.territories" :key="ti" class="df-territory-card">
             <div class="flex items-center justify-between mb-2">
@@ -446,16 +447,13 @@
               </template>
               <h5 v-else class="text-white font-bold text-sm">{{ territory.name }}</h5>
             </div>
-
             <template v-if="editTerritories">
               <input v-model="territory.controlledBy" class="df-input text-xs mb-1" placeholder="Controlado por..." />
-              <textarea v-model="territory.description" class="df-input text-xs resize-none" rows="2" placeholder="Descrição do território e seu significado..."></textarea>
+              <textarea v-model="territory.description" class="df-input text-xs resize-none" rows="2" placeholder="Descrição do território..."></textarea>
               <div class="flex items-center gap-2 mt-2">
                 <label class="text-xs text-df-muted">Nível de controle:</label>
                 <div class="flex gap-1">
-                  <button
-                    v-for="n in 5" :key="n" type="button"
-                    @click="territory.controlLevel = n"
+                  <button v-for="n in 5" :key="n" type="button" @click="territory.controlLevel = n"
                     class="w-5 h-5 rounded-full border transition-all"
                     :class="n <= (territory.controlLevel || 0) ? 'bg-df-red border-df-red' : 'bg-transparent border-df-border-silver hover:border-df-red'"
                   ></button>
@@ -475,13 +473,50 @@
           </div>
         </div>
 
+        <!-- Empty state for text territories -->
+        <p v-if="politics.territories.length === 0 && !editTerritories" class="text-df-muted text-xs italic text-center py-4">
+          Nenhum território cadastrado. Clique em "Editar" para adicionar.
+        </p>
+
         <button v-if="editTerritories" @click="addTerritory" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
           + Adicionar Território
         </button>
 
-        <!-- Empty state -->
-        <div v-if="!editTerritories && politics.territories.length === 0" class="text-center py-6 text-df-muted text-sm italic">
-          Nenhum território registrado. Clique em "Editar" para começar.
+        <!-- ── Optional: Interactive City Map ── -->
+        <div class="mt-6 pt-4 border-t border-df-border-silver/20">
+          <button
+            @click="showCityMap = !showCityMap"
+            class="w-full flex items-center justify-between py-2 text-left group"
+          >
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>
+              </svg>
+              <span class="text-sm font-semibold text-df-silver uppercase tracking-wider group-hover:text-df-gold transition-colors">
+                Mapa da Cidade
+              </span>
+              <span v-if="politics.territoryMapImage" class="text-[10px] text-emerald-400 bg-emerald-400/10 border border-emerald-400/30 px-1.5 py-0.5 rounded-full">Ativo</span>
+            </div>
+            <svg
+              class="w-4 h-4 text-df-muted transition-transform duration-200"
+              :class="{ 'rotate-180': showCityMap }"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            ><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <p class="text-[10px] text-df-muted mt-1 mb-3">
+            Opcional: carregue uma imagem de mapa e desenhe zonas de influência interativas sobre ela.
+          </p>
+
+          <div v-if="showCityMap" class="mt-3">
+            <TerritoryMap
+              v-model="politics.territoryZones"
+              :map-image="politics.territoryMapImage"
+              :editing="editTerritories"
+              @update:map-image="politics.territoryMapImage = $event"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -638,9 +673,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useCampaign } from '~/composables/useCampaign'
+import TerritoryMap from './TerritoryMap.vue'
+import type { TerritoryZone } from './TerritoryMap.vue'
 
 interface Props { campaignId: string }
 const props = defineProps<Props>()
@@ -651,6 +688,12 @@ const editGovernment = ref(false)
 const editFactions = ref(false)
 const editRelations = ref(false)
 const editTerritories = ref(false)
+const showCityMap = ref(false)
+
+// Auto-expand city map when entering edit mode for territories
+watch(editTerritories, (val) => {
+  if (val) showCityMap.value = true
+})
 
 const editMode = computed(() => editGovernment.value || editFactions.value || editRelations.value || editTerritories.value)
 
@@ -700,13 +743,17 @@ interface PoliticsData {
   factions: Faction[]
   relations: Relation[]
   territories: Territory[]
+  territoryMapImage: string
+  territoryZones: TerritoryZone[]
 }
 
 const defaultPolitics = (): PoliticsData => ({
   government: [],
   factions: [],
   relations: [],
-  territories: []
+  territories: [],
+  territoryMapImage: '',
+  territoryZones: []
 })
 
 const politics = ref<PoliticsData>(defaultPolitics())
@@ -758,8 +805,19 @@ onMounted(async () => {
           secret: r.secret ?? false
         }))
       }
+      // Migrate territory zones: ensure each zone has a status field
+      if (parsed.territoryZones) {
+        parsed.territoryZones = parsed.territoryZones.map((z: any) => ({
+          ...z,
+          status: z.status || 'stable'
+        }))
+      }
       politics.value = { ...defaultPolitics(), ...parsed }
     } catch { /* ignore */ }
+  }
+  // Auto-expand city map if one is already loaded
+  if (politics.value.territoryMapImage) {
+    showCityMap.value = true
   }
   savedSnapshot = JSON.stringify(politics.value)
 })
