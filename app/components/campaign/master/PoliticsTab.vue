@@ -691,8 +691,19 @@ const editTerritories = ref(false)
 const showCityMap = ref(false)
 
 // Auto-expand city map when entering edit mode for territories
-watch(editTerritories, (val) => {
+watch(editTerritories, (val, oldVal) => {
   if (val) showCityMap.value = true
+  // Cleanup empty territories when exiting edit mode
+  if (!val && oldVal) {
+    politics.value.territories = politics.value.territories.filter(
+      t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
+    )
+    // Also cleanup empty influences from map zones
+    politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
+      ...z,
+      influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
+    }))
+  }
 })
 
 const editMode = computed(() => editGovernment.value || editFactions.value || editRelations.value || editTerritories.value)
@@ -823,6 +834,14 @@ onMounted(async () => {
 })
 
 const savePolitics = () => {
+  // Cleanup empty entries before saving
+  politics.value.territories = politics.value.territories.filter(
+    t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
+  )
+  politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
+    ...z,
+    influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
+  }))
   localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
   savedSnapshot = JSON.stringify(politics.value)
   resetAllEdit()
