@@ -6,7 +6,7 @@
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20"/><path d="M5 20V10l7-6 7 6v10"/><path d="M9 20v-6h6v6"/><path d="M3 10l9-7 9 7"/></svg>
         Mapa Político da Crônica
       </h3>
-      <button @click="editMode = !editMode" class="df-btn-ghost px-3 py-1.5 text-sm flex items-center gap-2">
+      <button @click="toggleAllEdit()" class="df-btn-ghost px-3 py-1.5 text-sm flex items-center gap-2">
         <svg v-if="!editMode" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         {{ editMode ? 'Visualizar' : 'Editar' }}
@@ -40,8 +40,8 @@
               <div class="tree-nodes" :class="{ multi: tier.roles.length > 1 }">
                 <div v-for="(role, ri) in tier.roles" :key="ri" class="tree-node">
                   <div
-                    class="node-card" :class="{ 'node-card-edit': editMode, 'cursor-pointer': !editMode && role.npcId }"
-                    @click="!editMode && role.npcId ? viewingRole = role : null"
+                    class="node-card" :class="{ 'node-card-edit': editGovernment, 'cursor-pointer': !editGovernment && role.npcId }"
+                    @click="!editGovernment && role.npcId ? viewingRole = role : null"
                   >
                     <!-- Avatar -->
                     <div class="node-avatar" :class="getTierAvatarClass(tier.tier)">
@@ -55,7 +55,7 @@
                     </div>
 
                     <!-- Edit mode controls -->
-                    <template v-if="editMode">
+                    <template v-if="editGovernment">
                       <select v-model="role.title" class="df-input text-xs mt-1 text-center">
                         <option value="">Cargo...</option>
                         <option v-for="t in governmentTitles" :key="t" :value="t">{{ t }}</option>
@@ -87,12 +87,12 @@
         </div>
 
         <!-- Empty state -->
-        <div v-if="!editMode && politics.government.length === 0" class="text-center py-8 text-df-muted text-sm italic">
+        <div v-if="!editGovernment && politics.government.length === 0" class="text-center py-8 text-df-muted text-sm italic">
           <svg class="w-12 h-12 mx-auto mb-3 text-df-border-silver opacity-40" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
           Nenhum cargo registrado. Clique em "Editar" para começar.
         </div>
 
-        <button v-if="editMode" @click="addGovernmentRole" class="mt-4 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+        <button v-if="editGovernment" @click="addGovernmentRole" class="mt-4 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
           + Adicionar Cargo
         </button>
       </div>
@@ -112,17 +112,17 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Facções</h4>
           </div>
-          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <button @click="editFactions = !editFactions" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editFactions" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editMode ? 'Ver' : 'Editar' }}
+            {{ editFactions ? 'Ver' : 'Editar' }}
           </button>
         </div>
 
         <div class="space-y-5">
           <div v-for="(faction, fi) in politics.factions" :key="fi" class="df-faction-card">
             <!-- ── EDIT MODE ── -->
-            <template v-if="editMode">
+            <template v-if="editFactions">
               <!-- Row 1: Name + Delete -->
               <div class="flex items-center gap-2 mb-2">
                 <span class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: faction.color || '#dc2626' }"></span>
@@ -229,19 +229,19 @@
           </div>
         </div>
 
-        <button v-if="editMode" @click="addFaction" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+        <button v-if="editFactions" @click="addFaction" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
           + Adicionar Facção
         </button>
 
         <!-- Empty state -->
-        <div v-if="!editMode && politics.factions.length === 0" class="text-center py-6 text-df-muted text-sm italic">
+        <div v-if="!editFactions && politics.factions.length === 0" class="text-center py-6 text-df-muted text-sm italic">
           Nenhuma facção registrada. Clique em "Editar" para começar.
         </div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- SECTION 3: Relações (Alianças, Ódios, Tensões) -->
+    <!-- SECTION 3: Relações (Grafo Interativo)          -->
     <!-- ═══════════════════════════════════════════════ -->
     <div class="df-card">
       <div class="df-card-corner df-card-corner-tl"></div>
@@ -254,61 +254,163 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Relações</h4>
           </div>
-          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <button @click="editRelations = !editRelations" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editRelations" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editMode ? 'Ver' : 'Editar' }}
+            {{ editRelations ? 'Ver' : 'Editar' }}
           </button>
         </div>
 
-        <!-- Sub-tabs for relation types -->
-        <div class="flex gap-1 mb-4 border-b border-df-border-red/30 pb-2">
-          <button
-            v-for="rt in relationTypes" :key="rt.key"
-            @click="activeRelationType = rt.key"
-            class="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-t transition-all"
-            :class="activeRelationType === rt.key ? 'text-white border-b-2' : 'text-df-muted hover:text-df-silver'"
-            :style="activeRelationType === rt.key ? { borderColor: rt.color, color: rt.color } : {}"
-          >
-            {{ rt.label }}
+        <!-- ── Filters ── -->
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <label v-for="rt in relationTypes" :key="rt.key" class="rel-filter-label" :style="{ '--filter-color': rt.color }">
+            <input type="checkbox" v-model="relFilters[rt.key]" class="rel-filter-check" />
+            <span class="rel-filter-box" :style="relFilters[rt.key] ? { background: rt.color, borderColor: rt.color } : {}"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider" :style="{ color: relFilters[rt.key] ? rt.color : '#6b6b80' }">{{ rt.label }}</span>
+          </label>
+          <div class="ml-auto">
+            <button @click="showSecretRelations = !showSecretRelations" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs uppercase tracking-wider transition-all" :class="showSecretRelations ? 'bg-purple-700 border border-purple-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.3)]' : 'bg-purple-900/60 border border-purple-700/60 text-white hover:bg-purple-700 hover:shadow-[0_0_12px_rgba(147,51,234,0.3)]'">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>{{ showSecretRelations ? 'Ocultar secretas' : 'Mostrar secretas' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── VIEW MODE: Node Graph ── -->
+        <template v-if="!editRelations">
+          <div v-if="visibleRelations.length > 0" class="rel-graph-wrapper">
+            <!-- One graph per unique NPC that has relations -->
+            <div v-for="npcId in graphCenterNpcs" :key="npcId" class="rel-graph-row">
+              <div class="rel-graph-center-label">
+                <div class="rel-graph-avatar rel-graph-avatar-center">
+                  <img v-if="getNpcById(npcId)?.photo" :src="getNpcById(npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                  <div v-else class="w-full h-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                </div>
+                <span class="text-xs text-white font-semibold mt-1 text-center leading-tight max-w-[80px] truncate">{{ getNpcById(npcId)?.name || '—' }}</span>
+              </div>
+
+              <!-- Connected NPCs -->
+              <div class="rel-graph-connections">
+                <div v-for="(conn, ci) in getRelationsForNpc(npcId)" :key="ci" class="rel-graph-link">
+                  <!-- Line -->
+                  <div class="rel-graph-line" :class="getRelLineClass(conn.relation)" :style="{ '--rel-color': getRelColor(conn.relation.type) }" @mouseenter="hoveredRelation = conn.relation" @mouseleave="hoveredRelation = null"></div>
+                  <!-- Target avatar -->
+                  <div class="rel-graph-target">
+                    <div class="rel-graph-avatar" :style="{ borderColor: getRelColor(conn.relation.type) }">
+                      <img v-if="getNpcById(conn.targetId)?.photo" :src="getNpcById(conn.targetId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                      <div v-else class="w-full h-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </div>
+                    </div>
+                    <span class="text-[10px] text-df-silver text-center leading-tight max-w-[70px] truncate">{{ getNpcById(conn.targetId)?.name || '—' }}</span>
+                    <svg v-if="conn.relation.secret" class="w-3 h-3 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  </div>
+
+                  <!-- Tooltip -->
+                  <div v-if="hoveredRelation === conn.relation" class="rel-tooltip">
+                    <div class="flex items-center gap-1.5 mb-1">
+                      <span class="w-2 h-2 rounded-full" :style="{ background: getRelColor(conn.relation.type) }"></span>
+                      <span class="text-xs font-bold" :style="{ color: getRelColor(conn.relation.type) }">{{ conn.relation.name || getRelLabel(conn.relation.type) }}</span>
+                      <span v-if="conn.relation.secret" class="flex items-center gap-0.5 text-[9px] text-purple-400 ml-auto">
+                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        Secreta
+                      </span>
+                    </div>
+                    <div class="text-[10px] text-df-silver space-y-0.5">
+                      <p><span class="text-df-gold">Nível:</span> {{ getStrengthLabel(conn.relation.strength) }}</p>
+                      <p v-if="conn.relation.since"><span class="text-df-gold">Desde:</span> {{ conn.relation.since }}</p>
+                      <p v-if="conn.relation.reason"><span class="text-df-gold">Nota:</span> {{ conn.relation.reason }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secret relations banner -->
+          <div v-if="secretRelationsCount > 0 && !showSecretRelations" class="mt-3 flex items-center gap-2 p-2.5 rounded-lg border border-purple-800/40 bg-purple-950/20">
+            <svg class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="text-xs text-purple-300">{{ secretRelationsCount }} relação(ões) secreta(s) oculta(s)</span>
+            <button @click="showSecretRelations = true" class="ml-auto text-xs text-purple-400 hover:text-purple-200 underline transition-colors">Revelar</button>
+          </div>
+
+          <!-- Empty state -->
+          <div v-if="visibleRelations.length === 0 && politics.relations.length === 0" class="text-center py-6 text-df-muted text-sm italic">
+            Nenhuma relação registrada. Clique em "Editar" para começar.
+          </div>
+          <div v-else-if="visibleRelations.length === 0" class="text-center py-4 text-df-muted text-sm italic">
+            Nenhuma relação visível com os filtros atuais.
+          </div>
+        </template>
+
+        <!-- ── EDIT MODE: Relation Cards ── -->
+        <template v-else>
+          <div class="space-y-3">
+            <div v-for="(rel, ri) in politics.relations" :key="ri" class="rel-edit-card" :class="getRelBorderClass(rel.type)">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full" :style="{ background: getRelColor(rel.type) }"></span>
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: getRelColor(rel.type) }">{{ getRelLabel(rel.type) }}</span>
+                  <span v-if="rel.secret" class="flex items-center gap-1 text-[10px] text-purple-400">
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    Secreta
+                  </span>
+                </div>
+                <button @click="removeRelation(rel)" class="text-df-muted hover:text-df-red transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                </button>
+              </div>
+              <!-- Row 1: Type + Strength + Secret -->
+              <div class="flex gap-2 mb-2">
+                <select v-model="rel.type" class="df-input text-xs flex-1">
+                  <option value="alliance">Aliança</option>
+                  <option value="hatred">Inimizade</option>
+                  <option value="tension">Tensão</option>
+                </select>
+                <select v-model="rel.strength" class="df-input text-xs flex-1">
+                  <option value="strong">Forte</option>
+                  <option value="medium">Média</option>
+                  <option value="weak">Fraca</option>
+                </select>
+                <button @click="toggleRelSecret(rel)" class="df-btn-primary flex-shrink-0 px-2.5 py-1 text-[10px] gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Secreta
+                </button>
+              </div>
+              <!-- Row 2: NPCs -->
+              <div class="flex items-center gap-2 mb-2">
+                <select v-model="rel.fromNpcId" class="df-input text-xs flex-1">
+                  <option value="">— Selecionar NPC —</option>
+                  <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
+                </select>
+                <svg class="w-4 h-4 text-df-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                <select v-model="rel.toNpcId" class="df-input text-xs flex-1">
+                  <option value="">— Selecionar NPC —</option>
+                  <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
+                </select>
+              </div>
+              <!-- Row 3: Name + Since -->
+              <div class="flex gap-2 mb-2">
+                <input v-model="rel.name" class="df-input text-xs" style="flex: 3 1 0%" placeholder="Nome da relação (Se houver)..." />
+                <input v-model="rel.since" class="df-input text-xs" style="flex: 1 1 0%" placeholder="Desde... (Ano)" />
+              </div>
+              <!-- Row 4: Reason -->
+              <textarea v-model="rel.reason" class="df-input text-xs resize-none" rows="2" placeholder="Observações / justificativa..." />
+              <!-- Toggle secret visibility -->
+              <div v-if="rel.secret" class="mt-2 flex items-center gap-2">
+                <button @click="toggleRelSecret(rel)" class="text-[10px] text-purple-400 hover:text-purple-200 underline transition-colors">
+                  Tornar pública (revelada aos jogadores)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button @click="addRelation" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+            + Adicionar Relação
           </button>
-        </div>
-
-        <div class="space-y-2">
-          <div
-            v-for="(rel, ri) in filteredRelations"
-            :key="ri"
-            class="flex items-center gap-2 p-2 rounded-lg border transition-all"
-            :class="getRelBorderClass(rel.type)"
-          >
-            <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: getRelColor(rel.type) }"></span>
-            <template v-if="editMode">
-              <input v-model="rel.from" class="df-input text-xs flex-1" placeholder="De..." />
-              <svg class="w-4 h-4 text-df-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
-              <input v-model="rel.to" class="df-input text-xs flex-1" placeholder="Para..." />
-              <input v-model="rel.reason" class="df-input text-xs flex-1" placeholder="Motivo..." />
-              <button @click="removeRelation(rel)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </template>
-            <template v-else>
-              <span class="text-white text-sm font-medium">{{ rel.from }}</span>
-              <span class="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" :style="{ color: getRelColor(rel.type), background: getRelColor(rel.type) + '15' }">
-                {{ getRelLabel(rel.type) }}
-              </span>
-              <span class="text-white text-sm font-medium">{{ rel.to }}</span>
-              <span v-if="rel.reason" class="text-df-muted text-xs italic ml-auto truncate max-w-[200px]">— {{ rel.reason }}</span>
-            </template>
-          </div>
-
-          <div v-if="filteredRelations.length === 0" class="text-center py-4 text-df-muted text-sm italic">
-            Nenhuma relação de {{ getRelLabel(activeRelationType).toLowerCase() }} registrada.
-          </div>
-        </div>
-
-        <button v-if="editMode" @click="addRelation" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
-          + Adicionar Relação
-        </button>
+        </template>
       </div>
     </div>
 
@@ -326,17 +428,17 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Influência por Território</h4>
           </div>
-          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <button @click="editTerritories = !editTerritories" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editTerritories" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editMode ? 'Ver' : 'Editar' }}
+            {{ editTerritories ? 'Ver' : 'Editar' }}
           </button>
         </div>
 
         <div class="space-y-3">
           <div v-for="(territory, ti) in politics.territories" :key="ti" class="df-territory-card">
             <div class="flex items-center justify-between mb-2">
-              <template v-if="editMode">
+              <template v-if="editTerritories">
                 <input v-model="territory.name" class="df-input text-sm font-bold flex-1 mr-2" placeholder="Nome do território" />
                 <button @click="removeTerritory(ti)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -345,7 +447,7 @@
               <h5 v-else class="text-white font-bold text-sm">{{ territory.name }}</h5>
             </div>
 
-            <template v-if="editMode">
+            <template v-if="editTerritories">
               <input v-model="territory.controlledBy" class="df-input text-xs mb-1" placeholder="Controlado por..." />
               <textarea v-model="territory.description" class="df-input text-xs resize-none" rows="2" placeholder="Descrição do território e seu significado..."></textarea>
               <div class="flex items-center gap-2 mt-2">
@@ -362,7 +464,7 @@
             </template>
             <template v-else>
               <p v-if="territory.controlledBy" class="text-df-silver text-xs mb-1">
-                <span class="text-df-gold">Domínio de:</span> {{ territory.controlledBy }}
+                <span class="text-df-gold">Domínio:</span> {{ territory.controlledBy }}
               </p>
               <p v-if="territory.description" class="text-df-muted text-xs italic mb-2">{{ territory.description }}</p>
               <div v-if="territory.controlLevel" class="flex items-center gap-1">
@@ -373,12 +475,12 @@
           </div>
         </div>
 
-        <button v-if="editMode" @click="addTerritory" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+        <button v-if="editTerritories" @click="addTerritory" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
           + Adicionar Território
         </button>
 
         <!-- Empty state -->
-        <div v-if="!editMode && politics.territories.length === 0" class="text-center py-6 text-df-muted text-sm italic">
+        <div v-if="!editTerritories && politics.territories.length === 0" class="text-center py-6 text-df-muted text-sm italic">
           Nenhum território registrado. Clique em "Editar" para começar.
         </div>
       </div>
@@ -545,7 +647,27 @@ const props = defineProps<Props>()
 const toast = useToast()
 const { campaignNPCs, loadCampaignNPCs } = useCampaign()
 
-const editMode = ref(false)
+const editGovernment = ref(false)
+const editFactions = ref(false)
+const editRelations = ref(false)
+const editTerritories = ref(false)
+
+const editMode = computed(() => editGovernment.value || editFactions.value || editRelations.value || editTerritories.value)
+
+const toggleAllEdit = () => {
+  const newVal = !editMode.value
+  editGovernment.value = newVal
+  editFactions.value = newVal
+  editRelations.value = newVal
+  editTerritories.value = newVal
+}
+
+const resetAllEdit = () => {
+  editGovernment.value = false
+  editFactions.value = false
+  editRelations.value = false
+  editTerritories.value = false
+}
 
 // ── Government titles used in Camarilla ──
 const governmentTitles = [
@@ -557,18 +679,20 @@ const governmentTitles = [
 // ── Relation types ──
 const relationTypes = [
   { key: 'alliance' as const, label: 'Alianças', color: '#22c55e' },
-  { key: 'hatred' as const, label: 'Ódios', color: '#dc2626' },
+  { key: 'hatred' as const, label: 'Inimigos', color: '#dc2626' },
   { key: 'tension' as const, label: 'Tensões', color: '#f59e0b' }
 ]
 
 type RelationType = 'alliance' | 'hatred' | 'tension'
-const activeRelationType = ref<RelationType>('alliance')
+const relFilters = ref<{ alliance: boolean; hatred: boolean; tension: boolean }>({ alliance: true, hatred: true, tension: true })
+const showSecretRelations = ref(false)
 
 interface GovernmentRole { title: string; npcId: string; note: string }
 type FactionType = 'independente' | 'anarquista'
 interface FactionMember { npcId: string; customName: string; customPhoto: string; rank: string }
 interface Faction { name: string; type: FactionType; color: string; description: string; members: FactionMember[] }
-interface Relation { type: RelationType; from: string; to: string; reason: string }
+type RelationStrength = 'strong' | 'medium' | 'weak'
+interface Relation { type: RelationType; fromNpcId: string; toNpcId: string; name: string; strength: RelationStrength; since: string; reason: string; secret: boolean }
 interface Territory { name: string; controlledBy: string; description: string; controlLevel: number }
 
 interface PoliticsData {
@@ -621,6 +745,19 @@ onMounted(async () => {
           return { name: f.name || '', type: 'independente' as const, color: f.color || '#dc2626', description: f.description || '', members }
         })
       }
+      // Migrate old relation format: { from, to } → { fromNpcId, toNpcId, name, strength, since, secret }
+      if (parsed.relations) {
+        parsed.relations = parsed.relations.map((r: any) => ({
+          type: r.type || 'alliance',
+          fromNpcId: r.fromNpcId || '',
+          toNpcId: r.toNpcId || '',
+          name: r.name || '',
+          strength: r.strength || 'medium',
+          since: r.since || '',
+          reason: r.reason || '',
+          secret: r.secret ?? false
+        }))
+      }
       politics.value = { ...defaultPolitics(), ...parsed }
     } catch { /* ignore */ }
   }
@@ -630,13 +767,13 @@ onMounted(async () => {
 const savePolitics = () => {
   localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
   savedSnapshot = JSON.stringify(politics.value)
-  editMode.value = false
+  resetAllEdit()
   toast.success('Mapa Político salvo!', 'Todas as alterações foram registradas.')
 }
 
 const cancelEdits = () => {
   try { politics.value = JSON.parse(savedSnapshot) } catch { /* ignore */ }
-  editMode.value = false
+  resetAllEdit()
 }
 
 // ── Government: hierarchy tiers ──
@@ -729,7 +866,7 @@ const removeFaction = (i: number) => { politics.value.factions.splice(i, 1) }
 
 const addFactionMember = (faction: Faction) => {
   const ranks = getFactionRanks(faction)
-  faction.members.push({ npcId: '', customName: '', customPhoto: '', rank: ranks[ranks.length - 1] })
+  faction.members.push({ npcId: '', customName: '', customPhoto: '', rank: ranks[ranks.length - 1] || 'Membro' })
 }
 const removeFactionMember = (faction: Faction, index: number) => {
   faction.members.splice(index, 1)
@@ -755,11 +892,72 @@ const viewingFactionNPC = computed(() =>
 )
 
 // ── Relations ──
-const filteredRelations = computed(() => politics.value.relations.filter(r => r.type === activeRelationType.value))
-const addRelation = () => { politics.value.relations.push({ type: activeRelationType.value, from: '', to: '', reason: '' }) }
+const hoveredRelation = ref<Relation | null>(null)
+
+const visibleRelations = computed(() => {
+  return politics.value.relations.filter(r => {
+    if (!relFilters.value[r.type]) return false
+    if (r.secret && !showSecretRelations.value) return false
+    return true
+  })
+})
+
+const secretRelationsCount = computed(() =>
+  politics.value.relations.filter(r => r.secret).length
+)
+
+// Build list of unique center NPCs from visible relations
+const graphCenterNpcs = computed(() => {
+  const seen = new Set<string>()
+  const centers: string[] = []
+  for (const r of visibleRelations.value) {
+    if (r.fromNpcId && !seen.has(r.fromNpcId)) {
+      seen.add(r.fromNpcId)
+      centers.push(r.fromNpcId)
+    }
+  }
+  return centers
+})
+
+// Get all relations where npcId is the "from" side
+const getRelationsForNpc = (npcId: string) => {
+  return visibleRelations.value
+    .filter(r => r.fromNpcId === npcId && r.toNpcId)
+    .map(r => ({ relation: r, targetId: r.toNpcId }))
+}
+
+const getStrengthLabel = (s: string) => {
+  if (s === 'strong') return 'Forte'
+  if (s === 'medium') return 'Média'
+  return 'Fraca'
+}
+
+const getRelLineClass = (rel: Relation) => {
+  const classes = ['rel-line']
+  if (rel.type === 'alliance') classes.push('rel-line-alliance')
+  else if (rel.type === 'hatred') classes.push('rel-line-hatred')
+  else classes.push('rel-line-tension')
+  if (rel.secret) classes.push('rel-line-secret')
+  return classes.join(' ')
+}
+
+const addRelation = () => {
+  politics.value.relations.push({
+    type: 'alliance', fromNpcId: '', toNpcId: '', name: '', strength: 'medium', since: '', reason: '', secret: false
+  })
+}
 const removeRelation = (rel: Relation) => {
   const i = politics.value.relations.indexOf(rel)
   if (i !== -1) politics.value.relations.splice(i, 1)
+}
+
+const toggleRelSecret = (rel: Relation) => {
+  rel.secret = !rel.secret
+  if (rel.secret) {
+    toast.success('Relação Secreta', 'Esta relação agora está oculta para os jogadores.')
+  } else {
+    toast.success('Relação Pública', 'Esta relação agora está visível para os jogadores.')
+  }
 }
 
 const getRelColor = (type: string) => {
@@ -769,7 +967,7 @@ const getRelColor = (type: string) => {
 }
 const getRelLabel = (type: string) => {
   if (type === 'alliance') return 'Aliança'
-  if (type === 'hatred') return 'Ódio'
+  if (type === 'hatred') return 'Inimizade'
   return 'Tensão'
 }
 const getRelBorderClass = (type: string) => {
@@ -1060,4 +1258,153 @@ select.df-input option {
 .df-scrollbar::-webkit-scrollbar { width: 6px; }
 .df-scrollbar::-webkit-scrollbar-track { background: #050510; }
 .df-scrollbar::-webkit-scrollbar-thumb { background: #7f1d1d; border-radius: 3px; }
+
+/* ═══ Relation Graph ═══ */
+.rel-graph-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.rel-graph-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0.75rem 0;
+}
+.rel-graph-center-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 90px;
+}
+.rel-graph-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #4a4a5a;
+  background: #0a0a1a;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.rel-graph-avatar-center {
+  width: 56px;
+  height: 56px;
+  border-color: #d4a647;
+  box-shadow: 0 0 14px rgba(212, 166, 71, 0.3);
+}
+.rel-graph-connections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+.rel-graph-link {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+.rel-graph-line {
+  height: 2px;
+  flex: 1;
+  min-width: 40px;
+  max-width: 120px;
+  position: relative;
+  cursor: pointer;
+}
+/* Invisible hover zone so thin lines are easy to target */
+.rel-graph-line::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+}
+/* Alliance: solid green */
+.rel-line-alliance {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.35);
+}
+/* Hatred: thick solid red */
+.rel-line-hatred {
+  height: 4px;
+  background: #dc2626;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+}
+/* Tension: dashed yellow */
+.rel-line-tension {
+  height: 2px;
+  background: transparent;
+  border-top: 2px dashed #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.2);
+}
+/* Secret: add purple glow */
+.rel-line-secret {
+  opacity: 0.7;
+  filter: saturate(0.6);
+}
+.rel-graph-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 80px;
+}
+
+/* Tooltip */
+.rel-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  z-index: 50;
+  background: #0d0d20;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 180px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(127,29,29,0.2);
+  pointer-events: none;
+  animation: tooltipFade 0.15s ease;
+}
+@keyframes tooltipFade {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Filter checkboxes */
+.rel-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  user-select: none;
+}
+.rel-filter-check { display: none; }
+.rel-filter-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid #4a4a5a;
+  background: transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Edit card */
+.rel-edit-card {
+  background: #0d0d20;
+  border: 1px solid #4a4a5a;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: all 0.2s ease;
+}
+.rel-edit-card:hover {
+  border-color: #7f1d1d;
+}
 </style>
