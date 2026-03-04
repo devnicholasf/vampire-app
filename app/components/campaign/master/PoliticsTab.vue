@@ -14,7 +14,7 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- SECTION 1: Governo da Cidade                    -->
+    <!-- SECTION 1: Governo da Cidade (Hierarchy Tree)   -->
     <!-- ═══════════════════════════════════════════════ -->
     <div class="df-card">
       <div class="df-card-corner df-card-corner-tl"></div>
@@ -22,37 +22,77 @@
       <div class="df-card-corner df-card-corner-bl"></div>
       <div class="df-card-corner df-card-corner-br"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-4">
+        <div class="flex items-center gap-2 mb-6">
           <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
           <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Governo da Cidade</h4>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div v-for="(role, index) in politics.government" :key="index" class="df-role-card">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold uppercase tracking-wider" :class="getRoleColor(role.title)">{{ role.title || 'Cargo' }}</span>
-              <button v-if="editMode" @click="removeGovernmentRole(index)" class="text-df-muted hover:text-df-red transition-colors">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <template v-if="editMode">
-              <select v-model="role.title" class="df-input text-xs mb-1">
-                <option value="">Cargo...</option>
-                <option v-for="t in governmentTitles" :key="t" :value="t">{{ t }}</option>
-              </select>
-              <input v-model="role.name" class="df-input text-sm" placeholder="Nome do vampiro" />
-              <input v-model="role.clan" class="df-input text-xs mt-1" placeholder="Clã" />
-              <input v-model="role.note" class="df-input text-xs mt-1" placeholder="Nota breve..." />
-            </template>
-            <template v-else>
-              <p class="text-white font-semibold text-sm">{{ role.name || '—' }}</p>
-              <p v-if="role.clan" class="text-df-red text-xs">{{ role.clan }}</p>
-              <p v-if="role.note" class="text-df-muted text-xs mt-1 italic">{{ role.note }}</p>
+        <!-- Hierarchy Tree -->
+        <div v-if="politics.government.length > 0" class="hierarchy-tree-wrapper">
+          <div class="hierarchy-tree">
+            <template v-for="(tier, ti) in governmentByTier" :key="ti">
+              <!-- Trunk connector between tiers -->
+              <div v-if="ti > 0" class="tree-trunk">
+                <div class="trunk-dot"></div>
+              </div>
+
+              <!-- Tier nodes -->
+              <div class="tree-nodes" :class="{ multi: tier.roles.length > 1 }">
+                <div v-for="(role, ri) in tier.roles" :key="ri" class="tree-node">
+                  <div
+                    class="node-card" :class="{ 'node-card-edit': editMode, 'cursor-pointer': !editMode && role.npcId }"
+                    @click="!editMode && role.npcId ? viewingRole = role : null"
+                  >
+                    <!-- Avatar -->
+                    <div class="node-avatar" :class="getTierAvatarClass(tier.tier)">
+                      <img v-if="getNpcById(role.npcId)?.photo" :src="getNpcById(role.npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                      <div v-else class="w-full h-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                          <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                      </div>
+                    </div>
+
+                    <!-- Edit mode controls -->
+                    <template v-if="editMode">
+                      <select v-model="role.title" class="df-input text-xs mt-1 text-center">
+                        <option value="">Cargo...</option>
+                        <option v-for="t in governmentTitles" :key="t" :value="t">{{ t }}</option>
+                      </select>
+                      <select v-model="role.npcId" class="df-input text-xs mt-1">
+                        <option value="">Selecionar NPC...</option>
+                        <option v-for="npc in getAvailableNPCsForRole(role)" :key="npc.id" :value="npc.id">
+                          {{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}
+                        </option>
+                      </select>
+                      <input v-model="role.note" class="df-input text-xs mt-1" placeholder="Nota..." />
+                      <button @click="removeGovernmentRole(findRoleIndex(role))" class="mt-1.5 text-df-muted hover:text-df-red transition-colors">
+                        <svg class="w-3.5 h-3.5 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                      </button>
+                    </template>
+
+                    <!-- View mode info -->
+                    <template v-else>
+                      <span class="node-title" :class="getRoleColor(role.title)">{{ role.title || 'Cargo' }}</span>
+                      <span class="node-name">{{ getNpcById(role.npcId)?.name || '—' }}</span>
+                      <span v-if="getNpcById(role.npcId)?.clan" class="node-clan">{{ getNpcById(role.npcId)?.clan }}</span>
+                      <span v-if="role.note" class="node-note">{{ role.note }}</span>
+                    </template>
+                  </div>
+                </div>
+              </div>
             </template>
           </div>
         </div>
 
-        <button v-if="editMode" @click="addGovernmentRole" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+        <!-- Empty state -->
+        <div v-if="!editMode && politics.government.length === 0" class="text-center py-8 text-df-muted text-sm italic">
+          <svg class="w-12 h-12 mx-auto mb-3 text-df-border-silver opacity-40" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
+          Nenhum cargo registrado. Clique em "Editar" para começar.
+        </div>
+
+        <button v-if="editMode" @click="addGovernmentRole" class="mt-4 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
           + Adicionar Cargo
         </button>
       </div>
@@ -67,46 +107,123 @@
       <div class="df-card-corner df-card-corner-bl"></div>
       <div class="df-card-corner df-card-corner-br"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-4">
-          <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-          <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Facções</h4>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+            <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Facções</h4>
+          </div>
+          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            {{ editMode ? 'Ver' : 'Editar' }}
+          </button>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
           <div v-for="(faction, fi) in politics.factions" :key="fi" class="df-faction-card">
-            <div class="flex items-center justify-between mb-2">
-              <template v-if="editMode">
-                <input v-model="faction.name" class="df-input text-sm font-bold flex-1 mr-2" placeholder="Nome da facção" />
+            <!-- ── EDIT MODE ── -->
+            <template v-if="editMode">
+              <!-- Row 1: Name + Delete -->
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: faction.color || '#dc2626' }"></span>
+                <input v-model="faction.name" class="df-input text-sm font-bold flex-1" placeholder="Nome da facção" />
                 <button @click="removeFaction(fi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </button>
-              </template>
-              <h5 v-else class="text-white font-bold text-sm flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full" :style="{ background: faction.color || '#dc2626' }"></span>
-                {{ faction.name }}
-              </h5>
-            </div>
-
-            <template v-if="editMode">
-              <div class="flex gap-2 mb-2">
-                <input v-model="faction.leader" class="df-input text-xs flex-1" placeholder="Líder da facção" />
-                <input v-model="faction.color" type="color" class="w-8 h-8 rounded cursor-pointer border border-df-border-silver bg-transparent" />
               </div>
-              <textarea v-model="faction.description" class="df-input text-xs resize-none" rows="2" placeholder="Descrição / objetivos..."></textarea>
-              <div class="mt-2">
-                <label class="text-xs text-df-muted">Membros (um por linha)</label>
-                <textarea v-model="faction.membersText" class="df-input text-xs resize-none mt-1" rows="2" placeholder="Marcus Ventrue&#10;Helena Toreador"></textarea>
+              <!-- Row 2: Type + Color -->
+              <div class="flex items-center gap-2 mb-3">
+                <select v-model="faction.type" class="df-input text-xs flex-1">
+                  <option value="independente">Independente</option>
+                  <option value="anarquista">Anarquista</option>
+                </select>
+                <input v-model="faction.color" type="color" class="w-8 h-8 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" />
+              </div>
+              <textarea v-model="faction.description" class="df-input text-xs resize-none mb-3" rows="2" placeholder="Descrição / objetivos..." />
+
+              <!-- Members edit -->
+              <div class="border-t border-df-border-silver/30 pt-3">
+                <h5 class="text-xs font-bold text-df-gold uppercase tracking-wider mb-2">Membros</h5>
+                <div class="space-y-2">
+                  <div v-for="(member, mi) in faction.members" :key="mi" class="flex items-start gap-2 p-2 rounded-lg border border-df-border-silver/20 bg-df-deep/50">
+                    <!-- Avatar preview -->
+                    <div class="w-10 h-10 rounded-full overflow-hidden border border-df-border-silver bg-df-input flex-shrink-0 flex items-center justify-center">
+                      <img v-if="getMemberPhoto(member)" :src="getMemberPhoto(member)" class="w-full h-full object-cover" alt="" />
+                      <svg v-else class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
+                    <div class="flex-1 space-y-1 min-w-0">
+                      <div class="flex gap-1">
+                        <select v-model="member.rank" class="df-input text-xs flex-1">
+                          <option value="">Posto...</option>
+                          <option v-for="r in getFactionRanks(faction)" :key="r" :value="r">{{ r }}</option>
+                        </select>
+                      </div>
+                      <select v-model="member.npcId" class="df-input text-xs">
+                        <option value="">— Personalizado —</option>
+                        <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">
+                          {{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}
+                        </option>
+                      </select>
+                      <template v-if="!member.npcId">
+                        <input v-model="member.customName" class="df-input text-xs" placeholder="Nome do membro..." />
+                        <div class="flex gap-1 items-center">
+                          <input v-model="member.customPhoto" class="df-input text-xs flex-1" placeholder="URL da foto..." />
+                          <label class="cursor-pointer text-df-muted hover:text-df-gold transition-colors flex-shrink-0 p-1">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <input type="file" accept="image/*" class="hidden" @change="handleMemberPhotoUpload($event, member)" />
+                          </label>
+                        </div>
+                      </template>
+                    </div>
+                    <button @click="removeFactionMember(faction, mi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0 mt-1">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <button @click="addFactionMember(faction)" class="mt-2 w-full py-1.5 border border-dashed border-df-border-silver/50 rounded-lg text-df-muted text-xs hover:border-df-gold hover:text-df-gold transition-colors">
+                  + Adicionar Membro
+                </button>
               </div>
             </template>
+
+            <!-- ── VIEW MODE ── -->
             <template v-else>
-              <p v-if="faction.leader" class="text-df-silver text-xs mb-1">
-                <span class="text-df-gold">Líder:</span> {{ faction.leader }}
-              </p>
-              <p v-if="faction.description" class="text-df-muted text-xs italic mb-2">{{ faction.description }}</p>
-              <div v-if="factionMembers(faction).length" class="flex flex-wrap gap-1">
-                <span v-for="m in factionMembers(faction)" :key="m" class="px-2 py-0.5 text-xs rounded-full border" :style="{ borderColor: faction.color || '#7f1d1d', color: faction.color || '#dc2626' }">
-                  {{ m }}
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" :style="{ background: faction.color || '#dc2626' }"></span>
+                <h5 class="text-white font-bold text-sm">{{ faction.name }}</h5>
+                <span class="text-xs px-2 py-0.5 rounded-full border" :style="{ borderColor: (faction.color || '#dc2626') + '66', color: faction.color || '#dc2626' }">
+                  {{ faction.type === 'anarquista' ? 'Anarquista' : 'Independente' }}
                 </span>
+              </div>
+              <p v-if="faction.description" class="text-df-muted text-xs italic mb-3">{{ faction.description }}</p>
+
+              <!-- Faction Hierarchy Tree -->
+              <div v-if="faction.members.length > 0" class="hierarchy-tree-wrapper">
+                <div class="hierarchy-tree">
+                  <template v-for="(tier, ti) in getFactionMembersByTier(faction)" :key="ti">
+                    <div v-if="ti > 0" class="tree-trunk">
+                      <div class="trunk-dot" :style="{ background: faction.color || '#d4a647' }"></div>
+                    </div>
+                    <div class="tree-nodes" :class="{ multi: tier.members.length > 1 }">
+                      <div v-for="(member, mi) in tier.members" :key="mi" class="tree-node">
+                        <div class="node-card cursor-pointer" @click="viewFactionMember(faction, member)">
+                          <div class="node-avatar" :class="ti === 0 ? 'avatar-faction-leader' : 'avatar-default'" :style="ti === 0 ? { borderColor: faction.color, boxShadow: `0 0 16px ${faction.color}40` } : {}">
+                            <img v-if="getMemberPhoto(member)" :src="getMemberPhoto(member)" class="w-full h-full object-cover rounded-full" alt="" />
+                            <div v-else class="w-full h-full flex items-center justify-center">
+                              <svg class="w-6 h-6 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                          </div>
+                          <span class="node-title" :style="{ color: faction.color || '#dc2626' }">{{ member.rank }}</span>
+                          <span class="node-name">{{ getMemberName(member) }}</span>
+                          <span v-if="member.npcId && getNpcById(member.npcId)?.clan" class="node-clan">{{ getNpcById(member.npcId)?.clan }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div v-else class="text-center py-4 text-df-muted text-xs italic">
+                Nenhum membro registrado.
               </div>
             </template>
           </div>
@@ -132,9 +249,16 @@
       <div class="df-card-corner df-card-corner-bl"></div>
       <div class="df-card-corner df-card-corner-br"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-4">
-          <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Relações</h4>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Relações</h4>
+          </div>
+          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            {{ editMode ? 'Ver' : 'Editar' }}
+          </button>
         </div>
 
         <!-- Sub-tabs for relation types -->
@@ -197,9 +321,16 @@
       <div class="df-card-corner df-card-corner-bl"></div>
       <div class="df-card-corner df-card-corner-br"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-4">
-          <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Influência por Território</h4>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Influência por Território</h4>
+          </div>
+          <button @click="editMode = !editMode" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+            <svg v-if="!editMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            {{ editMode ? 'Ver' : 'Editar' }}
+          </button>
         </div>
 
         <div class="space-y-3">
@@ -253,6 +384,146 @@
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- NPC Details popup (from political map)           -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <Teleport to="body">
+      <div v-if="viewingRole" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" @click.self="viewingRole = null">
+        <div class="npc-detail-modal w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div class="df-card-corner df-card-corner-tl"></div>
+          <div class="df-card-corner df-card-corner-tr"></div>
+          <div class="df-card-corner df-card-corner-bl"></div>
+          <div class="df-card-corner df-card-corner-br"></div>
+
+          <div class="relative z-10 overflow-y-auto df-scrollbar p-6" v-if="viewingNPC">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
+                Membro do Governo
+              </h3>
+              <button @click="viewingRole = null" class="npc-detail-close">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <!-- Profile Header -->
+            <div class="flex items-center gap-6 pb-6 border-b border-df-border-red/50">
+              <div class="w-32 h-32 rounded-full overflow-hidden border-2 border-df-border-red bg-df-input flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-900/30">
+                <img v-if="viewingNPC.photo" :src="viewingNPC.photo" :alt="viewingNPC.name" class="w-full h-full object-cover" />
+                <svg v-else class="w-14 h-14 text-df-red/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
+              </div>
+              <div>
+                <h4 class="text-2xl font-bold text-white">{{ viewingNPC.name }}</h4>
+                <p v-if="viewingNPC.clan" class="text-df-red font-medium text-lg">{{ viewingNPC.clan }}</p>
+                <p v-if="viewingNPC.generation" class="text-sm text-df-muted">{{ viewingNPC.generation }}ª Geração</p>
+                <!-- Government role badge -->
+                <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-df-gold/40 bg-df-gold/10">
+                  <svg class="w-3.5 h-3.5 text-df-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
+                  <span class="text-df-gold text-xs font-bold uppercase tracking-wider">{{ viewingRole.title }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Note -->
+            <div v-if="viewingRole.note" class="mt-5">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Nota Política</h5>
+              <p class="text-sm text-df-silver leading-relaxed italic">{{ viewingRole.note }}</p>
+            </div>
+
+            <!-- Bio -->
+            <div class="mt-5">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Biografia</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ viewingNPC.bio || 'Nenhuma biografia definida.' }}</p>
+            </div>
+
+            <!-- Key Points -->
+            <div v-if="viewingNPC.keyPoints && viewingNPC.keyPoints.length > 0" class="mt-5">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-3">Pontos Chave</h5>
+              <ul class="space-y-2">
+                <li v-for="point in viewingNPC.keyPoints" :key="point" class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-df-red mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3"/></svg>
+                  <span class="text-sm text-df-silver">{{ point }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Close button -->
+            <div class="flex justify-end pt-6 mt-5 border-t border-df-border-red/50">
+              <button @click="viewingRole = null" class="df-btn-ghost px-5 py-2 text-sm">Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- Faction Member Details popup                    -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <Teleport to="body">
+      <div v-if="viewingFactionData" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" @click.self="viewingFactionData = null">
+        <div class="npc-detail-modal w-full max-w-3xl max-h-[90vh] flex flex-col">
+          <div class="df-card-corner df-card-corner-tl"></div>
+          <div class="df-card-corner df-card-corner-tr"></div>
+          <div class="df-card-corner df-card-corner-bl"></div>
+          <div class="df-card-corner df-card-corner-br"></div>
+
+          <div class="relative z-10 overflow-y-auto df-scrollbar p-6">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" :style="{ background: viewingFactionData.faction.color }"></span>
+                Membro de Facção
+              </h3>
+              <button @click="viewingFactionData = null" class="npc-detail-close">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <!-- Profile Header -->
+            <div class="flex items-center gap-6 pb-6 border-b border-df-border-red/50">
+              <div class="w-32 h-32 rounded-full overflow-hidden border-2 bg-df-input flex items-center justify-center flex-shrink-0 shadow-lg" :style="{ borderColor: viewingFactionData.faction.color, boxShadow: `0 4px 20px ${viewingFactionData.faction.color}30` }">
+                <img v-if="getMemberPhoto(viewingFactionData.member)" :src="getMemberPhoto(viewingFactionData.member)" class="w-full h-full object-cover" alt="" />
+                <svg v-else class="w-14 h-14 text-df-red/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <h4 class="text-2xl font-bold text-white">{{ getMemberName(viewingFactionData.member) }}</h4>
+                <p v-if="viewingFactionNPC?.clan" class="text-df-red font-medium text-lg">{{ viewingFactionNPC.clan }}</p>
+                <p v-if="viewingFactionNPC?.generation" class="text-sm text-df-muted">{{ viewingFactionNPC.generation }}ª Geração</p>
+                <!-- Faction + role badge -->
+                <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border" :style="{ borderColor: viewingFactionData.faction.color + '66', background: viewingFactionData.faction.color + '15' }">
+                  <span class="w-2 h-2 rounded-full" :style="{ background: viewingFactionData.faction.color }"></span>
+                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: viewingFactionData.faction.color }">{{ viewingFactionData.member.rank }} — {{ viewingFactionData.faction.name }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bio (NPC only) -->
+            <div v-if="viewingFactionNPC" class="mt-5">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Biografia</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ viewingFactionNPC.bio || 'Nenhuma biografia definida.' }}</p>
+            </div>
+
+            <!-- Key Points (NPC only) -->
+            <div v-if="viewingFactionNPC?.keyPoints && viewingFactionNPC.keyPoints.length > 0" class="mt-5">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-3">Pontos Chave</h5>
+              <ul class="space-y-2">
+                <li v-for="point in viewingFactionNPC.keyPoints" :key="point" class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-df-red mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="3"/></svg>
+                  <span class="text-sm text-df-silver">{{ point }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Close -->
+            <div class="flex justify-end pt-6 mt-5 border-t border-df-border-red/50">
+              <button @click="viewingFactionData = null" class="df-btn-ghost px-5 py-2 text-sm">Fechar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Save bar (when editing) -->
     <div v-if="editMode" class="sticky bottom-4 z-50 flex justify-end gap-3">
       <button @click="cancelEdits" class="df-btn-ghost px-5 py-2 text-sm">Descartar</button>
@@ -267,10 +538,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from '~/composables/useToast'
+import { useCampaign } from '~/composables/useCampaign'
 
 interface Props { campaignId: string }
 const props = defineProps<Props>()
 const toast = useToast()
+const { campaignNPCs, loadCampaignNPCs } = useCampaign()
 
 const editMode = ref(false)
 
@@ -291,8 +564,10 @@ const relationTypes = [
 type RelationType = 'alliance' | 'hatred' | 'tension'
 const activeRelationType = ref<RelationType>('alliance')
 
-interface GovernmentRole { title: string; name: string; clan: string; note: string }
-interface Faction { name: string; leader: string; color: string; description: string; membersText: string }
+interface GovernmentRole { title: string; npcId: string; note: string }
+type FactionType = 'independente' | 'anarquista'
+interface FactionMember { npcId: string; customName: string; customPhoto: string; rank: string }
+interface Faction { name: string; type: FactionType; color: string; description: string; members: FactionMember[] }
 interface Relation { type: RelationType; from: string; to: string; reason: string }
 interface Territory { name: string; controlledBy: string; description: string; controlLevel: number }
 
@@ -304,13 +579,7 @@ interface PoliticsData {
 }
 
 const defaultPolitics = (): PoliticsData => ({
-  government: [
-    { title: 'Príncipe', name: '', clan: '', note: '' },
-    { title: 'Senescal', name: '', clan: '', note: '' },
-    { title: 'Xerife', name: '', clan: '', note: '' },
-    { title: 'Harpia', name: '', clan: '', note: '' },
-    { title: 'Guardião do Elísio', name: '', clan: '', note: '' }
-  ],
+  government: [],
   factions: [],
   relations: [],
   territories: []
@@ -322,11 +591,37 @@ let savedSnapshot = ''
 // ── Persistence via localStorage ──
 const storageKey = computed(() => `vamp-politics-${props.campaignId}`)
 
-onMounted(() => {
+onMounted(async () => {
+  // Ensure NPCs are loaded (needed on page refresh)
+  await loadCampaignNPCs(props.campaignId)
+
   const stored = localStorage.getItem(storageKey.value)
   if (stored) {
     try {
-      politics.value = { ...defaultPolitics(), ...JSON.parse(stored) }
+      const parsed = JSON.parse(stored)
+      // Migrate old government format: { title, name, clan, note } → { title, npcId, note }
+      if (parsed.government) {
+        parsed.government = parsed.government.map((role: any) => ({
+          title: role.title || '',
+          npcId: role.npcId || '',
+          note: role.note || (role.name ? `${role.name}${role.clan ? ' (' + role.clan + ')' : ''}` : '')
+        }))
+      }
+      // Migrate old faction format: { leader, membersText } → { type, members[] }
+      if (parsed.factions) {
+        parsed.factions = parsed.factions.map((f: any) => {
+          if (f.members) return { ...f, type: f.type || 'independente' }
+          const members: any[] = []
+          if (f.leader) members.push({ npcId: '', customName: f.leader, customPhoto: '', rank: 'Líder' })
+          if (f.membersText) {
+            f.membersText.split('\n').map((m: string) => m.trim()).filter(Boolean).forEach((name: string) => {
+              members.push({ npcId: '', customName: name, customPhoto: '', rank: 'Membro' })
+            })
+          }
+          return { name: f.name || '', type: 'independente' as const, color: f.color || '#dc2626', description: f.description || '', members }
+        })
+      }
+      politics.value = { ...defaultPolitics(), ...parsed }
     } catch { /* ignore */ }
   }
   savedSnapshot = JSON.stringify(politics.value)
@@ -344,14 +639,120 @@ const cancelEdits = () => {
   editMode.value = false
 }
 
-// ── Government ──
-const addGovernmentRole = () => { politics.value.government.push({ title: '', name: '', clan: '', note: '' }) }
+// ── Government: hierarchy tiers ──
+const hierarchyTiers = [
+  { tier: 0, label: 'Líder Supremo', titles: ['Príncipe'] },
+  { tier: 1, label: 'Braço Direito', titles: ['Senescal'] },
+  { tier: 2, label: 'Oficiais', titles: ['Xerife', 'Harpia', 'Guardião do Elísio'] },
+  { tier: 3, label: 'Representantes', titles: ['Primogênito'] },
+  { tier: 4, label: 'Executores', titles: ['Algoz', 'Carrasco', 'Emissário'] },
+  { tier: 5, label: 'Outros', titles: ['Bispo', 'Arcebispo', 'Cardeal', 'Barão', 'Outro'] }
+]
+
+const allKnownTitles = hierarchyTiers.flatMap(t => t.titles)
+
+const governmentByTier = computed(() => {
+  const result = hierarchyTiers.map(tier => ({
+    ...tier,
+    roles: politics.value.government
+      .filter(r => tier.titles.includes(r.title))
+      .sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
+  }))
+  // Unassigned roles (empty or unrecognized titles)
+  const unassigned = politics.value.government.filter(r => !r.title || !allKnownTitles.includes(r.title))
+  if (unassigned.length > 0) {
+    result.push({ tier: 99, label: 'Não Atribuído', titles: [], roles: unassigned })
+  }
+  return result.filter(t => t.roles.length > 0)
+})
+
+const assignedNpcIds = computed(() =>
+  new Set(politics.value.government.map(r => r.npcId).filter(Boolean))
+)
+
+const getNpcById = (id: string) =>
+  id ? campaignNPCs.value.find(n => n.id === id) : undefined
+
+const getAvailableNPCsForRole = (role: GovernmentRole) =>
+  campaignNPCs.value
+    .filter(npc => npc.id === role.npcId || !assignedNpcIds.value.has(npc.id))
+    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+
+const findRoleIndex = (role: GovernmentRole) =>
+  politics.value.government.indexOf(role)
+
+const getTierAvatarClass = (tier: number) => {
+  if (tier === 0) return 'avatar-prince'
+  if (tier === 1) return 'avatar-seneschal'
+  return 'avatar-default'
+}
+
+const addGovernmentRole = () => { politics.value.government.push({ title: '', npcId: '', note: '' }) }
 const removeGovernmentRole = (i: number) => { politics.value.government.splice(i, 1) }
 
+// ── NPC Detail popup ──
+const viewingRole = ref<GovernmentRole | null>(null)
+const viewingNPC = computed(() =>
+  viewingRole.value?.npcId ? getNpcById(viewingRole.value.npcId) : undefined
+)
+
 // ── Factions ──
-const addFaction = () => { politics.value.factions.push({ name: '', leader: '', color: '#dc2626', description: '', membersText: '' }) }
+const independentRanks = ['Líder', 'Co-Líder', 'Oficial', 'Membro']
+const anarchistRanks = ['Barão', 'Tenente', 'Conselheiro Anarquista', 'Revolucionário', 'Membro']
+
+const getFactionRanks = (faction: Faction): string[] =>
+  faction.type === 'anarquista' ? anarchistRanks : independentRanks
+
+const getFactionMembersByTier = (faction: Faction) => {
+  const ranks = getFactionRanks(faction)
+  return ranks
+    .map((rank, index) => ({
+      rank,
+      tier: index,
+      members: faction.members.filter(m => m.rank === rank)
+    }))
+    .filter(t => t.members.length > 0)
+}
+
+const getMemberName = (member: FactionMember): string =>
+  member.npcId ? (getNpcById(member.npcId)?.name || '—') : (member.customName || '—')
+
+const getMemberPhoto = (member: FactionMember): string | undefined =>
+  member.npcId ? getNpcById(member.npcId)?.photo : (member.customPhoto || undefined)
+
+const addFaction = () => {
+  politics.value.factions.push({
+    name: '', type: 'independente', color: '#dc2626', description: '', members: []
+  })
+}
 const removeFaction = (i: number) => { politics.value.factions.splice(i, 1) }
-const factionMembers = (f: Faction) => f.membersText ? f.membersText.split('\n').map(m => m.trim()).filter(Boolean) : []
+
+const addFactionMember = (faction: Faction) => {
+  const ranks = getFactionRanks(faction)
+  faction.members.push({ npcId: '', customName: '', customPhoto: '', rank: ranks[ranks.length - 1] })
+}
+const removeFactionMember = (faction: Faction, index: number) => {
+  faction.members.splice(index, 1)
+}
+
+const handleMemberPhotoUpload = (event: Event, member: FactionMember) => {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { member.customPhoto = reader.result as string }
+  reader.readAsDataURL(file)
+}
+
+// ── Faction Detail popup ──
+const viewingFactionData = ref<{ faction: Faction; member: FactionMember } | null>(null)
+const viewFactionMember = (faction: Faction, member: FactionMember) => {
+  viewingFactionData.value = { faction, member }
+}
+const viewingFactionNPC = computed(() =>
+  viewingFactionData.value?.member.npcId
+    ? getNpcById(viewingFactionData.value.member.npcId)
+    : undefined
+)
 
 // ── Relations ──
 const filteredRelations = computed(() => politics.value.relations.filter(r => r.type === activeRelationType.value))
@@ -430,6 +831,173 @@ defineExpose({ count: computed(() => politics.value.factions.length) })
   border-color: #7f1d1d;
 }
 
+/* ═══ Hierarchy Tree ═══ */
+.hierarchy-tree-wrapper {
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+.hierarchy-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: fit-content;
+}
+
+/* Trunk line between tiers */
+.tree-trunk {
+  width: 2px;
+  height: 28px;
+  background: linear-gradient(to bottom, #7f1d1d, #d4a647);
+  position: relative;
+}
+.trunk-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d4a647;
+  box-shadow: 0 0 6px rgba(212, 166, 71, 0.6);
+}
+
+/* Tier nodes container */
+.tree-nodes {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+/* Individual node wrapper */
+.tree-node {
+  position: relative;
+  padding: 0 10px;
+}
+
+/* Multi-node tiers: connector lines */
+.tree-nodes.multi > .tree-node {
+  padding-top: 22px;
+}
+
+/* Vertical line from horizontal connector down to node */
+.tree-nodes.multi > .tree-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 22px;
+  background: #7f1d1d;
+}
+
+/* Horizontal connector segments */
+.tree-nodes.multi > .tree-node::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 2px;
+  background: #7f1d1d;
+}
+.tree-nodes.multi > .tree-node:first-child::after {
+  left: 50%;
+  right: 0;
+}
+.tree-nodes.multi > .tree-node:last-child::after {
+  left: 0;
+  right: 50%;
+}
+.tree-nodes.multi > .tree-node:not(:first-child):not(:last-child)::after {
+  left: 0;
+  right: 0;
+}
+
+/* Node card */
+.node-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #0d0d20;
+  border: 1px solid #4a4a5a;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.625rem;
+  min-width: 110px;
+  max-width: 150px;
+  transition: all 0.3s ease;
+}
+.node-card:hover {
+  border-color: #7f1d1d;
+  box-shadow: 0 0 16px rgba(127, 29, 29, 0.25);
+}
+.node-card-edit {
+  min-width: 140px;
+  max-width: 170px;
+}
+
+/* Avatar styles */
+.node-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #4a4a5a;
+  background: #0a0a1a;
+  margin-bottom: 0.4rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.node-avatar.avatar-prince {
+  width: 68px;
+  height: 68px;
+  border-color: #d4a647;
+  box-shadow: 0 0 20px rgba(212, 166, 71, 0.35), inset 0 0 8px rgba(212, 166, 71, 0.1);
+}
+.node-avatar.avatar-seneschal {
+  width: 60px;
+  height: 60px;
+  border-color: #60a5fa;
+  box-shadow: 0 0 14px rgba(96, 165, 250, 0.25);
+}
+.node-avatar.avatar-default {
+  border-color: #4a4a5a;
+}
+.node-avatar.avatar-faction-leader {
+  width: 64px;
+  height: 64px;
+}
+
+/* Node text elements */
+.node-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.125rem;
+}
+.node-name {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.75rem;
+  margin-top: 0.125rem;
+  line-height: 1.2;
+}
+.node-clan {
+  color: #dc2626;
+  font-size: 0.65rem;
+}
+.node-note {
+  color: #6b6b80;
+  font-size: 0.6rem;
+  font-style: italic;
+  margin-top: 0.125rem;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ═══ Inputs ═══ */
 .df-input {
   width: 100%;
@@ -442,6 +1010,10 @@ defineExpose({ count: computed(() => politics.value.factions.length) })
 }
 .df-input:focus { outline: none; border-color: #dc2626; }
 .df-input::placeholder { color: #6b6b80; }
+select.df-input option {
+  background: #0d0d20;
+  color: #c0c0d0;
+}
 
 /* ═══ Buttons ═══ */
 .df-btn-primary {
@@ -461,4 +1033,31 @@ defineExpose({ count: computed(() => politics.value.factions.length) })
   transition: all 0.2s ease;
 }
 .df-btn-ghost:hover { border-color: #dc2626; color: #c0c0d0; background: rgba(127,29,29,0.1); }
+
+/* ═══ NPC Detail Modal ═══ */
+.npc-detail-modal {
+  background: #0a0a1a;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.75rem;
+  position: relative;
+  box-shadow: 0 0 40px rgba(220,38,38,0.15), inset 0 1px 6px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.npc-detail-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #6b6b80;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.npc-detail-close:hover { color: #dc2626; border-color: #7f1d1d; background: rgba(127,29,29,0.15); }
+.df-scrollbar::-webkit-scrollbar { width: 6px; }
+.df-scrollbar::-webkit-scrollbar-track { background: #050510; }
+.df-scrollbar::-webkit-scrollbar-thumb { background: #7f1d1d; border-radius: 3px; }
 </style>
