@@ -148,6 +148,12 @@
 
       <!-- Tab Content -->
       <div class="tab-content">
+        <OverviewTab
+          v-if="currentTab === 'overview'"
+          :campaign="campaign"
+          :campaign-id="campaignId"
+        />
+
         <PlayersTab
           v-if="currentTab === 'players'"
           :campaign="campaign"
@@ -217,10 +223,17 @@ import NPCsTab from '~/components/campaign/master/NPCsTab.vue'
 import PoliticsTab from '~/components/campaign/master/PoliticsTab.vue'
 import SettingsTab from '~/components/campaign/master/SettingsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
+import OverviewTab from '~/components/campaign/master/OverviewTab.vue'
 
 // ============================================
 // SVG Icon Components for Tabs
 // ============================================
+const IconOverview: FunctionalComponent = () =>
+  h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('circle', { cx: '12', cy: '12', r: '10' }),
+    h('path', { d: 'M12 6v6l4 2' })
+  ])
+
 const IconPlayers: FunctionalComponent = () =>
   h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
     h('path', { d: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2' }),
@@ -277,9 +290,9 @@ const campaign = ref<Campaign | null>(null)
 const error = ref<string | null>(null)
 const localLoading = ref(false)
 // Persist tab via URL hash
-const validTabs = ['players', 'npcs', 'notes', 'settings', 'media']
+const validTabs = ['overview', 'players', 'npcs', 'notes', 'settings', 'media']
 const hashTab = route.hash?.replace('#', '')
-const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'players')
+const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'overview')
 
 watch(currentTab, (tab) => {
   router.replace({ hash: `#${tab}` })
@@ -306,6 +319,7 @@ const npcsCount = computed(() => npcsTabRef.value?.npcs?.length || 0)
 // Tabs configuration (SVG icon components)
 // ============================================
 const tabs = ref([
+  { id: 'overview', label: 'Visão Geral', iconComponent: IconOverview },
   { id: 'players', label: 'Jogadores', iconComponent: IconPlayers },
   { id: 'npcs', label: 'NPCs', iconComponent: IconNPCs },
   { id: 'notes', label: 'Política', iconComponent: IconPolitics },

@@ -221,8 +221,9 @@ const emit = defineEmits<{
 // Use real players from campaign_players
 const players = computed(() => {
   console.log('Campaign data:', props.campaign)
-  console.log('Campaign players:', props.campaign?.campaign_players)
-  return props.campaign?.campaign_players || []
+  const raw = props.campaign as any
+  console.log('Campaign players:', raw?.campaign_players)
+  return raw?.campaign_players || []
 })
 
 const inviteEmail = ref('')
@@ -272,7 +273,7 @@ const savePlayerSheet = async (playerData: any) => {
 }
 
 const kickPlayer = (playerId: string) => {
-  const player = players.value.find(p => p.user_id === playerId)
+  const player = players.value.find((p: any) => p.user_id === playerId)
   if (player) {
     playerToKick.value = { id: playerId, name: player.character_name || player.name || 'Jogador' }
     showKickModal.value = true

@@ -289,6 +289,9 @@
           <span class="font-bold text-xs" :style="{ color: hovZone.color }">{{ hovZone.name || 'Território' }}</span>
           <span class="text-[10px]" :style="{ color: getStatusConf(hovZone.status).color }">{{ getStatusConf(hovZone.status).emoji }} {{ getStatusConf(hovZone.status).label }}</span>
         </div>
+        <div v-if="getDominantFaction(hovZone)" class="text-[10px] text-df-silver mb-1">
+          <span class="text-df-gold">Domínio:</span> <span :style="{ color: getDominantFaction(hovZone)!.color }">{{ getDominantFaction(hovZone)!.faction }}</span> <span class="text-df-muted">({{ getDominantFaction(hovZone)!.percent }}%)</span>
+        </div>
         <div v-if="hovZone.influences.length > 0" class="tm-seg-bar" style="height: 8px;">
           <div v-for="(inf, ii) in [...hovZone.influences].sort((a, b) => b.percent - a.percent)" :key="ii" :style="{ width: inf.percent + '%', background: inf.color }" class="tm-seg-bar-piece"></div>
         </div>
