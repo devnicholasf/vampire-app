@@ -241,7 +241,7 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- SECTION 3: Relações (Grafo Interativo)          -->
+    <!-- SECTION 3: Relações (Agrupadas por Personagem)  -->
     <!-- ═══════════════════════════════════════════════ -->
     <div class="df-card">
       <div class="df-card-corner df-card-corner-tl"></div>
@@ -276,67 +276,88 @@
           </div>
         </div>
 
-        <!-- ── VIEW MODE: Node Graph ── -->
+        <!-- ── VIEW MODE: Star Graph Cards (3 per row) ── -->
         <template v-if="!editRelations">
-          <div v-if="visibleRelations.length > 0" class="rel-graph-wrapper">
-            <!-- One graph per unique NPC that has relations -->
-            <div v-for="npcId in graphCenterNpcs" :key="npcId" class="rel-graph-row">
-              <div class="rel-graph-center-label">
-                <div class="rel-graph-avatar rel-graph-avatar-center">
-                  <img v-if="getNpcById(npcId)?.photo" :src="getNpcById(npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
-                  <div v-else class="w-full h-full flex items-center justify-center">
-                    <svg class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div v-if="visibleRelations.length > 0" class="rel-star-grid">
+            <div v-for="npcId in graphCenterNpcs" :key="npcId" class="rel-star-card">
+              <div class="rel-star-diagram">
+                <!-- SVG lines from center to each node -->
+                <svg class="rel-star-svg" viewBox="0 0 240 240">
+                  <line
+                    v-for="(node, i) in getRadialPositions(npcId)"
+                    :key="'line-' + i"
+                    :x1="120" :y1="115"
+                    :x2="node.x" :y2="node.y"
+                    :stroke="getRelColor(node.relation.type)"
+                    :stroke-width="node.relation.strength === 'strong' ? 3 : 2"
+                    :stroke-dasharray="node.relation.strength === 'weak' ? '5,4' : 'none'"
+                    stroke-linecap="round"
+                    class="rel-star-line"
+                  />
+                </svg>
+
+                <!-- Center NPC avatar -->
+                <div class="rel-star-center-node">
+                  <div class="rel-graph-avatar rel-graph-avatar-center">
+                    <img v-if="getNpcById(npcId)?.photo" :src="getNpcById(npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <svg class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
                   </div>
+                  <span class="text-[10px] text-white font-semibold text-center leading-tight max-w-[70px] truncate mt-0.5">{{ getNpcById(npcId)?.name || '—' }}</span>
                 </div>
-                <span class="text-xs text-white font-semibold mt-1 text-center leading-tight max-w-[80px] truncate">{{ getNpcById(npcId)?.name || '—' }}</span>
-              </div>
 
-              <!-- Connected NPCs -->
-              <div class="rel-graph-connections">
-                <div v-for="(conn, ci) in getRelationsForNpc(npcId)" :key="ci" class="rel-graph-link">
-                  <!-- Line -->
-                  <div class="rel-graph-line" :class="getRelLineClass(conn.relation)" :style="{ '--rel-color': getRelColor(conn.relation.type) }" @mouseenter="hoveredRelation = conn.relation" @mouseleave="hoveredRelation = null"></div>
-                  <!-- Target avatar -->
-                  <div class="rel-graph-target">
-                    <div class="rel-graph-avatar" :style="{ borderColor: getRelColor(conn.relation.type) }">
-                      <img v-if="getNpcById(conn.targetId)?.photo" :src="getNpcById(conn.targetId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
-                      <div v-else class="w-full h-full flex items-center justify-center">
-                        <svg class="w-4 h-4 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                      </div>
-                    </div>
-                    <span class="text-[10px] text-df-silver text-center leading-tight max-w-[70px] truncate">{{ getNpcById(conn.targetId)?.name || '—' }}</span>
-                    <svg v-if="conn.relation.secret" class="w-3 h-3 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                  </div>
-
-                  <!-- Tooltip -->
-                  <div v-if="hoveredRelation === conn.relation" class="rel-tooltip">
-                    <div class="flex items-center gap-1.5 mb-1">
-                      <span class="w-2 h-2 rounded-full" :style="{ background: getRelColor(conn.relation.type) }"></span>
-                      <span class="text-xs font-bold" :style="{ color: getRelColor(conn.relation.type) }">{{ conn.relation.name || getRelLabel(conn.relation.type) }}</span>
-                      <span v-if="conn.relation.secret" class="flex items-center gap-0.5 text-[9px] text-purple-400 ml-auto">
-                        <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                        Secreta
-                      </span>
-                    </div>
-                    <div class="text-[10px] text-df-silver space-y-0.5">
-                      <p><span class="text-df-gold">Nível:</span> {{ getStrengthLabel(conn.relation.strength) }}</p>
-                      <p v-if="conn.relation.since"><span class="text-df-gold">Desde:</span> {{ conn.relation.since }}</p>
-                      <p v-if="conn.relation.reason"><span class="text-df-gold">Nota:</span> {{ conn.relation.reason }}</p>
+                <!-- Connected NPC nodes -->
+                <div
+                  v-for="(node, i) in getRadialPositions(npcId)"
+                  :key="'node-' + i"
+                  class="rel-star-node"
+                  :style="{ left: node.x + 'px', top: node.y + 'px' }"
+                  @mouseenter="onNodeHover($event, node.relation)"
+                  @mouseleave="hoveredRelation = null"
+                >
+                  <div class="rel-graph-avatar" :style="{ borderColor: getRelColor(node.relation.type) }">
+                    <img v-if="getNpcById(node.targetId)?.photo" :src="getNpcById(node.targetId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                    <div v-else class="w-full h-full flex items-center justify-center">
+                      <svg class="w-4 h-4 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
                   </div>
+                  <span class="text-[10px] text-df-silver text-center leading-tight max-w-[60px] truncate">{{ getNpcById(node.targetId)?.name || '—' }}</span>
+                  <svg v-if="node.relation.secret" class="w-3 h-3 text-purple-400 absolute -top-1 -right-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Secret relations banner -->
+          <!-- Fixed tooltip for star graph -->
+          <Teleport to="body">
+            <div
+              v-if="hoveredRelation && !editRelations"
+              class="rel-star-tooltip"
+              :style="{ left: tooltipPos.x + 'px', top: (tooltipPos.y - 12) + 'px' }"
+            >
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="w-2 h-2 rounded-full" :style="{ background: getRelColor(hoveredRelation.type) }"></span>
+                <span class="text-xs font-bold" :style="{ color: getRelColor(hoveredRelation.type) }">{{ hoveredRelation.name || getRelLabel(hoveredRelation.type) }}</span>
+                <span v-if="hoveredRelation.secret" class="flex items-center gap-0.5 text-[9px] text-purple-400 ml-auto">
+                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  Secreta
+                </span>
+              </div>
+              <div class="text-[10px] text-df-silver space-y-0.5">
+                <p><span class="text-df-gold">Nível:</span> {{ getStrengthLabel(hoveredRelation.strength) }}</p>
+                <p v-if="hoveredRelation.since"><span class="text-df-gold">Desde:</span> {{ hoveredRelation.since }}</p>
+                <p v-if="hoveredRelation.reason"><span class="text-df-gold">Nota:</span> {{ hoveredRelation.reason }}</p>
+              </div>
+            </div>
+          </Teleport>
+
           <div v-if="secretRelationsCount > 0 && !showSecretRelations" class="mt-3 flex items-center gap-2 p-2.5 rounded-lg border border-purple-800/40 bg-purple-950/20">
             <svg class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span class="text-xs text-purple-300">{{ secretRelationsCount }} relação(ões) secreta(s) oculta(s)</span>
             <button @click="showSecretRelations = true" class="ml-auto text-xs text-purple-400 hover:text-purple-200 underline transition-colors">Revelar</button>
           </div>
 
-          <!-- Empty state -->
           <div v-if="visibleRelations.length === 0 && politics.relations.length === 0" class="text-center py-6 text-df-muted text-sm italic">
             Nenhuma relação registrada. Clique em "Editar" para começar.
           </div>
@@ -345,71 +366,155 @@
           </div>
         </template>
 
-        <!-- ── EDIT MODE: Relation Cards ── -->
+        <!-- ── EDIT MODE: Grouped by NPC + Side Panel ── -->
         <template v-else>
-          <div class="space-y-3">
-            <div v-for="(rel, ri) in politics.relations" :key="ri" class="rel-edit-card" :class="getRelBorderClass(rel.type)">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="w-2.5 h-2.5 rounded-full" :style="{ background: getRelColor(rel.type) }"></span>
-                  <span class="text-xs font-bold uppercase tracking-wider" :style="{ color: getRelColor(rel.type) }">{{ getRelLabel(rel.type) }}</span>
-                  <span v-if="rel.secret" class="flex items-center gap-1 text-[10px] text-purple-400">
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                    Secreta
-                  </span>
+          <div class="flex gap-3">
+            <!-- Left: NPC groups list -->
+            <div class="flex-1 min-w-0 space-y-2">
+              <template v-if="groupedRelations.length > 0">
+                <div v-for="group in groupedRelations" :key="group.npcId" class="rel-group-card">
+                  <button
+                    @click="expandedNpcId = expandedNpcId === group.npcId ? '' : group.npcId; editingRelation = null"
+                    class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-white/[0.03]"
+                    :class="expandedNpcId === group.npcId ? 'bg-white/[0.03]' : ''"
+                  >
+                    <div class="rel-group-avatar">
+                      <img v-if="getNpcById(group.npcId)?.photo" :src="getNpcById(group.npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                      <div v-else class="w-full h-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0 text-left">
+                      <span class="text-sm font-bold text-white">{{ getNpcById(group.npcId)?.name || '—' }}</span>
+                      <span class="text-xs text-df-muted ml-1.5">({{ group.relations.length }})</span>
+                      <div v-if="getNpcById(group.npcId)?.clan" class="text-[10px] text-df-red">{{ getNpcById(group.npcId)?.clan }}</div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <span v-for="rel in group.relations.slice(0, 5)" :key="rel.fromNpcId + rel.toNpcId + rel.type" class="w-2 h-2 rounded-full" :style="{ background: getRelColor(rel.type) }"></span>
+                      <span v-if="group.relations.length > 5" class="text-[9px] text-df-muted">+{{ group.relations.length - 5 }}</span>
+                    </div>
+                    <svg class="w-4 h-4 text-df-muted transition-transform" :class="expandedNpcId === group.npcId ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+
+                  <div v-if="expandedNpcId === group.npcId" class="px-3 pb-3 space-y-1.5 mt-1">
+                    <div
+                      v-for="(rel, ri) in group.relations" :key="ri"
+                      @click="openRelEditor(rel)"
+                      class="flex items-center gap-2 px-3 py-2 rounded-md transition-all cursor-pointer hover:bg-white/[0.04]"
+                      :class="editingRelation === rel ? 'bg-white/[0.06] ring-1 ring-df-border-red' : ''"
+                    >
+                      <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: getRelColor(rel.type) }"></span>
+                      <span class="text-xs font-semibold uppercase tracking-wider w-20 flex-shrink-0" :style="{ color: getRelColor(rel.type) }">{{ getRelLabel(rel.type) }}</span>
+                      <svg class="w-3 h-3 text-df-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+                      <span class="text-xs text-df-silver flex-1 min-w-0 truncate">{{ getNpcById(rel.toNpcId)?.name || '—' }}</span>
+                      <span class="text-[10px] text-df-muted flex-shrink-0">{{ getStrengthLabel(rel.strength) }}</span>
+                      <svg v-if="rel.secret" class="w-3 h-3 text-purple-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    </div>
+
+                    <button @click="addRelationForNpc(group.npcId)" class="w-full py-1.5 border border-dashed border-df-border-silver/40 rounded-md text-df-muted text-[10px] hover:border-df-gold hover:text-df-gold transition-colors uppercase tracking-wider">
+                      + Adicionar Relação
+                    </button>
+                  </div>
                 </div>
-                <button @click="removeRelation(rel)" class="text-df-muted hover:text-df-red transition-colors">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </template>
+
+              <div v-if="groupedRelations.length === 0" class="text-center py-6 text-df-muted text-sm italic">
+                Nenhuma relação registrada.
+              </div>
+
+              <button @click="addRelation" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
+                + Adicionar Relação
+              </button>
+            </div>
+
+            <!-- Right: Side Panel Editor -->
+            <Transition name="rel-panel">
+              <div v-if="editingRelation" class="rel-side-panel">
+              <div class="flex items-center justify-between mb-4">
+                <h5 class="text-xs font-bold text-df-gold uppercase tracking-widest">Editar Relação</h5>
+                <button @click="editingRelation = null" class="text-df-muted hover:text-df-red transition-colors">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
-              <!-- Row 1: Type + Strength + Secret -->
-              <div class="flex gap-2 mb-2">
-                <select v-model="rel.type" class="df-input text-xs flex-1">
-                  <option value="alliance">Aliança</option>
-                  <option value="hatred">Inimizade</option>
-                  <option value="tension">Tensão</option>
-                </select>
-                <select v-model="rel.strength" class="df-input text-xs flex-1">
-                  <option value="strong">Forte</option>
-                  <option value="medium">Média</option>
-                  <option value="weak">Fraca</option>
-                </select>
-                <button @click="toggleRelSecret(rel)" class="df-btn-primary flex-shrink-0 px-2.5 py-1 text-[10px] gap-1.5">
+
+              <div class="space-y-3">
+                <!-- Type -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Tipo</label>
+                  <select v-model="editingRelation.type" class="df-input text-xs">
+                    <option value="alliance">Aliança</option>
+                    <option value="hatred">Inimizade</option>
+                    <option value="tension">Tensão</option>
+                  </select>
+                </div>
+
+                <!-- Strength -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Força</label>
+                  <select v-model="editingRelation.strength" class="df-input text-xs">
+                    <option value="strong">Forte</option>
+                    <option value="medium">Média</option>
+                    <option value="weak">Fraca</option>
+                  </select>
+                </div>
+
+                <!-- From -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">De</label>
+                  <select v-model="editingRelation.fromNpcId" class="df-input text-xs">
+                    <option value="">— Selecionar —</option>
+                    <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
+                  </select>
+                </div>
+
+                <!-- To -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Para</label>
+                  <select v-model="editingRelation.toNpcId" class="df-input text-xs">
+                    <option value="">— Selecionar —</option>
+                    <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
+                  </select>
+                </div>
+
+                <!-- Name -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Nome</label>
+                  <input v-model="editingRelation.name" class="df-input text-xs" placeholder="Nome da relação..." />
+                </div>
+
+                <!-- Since -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Desde</label>
+                  <input v-model="editingRelation.since" class="df-input text-xs" placeholder="Ano..." />
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <label class="text-[10px] text-df-muted uppercase tracking-wider block mb-1">Descrição</label>
+                  <textarea v-model="editingRelation.reason" class="df-input text-xs resize-none" rows="3" placeholder="Observações..."></textarea>
+                </div>
+
+                <!-- Secret toggle -->
+                <button
+                  @click="toggleRelSecret(editingRelation)"
+                  class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs uppercase tracking-wider transition-all"
+                  :class="editingRelation.secret
+                    ? 'bg-purple-700 border border-purple-600 text-white shadow-[0_0_10px_rgba(147,51,234,0.25)]'
+                    : 'border border-df-border-silver/40 text-df-muted hover:border-purple-600 hover:text-purple-400'"
+                >
                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                  Secreta
+                  {{ editingRelation.secret ? 'Secreta' : 'Marcar como Secreta' }}
                 </button>
-              </div>
-              <!-- Row 2: NPCs -->
-              <div class="flex items-center gap-2 mb-2">
-                <select v-model="rel.fromNpcId" class="df-input text-xs flex-1">
-                  <option value="">— Selecionar NPC —</option>
-                  <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
-                </select>
-                <svg class="w-4 h-4 text-df-muted flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
-                <select v-model="rel.toNpcId" class="df-input text-xs flex-1">
-                  <option value="">— Selecionar NPC —</option>
-                  <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">{{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}</option>
-                </select>
-              </div>
-              <!-- Row 3: Name + Since -->
-              <div class="flex gap-2 mb-2">
-                <input v-model="rel.name" class="df-input text-xs" style="flex: 3 1 0%" placeholder="Nome da relação (Se houver)..." />
-                <input v-model="rel.since" class="df-input text-xs" style="flex: 1 1 0%" placeholder="Desde... (Ano)" />
-              </div>
-              <!-- Row 4: Reason -->
-              <textarea v-model="rel.reason" class="df-input text-xs resize-none" rows="2" placeholder="Observações / justificativa..." />
-              <!-- Toggle secret visibility -->
-              <div v-if="rel.secret" class="mt-2 flex items-center gap-2">
-                <button @click="toggleRelSecret(rel)" class="text-[10px] text-purple-400 hover:text-purple-200 underline transition-colors">
-                  Tornar pública (revelada aos jogadores)
+
+                <!-- Delete -->
+                <button @click="removeRelation(editingRelation); editingRelation = null" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs uppercase tracking-wider border border-red-900/40 text-df-red hover:bg-red-950/30 transition-all">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  Remover Relação
                 </button>
               </div>
             </div>
-          </div>
-
-          <button @click="addRelation" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
-            + Adicionar Relação
-          </button>
+          </Transition>
+        </div>
         </template>
       </div>
     </div>
@@ -721,6 +826,7 @@ const resetAllEdit = () => {
   editFactions.value = false
   editRelations.value = false
   editTerritories.value = false
+  editingRelation.value = null
 }
 
 // ── Government titles used in Camarilla ──
@@ -970,6 +1076,13 @@ const viewingFactionNPC = computed(() =>
 
 // ── Relations ──
 const hoveredRelation = ref<Relation | null>(null)
+const tooltipPos = ref({ x: 0, y: 0 })
+const onNodeHover = (e: MouseEvent, relation: Relation) => {
+  hoveredRelation.value = relation
+  tooltipPos.value = { x: e.clientX, y: e.clientY }
+}
+const expandedNpcId = ref('')
+const editingRelation = ref<Relation | null>(null)
 
 const visibleRelations = computed(() => {
   return politics.value.relations.filter(r => {
@@ -982,6 +1095,23 @@ const visibleRelations = computed(() => {
 const secretRelationsCount = computed(() =>
   politics.value.relations.filter(r => r.secret).length
 )
+
+// Group visible relations by "from" NPC
+const groupedRelations = computed(() => {
+  const map = new Map<string, Relation[]>()
+  for (const r of visibleRelations.value) {
+    if (!r.fromNpcId) continue
+    if (!map.has(r.fromNpcId)) map.set(r.fromNpcId, [])
+    map.get(r.fromNpcId)!.push(r)
+  }
+  return Array.from(map.entries())
+    .map(([npcId, relations]) => ({ npcId, relations }))
+    .sort((a, b) => {
+      const nameA = getNpcById(a.npcId)?.name || ''
+      const nameB = getNpcById(b.npcId)?.name || ''
+      return nameA.localeCompare(nameB, 'pt-BR')
+    })
+})
 
 // Build list of unique center NPCs from visible relations
 const graphCenterNpcs = computed(() => {
@@ -1003,6 +1133,32 @@ const getRelationsForNpc = (npcId: string) => {
     .map(r => ({ relation: r, targetId: r.toNpcId }))
 }
 
+// Calculate radial positions for connections around a center NPC
+const getRadialPositions = (npcId: string) => {
+  const conns = getRelationsForNpc(npcId)
+  const cx = 120, cy = 115, r = 95
+  return conns.map((conn, i) => {
+    const angle = (2 * Math.PI * i / conns.length) - Math.PI / 2
+    return {
+      ...conn,
+      x: cx + r * Math.cos(angle),
+      y: cy + r * Math.sin(angle),
+    }
+  })
+}
+
+const openRelEditor = (rel: Relation) => {
+  editingRelation.value = rel
+}
+
+const addRelationForNpc = (npcId: string) => {
+  const newRel: Relation = {
+    type: 'alliance', fromNpcId: npcId, toNpcId: '', name: '', strength: 'medium', since: '', reason: '', secret: false
+  }
+  politics.value.relations.push(newRel)
+  editingRelation.value = newRel
+}
+
 const getStrengthLabel = (s: string) => {
   if (s === 'strong') return 'Forte'
   if (s === 'medium') return 'Média'
@@ -1011,17 +1167,19 @@ const getStrengthLabel = (s: string) => {
 
 const getRelLineClass = (rel: Relation) => {
   const classes = ['rel-line']
-  if (rel.type === 'alliance') classes.push('rel-line-alliance')
-  else if (rel.type === 'hatred') classes.push('rel-line-hatred')
-  else classes.push('rel-line-tension')
+  if (rel.strength === 'strong') classes.push('rel-line-strong')
+  else if (rel.strength === 'weak') classes.push('rel-line-weak')
+  else classes.push('rel-line-medium')
   if (rel.secret) classes.push('rel-line-secret')
   return classes.join(' ')
 }
 
 const addRelation = () => {
-  politics.value.relations.push({
+  const newRel: Relation = {
     type: 'alliance', fromNpcId: '', toNpcId: '', name: '', strength: 'medium', since: '', reason: '', secret: false
-  })
+  }
+  politics.value.relations.push(newRel)
+  editingRelation.value = newRel
 }
 const removeRelation = (rel: Relation) => {
   const i = politics.value.relations.indexOf(rel)
@@ -1401,23 +1559,24 @@ select.df-input option {
   left: 0;
   right: 0;
 }
-/* Alliance: solid green */
-.rel-line-alliance {
-  background: #22c55e;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.35);
-}
-/* Hatred: thick solid red */
-.rel-line-hatred {
+/* Strong: thick solid line */
+.rel-line-strong {
   height: 4px;
-  background: #dc2626;
-  box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+  background: var(--rel-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--rel-color) 40%, transparent);
 }
-/* Tension: dashed yellow */
-.rel-line-tension {
+/* Medium: normal solid line */
+.rel-line-medium {
+  height: 2px;
+  background: var(--rel-color);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--rel-color) 35%, transparent);
+}
+/* Weak: dashed line */
+.rel-line-weak {
   height: 2px;
   background: transparent;
-  border-top: 2px dashed #f59e0b;
-  box-shadow: 0 0 4px rgba(245, 158, 11, 0.2);
+  border-top: 2px dashed var(--rel-color);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--rel-color) 20%, transparent);
 }
 /* Secret: add purple glow */
 .rel-line-secret {
@@ -1454,6 +1613,132 @@ select.df-input option {
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ═══ Star Graph Cards ═══ */
+.rel-star-tooltip {
+  position: fixed;
+  z-index: 9999;
+  transform: translate(-50%, -100%);
+  background: #0d0d20;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 180px;
+  max-width: 260px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(127,29,29,0.2);
+  pointer-events: none;
+  animation: starTooltipFade 0.12s ease;
+}
+@keyframes starTooltipFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.rel-star-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+@media (max-width: 900px) {
+  .rel-star-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .rel-star-grid { grid-template-columns: 1fr; }
+}
+.rel-star-card {
+  background: #0a0a18;
+  border: 1px solid #1a1a2e;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  transition: border-color 0.2s ease;
+}
+.rel-star-card:hover {
+  border-color: #7f1d1d44;
+}
+.rel-star-diagram {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto;
+}
+.rel-star-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+.rel-star-line {
+  filter: drop-shadow(0 0 3px currentColor);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+.rel-star-card:hover .rel-star-line {
+  opacity: 0.85;
+}
+.rel-star-center-node {
+  position: absolute;
+  left: 50%;
+  top: 115px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+}
+.rel-star-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+/* ═══ Grouped Relations ═══ */
+.rel-group-card {
+  background: #0d0d20;
+  border: 1px solid #4a4a5a;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.rel-group-card:hover {
+  border-color: #7f1d1d;
+}
+.rel-group-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid #7f1d1d;
+  background: #0a0a1a;
+  flex-shrink: 0;
+}
+
+/* Side Panel */
+.rel-side-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: #0d0d20;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  align-self: flex-start;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 8rem);
+  overflow-y: auto;
+}
+.rel-side-panel::-webkit-scrollbar { width: 4px; }
+.rel-side-panel::-webkit-scrollbar-track { background: transparent; }
+.rel-side-panel::-webkit-scrollbar-thumb { background: #7f1d1d; border-radius: 2px; }
+
+/* Panel transition */
+.rel-panel-enter-active { transition: all 0.2s ease; }
+.rel-panel-leave-active { transition: all 0.15s ease; }
+.rel-panel-enter-from { opacity: 0; transform: translateX(16px); }
+.rel-panel-leave-to { opacity: 0; transform: translateX(16px); }
+
 /* Filter checkboxes */
 .rel-filter-label {
   display: flex;
@@ -1471,17 +1756,5 @@ select.df-input option {
   background: transparent;
   transition: all 0.2s ease;
   flex-shrink: 0;
-}
-
-/* Edit card */
-.rel-edit-card {
-  background: #0d0d20;
-  border: 1px solid #4a4a5a;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  transition: all 0.2s ease;
-}
-.rel-edit-card:hover {
-  border-color: #7f1d1d;
 }
 </style>
