@@ -54,15 +54,48 @@
             </div>
           </div>
 
-          <!-- Bio -->
+          <!-- Status & Seita -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="df-label">Status</label>
+              <select v-model="form.status" class="df-input">
+                <option value="active">Ativo</option>
+                <option value="dead">Morto</option>
+                <option value="missing">Desaparecido</option>
+                <option value="traitor">Traidor</option>
+              </select>
+            </div>
+            <div>
+              <label class="df-label">Seita</label>
+              <select v-model="form.sect" class="df-input">
+                <option value="">Selecione uma seita</option>
+                <option v-for="s in sects" :key="s" :value="s">{{ s }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Papel na crônica & Pool principal -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="df-label">Papel na Crônica</label>
+              <input v-model="form.role" type="text" class="df-input" placeholder="Ex: Príncipe da cidade" />
+            </div>
+            <div>
+              <label class="df-label">Pool Principal</label>
+              <input v-model="form.mainPool" type="text" class="df-input" placeholder="Ex: Manipulação + Persuasão (7)" />
+            </div>
+          </div>
+
+          <!-- Motivação -->
           <div>
-            <label class="df-label">Biografia</label>
-            <textarea
-              v-model="form.bio"
-              rows="4"
-              class="df-input resize-none"
-              placeholder="Descreva a história e personalidade do NPC..."
-            ></textarea>
+            <label class="df-label">Motivação</label>
+            <textarea v-model="form.motivation" rows="2" class="df-input resize-none" placeholder="O que move este NPC..."></textarea>
+          </div>
+
+          <!-- Segredo -->
+          <div>
+            <label class="df-label">Segredo</label>
+            <textarea v-model="form.secret" rows="2" class="df-input resize-none" placeholder="O que ele esconde..."></textarea>
           </div>
 
           <!-- Pontos Chave -->
@@ -74,7 +107,7 @@
                   v-model="form.keyPoints[index]"
                   type="text"
                   class="df-input flex-1"
-                  placeholder="Ex: Conhece segredos do Príncipe"
+                  :placeholder="index === 0 ? 'Ex: Conhece segredos do Príncipe' : ''"
                 />
                 <button type="button" @click="removeKeyPoint(index)" class="df-btn-icon flex-shrink-0">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -164,11 +197,18 @@ const vampireClans = [
   'Setita', 'Ravnos', 'Caitiff', 'Thin-Blood'
 ]
 
+const sects = ['Camarilla', 'Sabá', 'Anarquistas', 'Independente']
+
 const form = ref({
   name: '',
   clan: '',
   generation: 10,
-  bio: '',
+  status: 'active' as string,
+  sect: '',
+  role: '',
+  motivation: '',
+  secret: '',
+  mainPool: '',
   keyPoints: [''],
   photo: ''
 })
@@ -183,14 +223,19 @@ watchEffect(() => {
       name: props.npc.name,
       clan: props.npc.clan || '',
       generation: props.npc.generation || 10,
-      bio: props.npc.bio || '',
+      status: props.npc.status || 'active',
+      sect: props.npc.sect || '',
+      role: props.npc.role || '',
+      motivation: props.npc.motivation || '',
+      secret: props.npc.secret || '',
+      mainPool: props.npc.mainPool || '',
       keyPoints: (props.npc.keyPoints && props.npc.keyPoints.length > 0) ? [...props.npc.keyPoints] : [''],
       photo: props.npc.photo || ''
     }
     previewImage.value = null
     showUrlInput.value = false
   } else {
-    form.value = { name: '', clan: '', generation: 10, bio: '', keyPoints: [''], photo: '' }
+    form.value = { name: '', clan: '', generation: 10, status: 'active', sect: '', role: '', motivation: '', secret: '', mainPool: '', keyPoints: [''], photo: '' }
     previewImage.value = null
     showUrlInput.value = false
     if (fileInput.value) fileInput.value.value = ''
@@ -209,7 +254,12 @@ const handleSave = () => {
     name: form.value.name,
     clan: form.value.clan,
     generation: form.value.generation,
-    bio: form.value.bio,
+    status: form.value.status as any,
+    sect: form.value.sect,
+    role: form.value.role,
+    motivation: form.value.motivation,
+    secret: form.value.secret,
+    mainPool: form.value.mainPool,
     keyPoints: filteredKeyPoints,
     photo: previewImage.value || form.value.photo,
     updatedAt: new Date()

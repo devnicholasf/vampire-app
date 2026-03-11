@@ -842,6 +842,12 @@ export const useCampaign = () => {
     type: raw.type,
     clan: raw.clan,
     generation: raw.generation,
+    sect: raw.sect,
+    status: raw.status,
+    role: raw.role,
+    motivation: raw.motivation,
+    secret: raw.secret,
+    mainPool: raw.main_pool,
     bio: raw.bio,
     keyPoints: raw.key_points || [],
     photo: raw.photo_url,
@@ -889,6 +895,12 @@ export const useCampaign = () => {
           type: npcData.type,
           clan: npcData.clan,
           generation: npcData.generation,
+          sect: npcData.sect,
+          status: npcData.status,
+          role: npcData.role,
+          motivation: npcData.motivation,
+          secret: npcData.secret,
+          main_pool: npcData.mainPool,
           bio: npcData.bio,
           key_points: npcData.keyPoints,
           photo_url: npcData.photo
@@ -926,6 +938,12 @@ export const useCampaign = () => {
       if (npcData.type !== undefined) updateData.type = npcData.type
       if (npcData.clan !== undefined) updateData.clan = npcData.clan
       if (npcData.generation !== undefined) updateData.generation = npcData.generation
+      if (npcData.sect !== undefined) updateData.sect = npcData.sect
+      if (npcData.status !== undefined) updateData.status = npcData.status
+      if (npcData.role !== undefined) updateData.role = npcData.role
+      if (npcData.motivation !== undefined) updateData.motivation = npcData.motivation
+      if (npcData.secret !== undefined) updateData.secret = npcData.secret
+      if (npcData.mainPool !== undefined) updateData.main_pool = npcData.mainPool
       if (npcData.bio !== undefined) updateData.bio = npcData.bio
       if (npcData.keyPoints !== undefined) updateData.key_points = npcData.keyPoints
       if (npcData.photo !== undefined) updateData.photo_url = npcData.photo

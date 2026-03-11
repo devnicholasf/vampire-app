@@ -29,13 +29,33 @@
               <h4 class="text-2xl font-bold text-white">{{ npc.name }}</h4>
               <p v-if="npc.clan" class="text-df-red font-medium text-lg">{{ npc.clan }}</p>
               <p v-if="npc.generation" class="text-sm text-df-muted">{{ npc.generation }}ª Geração</p>
+              <p v-if="npc.sect" class="text-sm text-df-gold font-medium">{{ npc.sect }}</p>
+              <span v-if="npc.status" class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide" :class="statusBadgeClass(npc.status)">{{ statusLabel(npc.status) }}</span>
             </div>
           </div>
 
-          <!-- Bio -->
-          <div>
-            <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Biografia</h5>
-            <p class="text-sm text-df-silver leading-relaxed">{{ npc.bio || 'Nenhuma biografia definida.' }}</p>
+          <!-- Papel na Crônica & Motivação -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div v-if="npc.role">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Papel na Crônica</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ npc.role }}</p>
+            </div>
+            <div v-if="npc.motivation">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Motivação</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ npc.motivation }}</p>
+            </div>
+          </div>
+
+          <!-- Segredo & Pool -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div v-if="npc.secret">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Segredo</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ npc.secret }}</p>
+            </div>
+            <div v-if="npc.mainPool">
+              <h5 class="text-sm font-semibold text-df-gold uppercase tracking-wider mb-2">Pool Principal</h5>
+              <p class="text-sm text-df-silver leading-relaxed">{{ npc.mainPool }}</p>
+            </div>
           </div>
 
           <!-- Key Points -->
@@ -72,6 +92,15 @@ import type { NPC } from '~/types'
 interface Props { npc: NPC }
 defineProps<Props>()
 defineEmits<{ close: []; edit: [npc: NPC]; addToGame: [npc: NPC] }>()
+
+const statusLabel = (s: string) => ({ active: 'Ativo', dead: 'Morto', missing: 'Desaparecido', traitor: 'Traidor' }[s] || s)
+const statusBadgeClass = (s: string) => ({
+  active: 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50',
+  dead: 'bg-red-900/60 text-red-300 border border-red-700/50',
+  missing: 'bg-amber-900/60 text-amber-300 border border-amber-700/50',
+  traitor: 'bg-purple-900/60 text-purple-300 border border-purple-700/50'
+}[s] || 'bg-df-deep text-df-muted border border-df-border-silver')
+
 </script>
 
 <style scoped>

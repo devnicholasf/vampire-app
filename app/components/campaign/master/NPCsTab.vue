@@ -15,6 +15,32 @@
       </div>
     </div>
 
+    <!-- Organizado por -->
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-df-muted">Organizado por:</span>
+      <select v-model="groupBy" class="df-filter-select">
+        <option value="">Todos</option>
+        <option value="status">Status</option>
+        <option value="sect">Seita</option>
+        <option value="clan">Clã</option>
+      </select>
+      <select v-if="groupBy === 'status'" v-model="groupFilter" class="df-filter-select">
+        <option value="">Todos os status</option>
+        <option value="active">Ativo</option>
+        <option value="dead">Morto</option>
+        <option value="missing">Desaparecido</option>
+        <option value="traitor">Traidor</option>
+      </select>
+      <select v-if="groupBy === 'sect'" v-model="groupFilter" class="df-filter-select">
+        <option value="">Todas as seitas</option>
+        <option v-for="s in availableSects" :key="s" :value="s">{{ s }}</option>
+      </select>
+      <select v-if="groupBy === 'clan'" v-model="groupFilter" class="df-filter-select">
+        <option value="">Todos os clãs</option>
+        <option v-for="c in availableClans" :key="c" :value="c">{{ c }}</option>
+      </select>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-16">
       <div class="text-center">
@@ -24,9 +50,9 @@
     </div>
 
     <!-- NPCs Grid -->
-    <div v-else-if="npcs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else-if="filteredNPCs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
-        v-for="npc in sortedNPCs"
+        v-for="npc in filteredNPCs"
         :key="npc.id"
         class="df-card group hover:border-df-red/40 transition-all duration-300"
       >
@@ -54,8 +80,14 @@
             </button>
           </div>
 
-          <!-- Bio -->
-          <p class="text-sm text-df-silver line-clamp-3 mb-3">{{ npc.bio || 'Sem biografia definida' }}</p>
+          <!-- NPC Info Lines -->
+          <div class="space-y-1 mb-3 text-sm">
+            <p v-if="npc.role" class="text-df-silver"><span class="text-df-gold font-medium">Papel:</span> {{ npc.role }}</p>
+            <p v-if="npc.motivation" class="text-df-silver"><span class="text-df-gold font-medium">Motivação:</span> {{ npc.motivation }}</p>
+            <p v-if="npc.secret" class="text-df-silver"><span class="text-df-gold font-medium">Segredo:</span> {{ npc.secret }}</p>
+            <p v-if="npc.mainPool" class="text-df-silver"><span class="text-df-gold font-medium">Pool principal:</span> {{ npc.mainPool }}</p>
+            <p v-if="!npc.role && !npc.motivation && !npc.secret && !npc.mainPool" class="text-df-muted italic">Sem informações adicionais</p>
+          </div>
 
           <!-- Key Points -->
           <div v-if="npc.keyPoints && npc.keyPoints.length > 0" class="mb-4">
@@ -84,8 +116,21 @@
       </div>
     </div>
 
+    <!-- No Results for Filter -->
+    <div v-else-if="npcs.length > 0 && filteredNPCs.length === 0" class="df-card text-center py-12">
+      <div class="df-card-corner df-card-corner-tl"></div>
+      <div class="df-card-corner df-card-corner-tr"></div>
+      <div class="df-card-corner df-card-corner-bl"></div>
+      <div class="df-card-corner df-card-corner-br"></div>
+      <div class="relative z-10">
+        <svg class="w-12 h-12 text-df-border-silver mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <h4 class="text-lg font-bold text-white mb-2">Nenhum NPC encontrado</h4>
+        <p class="text-df-muted text-sm">Não há NPCs correspondentes ao filtro selecionado.</p>
+      </div>
+    </div>
+
     <!-- Empty State -->
-    <div v-else class="df-card text-center py-16">
+    <div v-else-if="npcs.length === 0" class="df-card text-center py-16">
       <div class="df-card-corner df-card-corner-tl"></div>
       <div class="df-card-corner df-card-corner-tr"></div>
       <div class="df-card-corner df-card-corner-bl"></div>
@@ -160,6 +205,36 @@ const toast = useToast()
 
 const sortedNPCs = computed(() => [...npcs.value].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')))
 
+const groupBy = ref('')
+const groupFilter = ref('')
+
+const availableSects = computed(() => {
+  const sects = npcs.value.map(n => n.sect).filter(Boolean) as string[]
+  return [...new Set(sects)].sort()
+})
+const availableClans = computed(() => {
+  const clans = npcs.value.map(n => typeof n.clan === 'string' ? n.clan : '').filter(Boolean)
+  return [...new Set(clans)].sort()
+})
+
+const filteredNPCs = computed(() => {
+  let list = sortedNPCs.value
+  if (groupBy.value && groupFilter.value) {
+    if (groupBy.value === 'status') list = list.filter(n => n.status === groupFilter.value)
+    else if (groupBy.value === 'sect') list = list.filter(n => n.sect === groupFilter.value)
+    else if (groupBy.value === 'clan') list = list.filter(n => (typeof n.clan === 'string' ? n.clan : '') === groupFilter.value)
+  }
+  return list
+})
+
+const statusLabel = (s: string) => ({ active: 'Ativo', dead: 'Morto', missing: 'Desaparecido', traitor: 'Traidor' }[s] || s)
+const statusBadgeClass = (s: string) => ({
+  active: 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50',
+  dead: 'bg-red-900/40 text-red-400 border border-red-700/50',
+  missing: 'bg-amber-900/40 text-amber-400 border border-amber-700/50',
+  traitor: 'bg-purple-900/40 text-purple-400 border border-purple-700/50',
+}[s] || 'bg-gray-900/40 text-gray-400 border border-gray-700/50')
+
 const showCreateModal = ref(false)
 const editingNPC = ref<NPC | null>(null)
 const viewingNPC = ref<NPC | null>(null)
@@ -185,9 +260,9 @@ const closeSheet = () => { viewingSheet.value = null }
 const saveNPC = async (npcData: any) => {
   try {
     if (editingNPC.value) {
-      // Sync photo → sheet.avatar so both stay in sync
-      if (npcData.photo !== undefined && editingNPC.value.sheet) {
-        npcData.sheet = { ...editingNPC.value.sheet, avatar: npcData.photo }
+      // Sync photo → sheet.avatar and sect so both stay in sync
+      if (editingNPC.value.sheet) {
+        npcData.sheet = { ...editingNPC.value.sheet, avatar: npcData.photo, sect: npcData.sect }
       }
       await updateNPC(editingNPC.value.id, npcData); toast.success('NPC atualizado!', `${npcData.name} foi atualizado com sucesso`)
     }
@@ -237,6 +312,20 @@ defineExpose({ npcs })
 
 /* ═══ Line Clamp ═══ */
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ═══ Filter Select ═══ */
+.df-filter-select {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #4a4a5a;
+  border-radius: 0.375rem;
+  background: #0d0d20;
+  color: #c0c0d0;
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.df-filter-select:focus { border-color: #dc2626; }
+.df-filter-select option { background: #0d0d20; color: #c0c0d0; }
 
 /* ═══ Text Helpers ═══ */
 .df-text-muted { color: #6b6b80; }

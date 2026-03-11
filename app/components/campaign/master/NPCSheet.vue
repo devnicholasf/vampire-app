@@ -597,6 +597,7 @@ const saveSheet = () => {
     name: sheetData.value.name,
     clan: sheetData.value.clan,
     generation: sheetData.value.generation,
+    sect: sheetData.value.sect,
     bio: sheetData.value.history,
     photo: sheetData.value.avatar,
     keyPoints: cleanedKeyPoints,

@@ -150,7 +150,13 @@ export interface NPC {
   type?: string // Tipo do NPC (Antagonista, Aliado, Informante, etc.)
   clan?: VampireClan | string // Permitir string para mais flexibilidade
   generation?: number
-  bio?: string // Biografia completa
+  sect?: string // Seita (Camarilla, Sabbat, Anarquistas, etc.)
+  status?: 'active' | 'dead' | 'missing' | 'traitor' // Status do NPC
+  role?: string // Papel na crônica
+  motivation?: string // Motivação
+  secret?: string // Segredo
+  mainPool?: string // Pool principal
+  bio?: string // Biografia completa (legado)
   keyPoints?: string[] // Pontos chave na história
   photo?: string // URL da foto (futuramente arquivo)
   image?: string // Manter retrocompatibilidade
