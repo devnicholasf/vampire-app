@@ -24,7 +24,145 @@
 
     <!-- ── Map loaded ── -->
     <div v-else>
-      <!-- Zone cards (always visible above the map — view & edit modes) -->
+      <!-- Toolbar -->
+      <div class="tm-toolbar">
+        <div class="flex items-center gap-2 flex-wrap">
+          <template v-if="editing">
+            <button
+              @click="drawingMode = drawingMode === 'polygon' ? null : 'polygon'"
+              class="tm-tool-btn" :class="{ 'tm-tool-active': drawingMode === 'polygon' }"
+              title="Desenhar zona"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg>
+              <span class="text-[10px]">Zona</span>
+            </button>
+            <button
+              @click="drawingMode = drawingMode === 'rect' ? null : 'rect'"
+              class="tm-tool-btn" :class="{ 'tm-tool-active': drawingMode === 'rect' }"
+              title="Desenhar retângulo"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              <span class="text-[10px]">Retângulo</span>
+            </button>
+            <div class="w-px h-6 bg-df-border-silver/40 mx-1"></div>
+            <button v-if="currentPolygon.length > 0" @click="cancelDrawing" class="tm-tool-btn" title="Cancelar desenho">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span class="text-[10px]">Cancelar</span>
+            </button>
+            <button v-if="currentPolygon.length >= 3" @click="finishPolygon" class="tm-tool-btn tm-tool-confirm" title="Finalizar zona">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span class="text-[10px]">Fechar Zona</span>
+            </button>
+          </template>
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="zoomIn" class="tm-tool-btn" title="Zoom +"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+          <span class="text-[10px] text-df-muted min-w-[36px] text-center">{{ Math.round(zoom * 100) }}%</span>
+          <button @click="zoomOut" class="tm-tool-btn" title="Zoom −"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
+          <div class="w-px h-6 bg-df-border-silver/40 mx-1"></div>
+          <button v-if="editing" @click="replaceMap" class="tm-tool-btn" title="Trocar mapa">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span class="text-[10px]">Trocar</span>
+          </button>
+          <button v-if="editing" @click="removeMap" class="tm-tool-btn tm-tool-danger" title="Remover mapa">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            <span class="text-[10px]">Remover</span>
+          </button>
+          <input v-if="editing" ref="replaceInput" type="file" accept="image/*" class="hidden" @change="onFileSelect" />
+        </div>
+      </div>
+
+      <!-- Map viewport -->
+      <div
+        class="tm-viewport"
+        :class="{ 'tm-viewport-focused': mapFocused }"
+        ref="viewportRef"
+        @wheel="onWheel"
+        @mousedown="onViewportMouseDown"
+        @mousemove="onViewportMouseMove"
+        @mouseup="onViewportMouseUp"
+        @mouseleave="onViewportMouseLeave"
+        @click="handleViewportClick"
+      >
+        <div class="tm-canvas" :style="canvasStyle">
+          <!-- Background image -->
+          <img :src="mapImage" class="tm-bg-image" draggable="false" @load="onImageLoad" ref="bgImageRef" />
+
+          <!-- SVG overlay for zones -->
+          <svg v-if="imgW > 0" class="tm-svg-overlay" :viewBox="`0 0 ${imgW} ${imgH}`" preserveAspectRatio="none">
+            <!-- Existing zones -->
+            <g v-for="(zone, zi) in modelValue" :key="zi">
+              <polygon
+                :points="zone.points.map(p => `${p[0]},${p[1]}`).join(' ')"
+                :fill="zone.color + '55'"
+                :stroke="selectedZone === zi ? '#d4a647' : zone.color"
+                :stroke-width="selectedZone === zi ? 3 / zoom : 1.5 / zoom"
+                class="tm-zone-polygon"
+                :class="{ 'tm-zone-hover': !editing || drawingMode === null, 'tm-zone-war': zone.status === 'war' }"
+                @click.stop="onZoneClick(zi, $event)"
+                @mouseenter="hoveredZone = zi"
+                @mouseleave="hoveredZone = -1"
+              />
+              <!-- Zone label -->
+              <text
+                :x="getZoneCenter(zone)[0]"
+                :y="getZoneCenter(zone)[1]"
+                text-anchor="middle"
+                dominant-baseline="central"
+                :font-size="14 / zoom"
+                fill="white"
+                :stroke="'#000'"
+                :stroke-width="3 / zoom"
+                paint-order="stroke"
+                class="tm-zone-label"
+                pointer-events="none"
+              >
+                {{ zone.name || 'Sem nome' }}
+              </text>
+            </g>
+
+            <!-- Current polygon being drawn -->
+            <g v-if="currentPolygon.length > 0">
+              <polyline
+                :points="[...currentPolygon, ...(mousePos ? [mousePos] : [])].map(p => `${p[0]},${p[1]}`).join(' ')"
+                fill="none"
+                stroke="#d4a647"
+                :stroke-width="2 / zoom"
+                stroke-dasharray="6 3"
+              />
+              <circle v-for="(pt, pi) in currentPolygon" :key="pi"
+                :cx="pt[0]" :cy="pt[1]" :r="4 / zoom"
+                fill="#d4a647" stroke="#0a0a1a" :stroke-width="1.5 / zoom"
+              />
+            </g>
+
+            <!-- Rect drawing preview -->
+            <rect v-if="drawingMode === 'rect' && rectPreview"
+              :x="rectPreview.x"
+              :y="rectPreview.y"
+              :width="rectPreview.width"
+              :height="rectPreview.height"
+              fill="#d4a64755"
+              stroke="#d4a647"
+              :stroke-width="2 / zoom"
+              stroke-dasharray="6 3"
+            />
+
+            <!-- Dragging vertex handle -->
+            <g v-if="editing && selectedZone >= 0 && !drawingMode">
+              <circle v-for="(pt, pi) in modelValue[selectedZone]?.points || []" :key="'vh' + pi"
+                :cx="pt[0]" :cy="pt[1]" :r="5 / zoom"
+                :fill="draggingVertex === pi ? '#fff' : '#d4a647'"
+                stroke="#0a0a1a" :stroke-width="1.5 / zoom"
+                class="tm-vertex-handle"
+                @mousedown.stop="startVertexDrag(pi, $event)"
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Zone cards (below the map) -->
       <div v-if="modelValue.length > 0" class="tm-zone-cards-list">
         <div
           v-for="(zone, zi) in modelValue" :key="'zcard' + zi"
@@ -144,145 +282,6 @@
         </div>
       </div>
 
-      <!-- Toolbar -->
-      <div class="tm-toolbar">
-        <div class="flex items-center gap-2 flex-wrap">
-          <template v-if="editing">
-            <button
-              @click="drawingMode = drawingMode === 'polygon' ? null : 'polygon'"
-              class="tm-tool-btn" :class="{ 'tm-tool-active': drawingMode === 'polygon' }"
-              title="Desenhar zona"
-            >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg>
-              <span class="text-[10px]">Zona</span>
-            </button>
-            <button
-              @click="drawingMode = drawingMode === 'rect' ? null : 'rect'"
-              class="tm-tool-btn" :class="{ 'tm-tool-active': drawingMode === 'rect' }"
-              title="Desenhar retângulo"
-            >
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-              <span class="text-[10px]">Retângulo</span>
-            </button>
-            <div class="w-px h-6 bg-df-border-silver/40 mx-1"></div>
-            <button v-if="currentPolygon.length > 0" @click="cancelDrawing" class="tm-tool-btn" title="Cancelar desenho">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              <span class="text-[10px]">Cancelar</span>
-            </button>
-            <button v-if="currentPolygon.length >= 3" @click="finishPolygon" class="tm-tool-btn tm-tool-confirm" title="Finalizar zona">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span class="text-[10px]">Fechar Zona</span>
-            </button>
-          </template>
-        </div>
-        <div class="flex items-center gap-2">
-          <button @click="zoomIn" class="tm-tool-btn" title="Zoom +"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
-          <span class="text-[10px] text-df-muted min-w-[36px] text-center">{{ Math.round(zoom * 100) }}%</span>
-          <button @click="zoomOut" class="tm-tool-btn" title="Zoom −"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>
-          <div class="w-px h-6 bg-df-border-silver/40 mx-1"></div>
-          <button v-if="editing" @click="replaceMap" class="tm-tool-btn" title="Trocar mapa">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span class="text-[10px]">Trocar</span>
-          </button>
-          <button v-if="editing" @click="removeMap" class="tm-tool-btn tm-tool-danger" title="Remover mapa">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-            <span class="text-[10px]">Remover</span>
-          </button>
-          <input v-if="editing" ref="replaceInput" type="file" accept="image/*" class="hidden" @change="onFileSelect" />
-        </div>
-      </div>
-
-      <!-- Map viewport -->
-      <div
-        class="tm-viewport"
-        ref="viewportRef"
-        @wheel.prevent="onWheel"
-        @mousedown="onViewportMouseDown"
-        @mousemove="onViewportMouseMove"
-        @mouseup="onViewportMouseUp"
-        @mouseleave="onViewportMouseLeave"
-        @click="handleViewportClick"
-      >
-        <div class="tm-canvas" :style="canvasStyle">
-          <!-- Background image -->
-          <img :src="mapImage" class="tm-bg-image" draggable="false" @load="onImageLoad" ref="bgImageRef" />
-
-          <!-- SVG overlay for zones -->
-          <svg v-if="imgW > 0" class="tm-svg-overlay" :viewBox="`0 0 ${imgW} ${imgH}`" preserveAspectRatio="none">
-            <!-- Existing zones -->
-            <g v-for="(zone, zi) in modelValue" :key="zi">
-              <polygon
-                :points="zone.points.map(p => `${p[0]},${p[1]}`).join(' ')"
-                :fill="zone.color + '55'"
-                :stroke="selectedZone === zi ? '#d4a647' : zone.color"
-                :stroke-width="selectedZone === zi ? 3 / zoom : 1.5 / zoom"
-                class="tm-zone-polygon"
-                :class="{ 'tm-zone-hover': !editing || drawingMode === null, 'tm-zone-war': zone.status === 'war' }"
-                @click.stop="onZoneClick(zi, $event)"
-                @mouseenter="hoveredZone = zi"
-                @mouseleave="hoveredZone = -1"
-              />
-              <!-- Zone label -->
-              <text
-                :x="getZoneCenter(zone)[0]"
-                :y="getZoneCenter(zone)[1]"
-                text-anchor="middle"
-                dominant-baseline="central"
-                :font-size="14 / zoom"
-                fill="white"
-                :stroke="'#000'"
-                :stroke-width="3 / zoom"
-                paint-order="stroke"
-                class="tm-zone-label"
-                pointer-events="none"
-              >
-                {{ zone.name || 'Sem nome' }}
-              </text>
-            </g>
-
-            <!-- Current polygon being drawn -->
-            <g v-if="currentPolygon.length > 0">
-              <polyline
-                :points="[...currentPolygon, ...(mousePos ? [mousePos] : [])].map(p => `${p[0]},${p[1]}`).join(' ')"
-                fill="none"
-                stroke="#d4a647"
-                :stroke-width="2 / zoom"
-                stroke-dasharray="6 3"
-              />
-              <circle v-for="(pt, pi) in currentPolygon" :key="pi"
-                :cx="pt[0]" :cy="pt[1]" :r="4 / zoom"
-                fill="#d4a647" stroke="#0a0a1a" :stroke-width="1.5 / zoom"
-              />
-            </g>
-
-            <!-- Rect drawing preview -->
-            <rect v-if="drawingMode === 'rect' && rectPreview"
-              :x="rectPreview.x"
-              :y="rectPreview.y"
-              :width="rectPreview.width"
-              :height="rectPreview.height"
-              fill="#d4a64755"
-              stroke="#d4a647"
-              :stroke-width="2 / zoom"
-              stroke-dasharray="6 3"
-            />
-
-            <!-- Dragging vertex handle -->
-            <g v-if="editing && selectedZone >= 0 && !drawingMode">
-              <circle v-for="(pt, pi) in modelValue[selectedZone]?.points || []" :key="'vh' + pi"
-                :cx="pt[0]" :cy="pt[1]" :r="5 / zoom"
-                :fill="draggingVertex === pi ? '#fff' : '#d4a647'"
-                stroke="#0a0a1a" :stroke-width="1.5 / zoom"
-                class="tm-vertex-handle"
-                @mousedown.stop="startVertexDrag(pi, $event)"
-              />
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <!-- (Zone cards are now unified above the map) -->
-
       <!-- Hovered zone tooltip (only view mode) -->
       <div v-if="!editing && hoveredZone >= 0 && hoveredZone !== selectedZone && hovZone" class="tm-hover-tooltip" :style="tooltipStyle">
         <div class="flex items-center gap-2 mb-1">
@@ -301,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch, toRef, onMounted, onBeforeUnmount } from 'vue'
 import { useToast } from '~/composables/useToast'
 
 export interface TerritoryInfluence {
@@ -371,6 +370,12 @@ const mousePos = ref<number[] | null>(null)
 // ── Selection ──
 const selectedZone = ref(-1)
 const hoveredZone = ref(-1)
+const mapFocused = ref(false)
+
+// Reset selection when entering/leaving edit mode
+watch(toRef(props, 'editing'), () => {
+  selectedZone.value = -1
+})
 const tooltipPos = ref({ x: 0, y: 0 })
 const hoveredSegment = ref(-1)
 
@@ -500,6 +505,8 @@ const zoomIn = () => { zoom.value = Math.min(zoom.value * 1.2, 5) }
 const zoomOut = () => { zoom.value = Math.max(zoom.value / 1.2, 0.1) }
 
 const onWheel = (e: WheelEvent) => {
+  if (!mapFocused.value) return // let page scroll normally
+  e.preventDefault()
   const factor = e.deltaY > 0 ? 0.9 : 1.1
   const newZoom = Math.max(0.1, Math.min(5, zoom.value * factor))
   // Zoom toward cursor:
@@ -526,6 +533,7 @@ const screenToImage = (clientX: number, clientY: number): number[] => {
 
 // ── Viewport mouse handlers ──
 const onViewportMouseDown = (e: MouseEvent) => {
+  mapFocused.value = true
   didDrag.value = false
   if (e.button === 1 || (e.button === 0 && (!props.editing || !drawingMode.value))) {
     // Pan
@@ -697,6 +705,16 @@ const handleViewportClick = (e: MouseEvent) => {
   if (!props.editing || !drawingMode.value) return
   onCanvasClick(e)
 }
+
+// ── Click outside to unfocus map ──
+const onDocumentClick = (e: MouseEvent) => {
+  if (!viewportRef.value) return
+  if (!viewportRef.value.contains(e.target as Node)) {
+    mapFocused.value = false
+  }
+}
+onMounted(() => { document.addEventListener('click', onDocumentClick) })
+onBeforeUnmount(() => { document.removeEventListener('click', onDocumentClick) })
 </script>
 
 <style scoped>
@@ -785,9 +803,14 @@ const handleViewportClick = (e: MouseEvent) => {
   border: 1px solid #4a4a5a;
   border-radius: 0.5rem;
   background: #050510;
+  cursor: default;
+  transition: border-color 0.2s;
+}
+.tm-viewport-focused {
+  border-color: #d4a647;
   cursor: grab;
 }
-.tm-viewport:active {
+.tm-viewport-focused:active {
   cursor: grabbing;
 }
 .tm-canvas {

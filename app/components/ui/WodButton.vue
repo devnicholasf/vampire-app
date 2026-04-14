@@ -32,7 +32,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   position: 'bottom-right',
   size: 'md',
-  url: 'https://www.paradoxinteractive.com/games/world-of-darkness/discover-world-of-darkness/vampire-the-masquerade',
+  url: 'https://www.paradoxinteractive.com/games/world-of-darkness/products/tabletop-roleplaying/vampire-the-masquerade',
   tooltip: 'Visite o site oficial do World of Darkness',
   variant: 'default'
 })

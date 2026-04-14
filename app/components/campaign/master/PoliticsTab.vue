@@ -22,9 +22,22 @@
       <div class="df-card-corner df-card-corner-bl"></div>
       <div class="df-card-corner df-card-corner-br"></div>
       <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-6">
-          <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
-          <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Governo da Cidade</h4>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5z"/><path d="M5 16h14v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2z"/></svg>
+            <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Governo da Cidade</h4>
+          </div>
+          <div class="flex items-center gap-2">
+            <button v-if="editGovernment" @click="saveSectionPolitics('government')" class="df-btn-save-section">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Salvar
+            </button>
+            <button @click="editGovernment = !editGovernment" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+              <svg v-if="!editGovernment" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {{ editGovernment ? 'Ver' : 'Editar' }}
+            </button>
+          </div>
         </div>
 
         <!-- Hierarchy Tree -->
@@ -112,77 +125,97 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Facções</h4>
           </div>
-          <button @click="editFactions = !editFactions" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editFactions" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editFactions ? 'Ver' : 'Editar' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button v-if="editFactions" @click="saveSectionPolitics('factions')" class="df-btn-save-section">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Salvar
+            </button>
+            <button @click="editFactions = !editFactions" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+              <svg v-if="!editFactions" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {{ editFactions ? 'Ver' : 'Editar' }}
+            </button>
+          </div>
         </div>
 
         <div class="space-y-5">
           <div v-for="(faction, fi) in politics.factions" :key="fi" class="df-faction-card">
             <!-- ── EDIT MODE ── -->
             <template v-if="editFactions">
-              <!-- Row 1: Name + Delete -->
-              <div class="flex items-center gap-2 mb-2">
+              <!-- Collapsed header (always visible) -->
+              <div class="flex items-center gap-2 cursor-pointer select-none faction-collapse-header" @click="expandedFactionIndex = expandedFactionIndex === fi ? null : fi">
+                <svg class="w-3.5 h-3.5 text-df-muted transition-transform duration-200" :class="{ 'rotate-90': expandedFactionIndex === fi }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                 <span class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: faction.color || '#dc2626' }"></span>
-                <input v-model="faction.name" class="df-input text-sm font-bold flex-1" placeholder="Nome da facção" />
-                <button @click="removeFaction(fi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
+                <span class="text-white font-bold text-sm flex-1 truncate">{{ faction.name || 'Nova Facção' }}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full border" :style="{ borderColor: (faction.color || '#dc2626') + '44', color: faction.color || '#dc2626' }">
+                  {{ faction.type === 'anarquista' ? 'Anarquista' : 'Independente' }}
+                </span>
+                <span v-if="faction.members.length" class="text-df-muted text-xs">{{ faction.members.length }} {{ faction.members.length === 1 ? 'membro' : 'membros' }}</span>
+                <button @click.stop="removeFaction(fi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0 ml-1" title="Remover facção">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </button>
               </div>
-              <!-- Row 2: Type + Color -->
-              <div class="flex items-center gap-2 mb-3">
-                <select v-model="faction.type" class="df-input text-xs flex-1">
-                  <option value="independente">Independente</option>
-                  <option value="anarquista">Anarquista</option>
-                </select>
-                <input v-model="faction.color" type="color" class="w-8 h-8 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" />
-              </div>
-              <textarea v-model="faction.description" class="df-input text-xs resize-none mb-3" rows="2" placeholder="Descrição / objetivos..." />
 
-              <!-- Members edit -->
-              <div class="border-t border-df-border-silver/30 pt-3">
-                <h5 class="text-xs font-bold text-df-gold uppercase tracking-wider mb-2">Membros</h5>
-                <div class="space-y-2">
-                  <div v-for="(member, mi) in faction.members" :key="mi" class="flex items-start gap-2 p-2 rounded-lg border border-df-border-silver/20 bg-df-deep/50">
-                    <!-- Avatar preview -->
-                    <div class="w-10 h-10 rounded-full overflow-hidden border border-df-border-silver bg-df-input flex-shrink-0 flex items-center justify-center">
-                      <img v-if="getMemberPhoto(member)" :src="getMemberPhoto(member)" class="w-full h-full object-cover" alt="" />
-                      <svg v-else class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    </div>
-                    <div class="flex-1 space-y-1 min-w-0">
-                      <div class="flex gap-1">
-                        <select v-model="member.rank" class="df-input text-xs flex-1">
-                          <option value="">Posto...</option>
-                          <option v-for="r in getFactionRanks(faction)" :key="r" :value="r">{{ r }}</option>
-                        </select>
-                      </div>
-                      <select v-model="member.npcId" class="df-input text-xs">
-                        <option value="">— Personalizado —</option>
-                        <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">
-                          {{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}
-                        </option>
-                      </select>
-                      <template v-if="!member.npcId">
-                        <input v-model="member.customName" class="df-input text-xs" placeholder="Nome do membro..." />
-                        <div class="flex gap-1 items-center">
-                          <input v-model="member.customPhoto" class="df-input text-xs flex-1" placeholder="URL da foto..." />
-                          <label class="cursor-pointer text-df-muted hover:text-df-gold transition-colors flex-shrink-0 p-1">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            <input type="file" accept="image/*" class="hidden" @change="handleMemberPhotoUpload($event, member)" />
-                          </label>
-                        </div>
-                      </template>
-                    </div>
-                    <button @click="removeFactionMember(faction, mi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0 mt-1">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
-                  </div>
+              <!-- Expanded edit form -->
+              <div v-if="expandedFactionIndex === fi" class="faction-expand-body">
+                <!-- Row 1: Name -->
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: faction.color || '#dc2626' }"></span>
+                  <input v-model="faction.name" class="df-input text-sm font-bold flex-1" placeholder="Nome da facção" />
                 </div>
-                <button @click="addFactionMember(faction)" class="mt-2 w-full py-1.5 border border-dashed border-df-border-silver/50 rounded-lg text-df-muted text-xs hover:border-df-gold hover:text-df-gold transition-colors">
-                  + Adicionar Membro
-                </button>
+                <!-- Row 2: Type + Color -->
+                <div class="flex items-center gap-2 mb-3">
+                  <select v-model="faction.type" class="df-input text-xs flex-1">
+                    <option value="independente">Independente</option>
+                    <option value="anarquista">Anarquista</option>
+                  </select>
+                  <input v-model="faction.color" type="color" class="w-8 h-8 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" />
+                </div>
+                <textarea v-model="faction.description" class="df-input text-xs resize-none mb-3" rows="2" placeholder="Descrição / objetivos..." />
+
+                <!-- Members edit -->
+                <div class="border-t border-df-border-silver/30 pt-3">
+                  <h5 class="text-xs font-bold text-df-gold uppercase tracking-wider mb-2">Membros</h5>
+                  <div class="space-y-2">
+                    <div v-for="(member, mi) in faction.members" :key="mi" class="flex items-start gap-2 p-2 rounded-lg border border-df-border-silver/20 bg-df-deep/50">
+                      <!-- Avatar preview -->
+                      <div class="w-10 h-10 rounded-full overflow-hidden border border-df-border-silver bg-df-input flex-shrink-0 flex items-center justify-center">
+                        <img v-if="getMemberPhoto(member)" :src="getMemberPhoto(member)" class="w-full h-full object-cover" alt="" />
+                        <svg v-else class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </div>
+                      <div class="flex-1 space-y-1 min-w-0">
+                        <div class="flex gap-1">
+                          <select v-model="member.rank" class="df-input text-xs flex-1">
+                            <option value="">Posto...</option>
+                            <option v-for="r in getFactionRanks(faction)" :key="r" :value="r">{{ r }}</option>
+                          </select>
+                        </div>
+                        <select v-model="member.npcId" class="df-input text-xs">
+                          <option value="">— Personalizado —</option>
+                          <option v-for="npc in campaignNPCs" :key="npc.id" :value="npc.id">
+                            {{ npc.name }}{{ npc.clan ? ` (${npc.clan})` : '' }}
+                          </option>
+                        </select>
+                        <template v-if="!member.npcId">
+                          <input v-model="member.customName" class="df-input text-xs" placeholder="Nome do membro..." />
+                          <div class="flex gap-1 items-center">
+                            <input v-model="member.customPhoto" class="df-input text-xs flex-1" placeholder="URL da foto..." />
+                            <label class="cursor-pointer text-df-muted hover:text-df-gold transition-colors flex-shrink-0 p-1">
+                              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              <input type="file" accept="image/*" class="hidden" @change="handleMemberPhotoUpload($event, member)" />
+                            </label>
+                          </div>
+                        </template>
+                      </div>
+                      <button @click="removeFactionMember(faction, mi)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0 mt-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <button @click="addFactionMember(faction)" class="mt-2 w-full py-1.5 border border-dashed border-df-border-silver/50 rounded-lg text-df-muted text-xs hover:border-df-gold hover:text-df-gold transition-colors">
+                    + Adicionar Membro
+                  </button>
+                </div>
               </div>
             </template>
 
@@ -254,11 +287,17 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Relações</h4>
           </div>
-          <button @click="editRelations = !editRelations" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editRelations" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editRelations ? 'Ver' : 'Editar' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button v-if="editRelations" @click="saveSectionPolitics('relations')" class="df-btn-save-section">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Salvar
+            </button>
+            <button @click="editRelations = !editRelations" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+              <svg v-if="!editRelations" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {{ editRelations ? 'Ver' : 'Editar' }}
+            </button>
+          </div>
         </div>
 
         <!-- ── Filters ── -->
@@ -276,23 +315,46 @@
           </div>
         </div>
 
-        <!-- ── VIEW MODE: Star Graph Cards (3 per row) ── -->
+        <!-- ── VIEW MODE: Star Graph Cards ── -->
         <template v-if="!editRelations">
           <div v-if="visibleRelations.length > 0" class="rel-star-grid">
             <div v-for="npcId in graphCenterNpcs" :key="npcId" class="rel-star-card">
+              <!-- Card Header -->
+              <div class="rel-star-card-header">
+                <div class="rel-graph-avatar rel-graph-avatar-header" :style="{ borderColor: '#d4a647' }">
+                  <img v-if="getNpcById(npcId)?.photo" :src="getNpcById(npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-[#0a0a18]">
+                    <svg class="w-4 h-4 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-bold text-df-gold uppercase tracking-wider truncate">{{ getNpcById(npcId)?.name || '—' }}</div>
+                  <div v-if="getNpcById(npcId)?.clan" class="text-[10px] text-df-red/70">{{ getNpcById(npcId)?.clan }}</div>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span v-for="rt in relationTypes" :key="rt.key"
+                    v-show="getRelationsForNpc(npcId).some(c => c.relation.type === rt.key)"
+                    class="w-2 h-2 rounded-full" :style="{ background: rt.color }"
+                  ></span>
+                  <span class="text-[10px] text-df-muted ml-1">{{ getRelationsForNpc(npcId).length }}</span>
+                </div>
+              </div>
+
+              <!-- Star Diagram -->
               <div class="rel-star-diagram">
-                <!-- SVG lines from center to each node -->
-                <svg class="rel-star-svg" viewBox="0 0 240 240">
+                <svg class="rel-star-svg" :viewBox="`0 0 ${starDiagramSize} ${starDiagramSize}`">
+                  <!-- Connection lines -->
                   <line
                     v-for="(node, i) in getRadialPositions(npcId)"
                     :key="'line-' + i"
-                    :x1="120" :y1="115"
+                    :x1="starCenter" :y1="starCenter"
                     :x2="node.x" :y2="node.y"
                     :stroke="getRelColor(node.relation.type)"
-                    :stroke-width="node.relation.strength === 'strong' ? 3 : 2"
-                    :stroke-dasharray="node.relation.strength === 'weak' ? '5,4' : 'none'"
+                    :stroke-width="node.relation.strength === 'strong' ? 3 : node.relation.strength === 'medium' ? 2 : 1.5"
+                    :stroke-dasharray="node.relation.strength === 'weak' ? '6,5' : 'none'"
                     stroke-linecap="round"
                     class="rel-star-line"
+                    :class="`rel-star-line--${node.relation.type}`"
                   />
                 </svg>
 
@@ -301,10 +363,9 @@
                   <div class="rel-graph-avatar rel-graph-avatar-center">
                     <img v-if="getNpcById(npcId)?.photo" :src="getNpcById(npcId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
                     <div v-else class="w-full h-full flex items-center justify-center">
-                      <svg class="w-5 h-5 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <svg class="w-6 h-6 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
                   </div>
-                  <span class="text-[10px] text-white font-semibold text-center leading-tight max-w-[70px] truncate mt-0.5">{{ getNpcById(npcId)?.name || '—' }}</span>
                 </div>
 
                 <!-- Connected NPC nodes -->
@@ -316,14 +377,17 @@
                   @mouseenter="onNodeHover($event, node.relation)"
                   @mouseleave="hoveredRelation = null"
                 >
-                  <div class="rel-graph-avatar" :style="{ borderColor: getRelColor(node.relation.type) }">
+                  <div class="rel-graph-avatar" :style="{ borderColor: getRelColor(node.relation.type), boxShadow: `0 0 10px ${getRelColor(node.relation.type)}30, inset 0 0 6px ${getRelColor(node.relation.type)}15` }">
                     <img v-if="getNpcById(node.targetId)?.photo" :src="getNpcById(node.targetId)!.photo" class="w-full h-full object-cover rounded-full" alt="" />
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <svg class="w-4 h-4 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
                   </div>
-                  <span class="text-[10px] text-df-silver text-center leading-tight max-w-[60px] truncate">{{ getNpcById(node.targetId)?.name || '—' }}</span>
-                  <svg v-if="node.relation.secret" class="w-3 h-3 text-purple-400 absolute -top-1 -right-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  <span class="text-[10px] text-df-silver font-semibold text-center leading-tight max-w-[70px] truncate mt-0.5">{{ getNpcById(node.targetId)?.name || '—' }}</span>
+                  <span class="rel-star-type-badge" :style="{ color: getRelColor(node.relation.type), borderColor: getRelColor(node.relation.type) + '50' }">
+                    {{ getRelLabel(node.relation.type) }}
+                  </span>
+                  <svg v-if="node.relation.secret" class="w-3.5 h-3.5 text-purple-400 absolute -top-1 -right-1 drop-shadow-[0_0_4px_rgba(147,51,234,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                 </div>
               </div>
             </div>
@@ -533,62 +597,21 @@
             <svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Influência por Território</h4>
           </div>
-          <button @click="editTerritories = !editTerritories" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
-            <svg v-if="!editTerritories" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ editTerritories ? 'Ver' : 'Editar' }}
-          </button>
-        </div>
-
-        <!-- ── Text Territories (primary) ── -->
-        <div class="space-y-3">
-          <div v-for="(territory, ti) in politics.territories" :key="ti" class="df-territory-card">
-            <div class="flex items-center justify-between mb-2">
-              <template v-if="editTerritories">
-                <input v-model="territory.name" class="df-input text-sm font-bold flex-1 mr-2" placeholder="Nome do território" />
-                <button @click="removeTerritory(ti)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                </button>
-              </template>
-              <h5 v-else class="text-white font-bold text-sm">{{ territory.name }}</h5>
-            </div>
-            <template v-if="editTerritories">
-              <input v-model="territory.controlledBy" class="df-input text-xs mb-1" placeholder="Controlado por..." />
-              <textarea v-model="territory.description" class="df-input text-xs resize-none" rows="2" placeholder="Descrição do território..."></textarea>
-              <div class="flex items-center gap-2 mt-2">
-                <label class="text-xs text-df-muted">Nível de controle:</label>
-                <div class="flex gap-1">
-                  <button v-for="n in 5" :key="n" type="button" @click="territory.controlLevel = n"
-                    class="w-5 h-5 rounded-full border transition-all"
-                    :class="n <= (territory.controlLevel || 0) ? 'bg-df-red border-df-red' : 'bg-transparent border-df-border-silver hover:border-df-red'"
-                  ></button>
-                </div>
-              </div>
-            </template>
-            <template v-else>
-              <p v-if="territory.controlledBy" class="text-df-silver text-xs mb-1">
-                <span class="text-df-gold">Domínio:</span> {{ territory.controlledBy }}
-              </p>
-              <p v-if="territory.description" class="text-df-muted text-xs italic mb-2">{{ territory.description }}</p>
-              <div v-if="territory.controlLevel" class="flex items-center gap-1">
-                <span class="text-xs text-df-muted mr-1">Controle:</span>
-                <span v-for="n in 5" :key="n" class="w-3 h-3 rounded-full border" :class="n <= territory.controlLevel ? 'bg-df-red border-df-red shadow-sm shadow-red-900/50' : 'bg-transparent border-df-border-silver'"></span>
-              </div>
-            </template>
+          <div class="flex items-center gap-2">
+            <button v-if="editTerritories" @click="saveSectionPolitics('territories')" class="df-btn-save-section">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Salvar
+            </button>
+            <button @click="editTerritories = !editTerritories" class="df-btn-ghost px-2.5 py-1 text-xs flex items-center gap-1.5">
+              <svg v-if="!editTerritories" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              {{ editTerritories ? 'Ver' : 'Editar' }}
+            </button>
           </div>
         </div>
 
-        <!-- Empty state for text territories -->
-        <p v-if="politics.territories.length === 0 && !editTerritories" class="text-df-muted text-xs italic text-center py-4">
-          Nenhum território cadastrado. Clique em "Editar" para adicionar.
-        </p>
-
-        <button v-if="editTerritories" @click="addTerritory" class="mt-3 w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-gold hover:text-df-gold transition-colors">
-          + Adicionar Território
-        </button>
-
         <!-- ── Optional: Interactive City Map ── -->
-        <div class="mt-6 pt-4 border-t border-df-border-silver/20">
+        <div class="mb-6 pb-4 border-b border-df-border-silver/20">
           <button
             @click="showCityMap = !showCityMap"
             class="w-full flex items-center justify-between py-2 text-left group"
@@ -623,6 +646,8 @@
             />
           </div>
         </div>
+
+
       </div>
     </div>
 
@@ -778,7 +803,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useToast } from '~/composables/useToast'
 import { useCampaign } from '~/composables/useCampaign'
 import TerritoryMap from './TerritoryMap.vue'
@@ -791,23 +816,50 @@ const { campaignNPCs, loadCampaignNPCs } = useCampaign()
 
 const editGovernment = ref(false)
 const editFactions = ref(false)
+const expandedFactionIndex = ref<number | null>(null)
 const editRelations = ref(false)
 const editTerritories = ref(false)
 const showCityMap = ref(false)
+let sectionJustSaved = false
+
+// Revert unsaved changes when exiting edit mode without saving
+watch(editGovernment, (val, oldVal) => {
+  if (!val && oldVal && !sectionJustSaved) {
+    try {
+      const snap = JSON.parse(savedSnapshot)
+      politics.value.government = snap.government ?? []
+    } catch { /* ignore */ }
+  }
+})
+
+watch(editFactions, (val, oldVal) => {
+  if (!val) expandedFactionIndex.value = null
+  if (!val && oldVal && !sectionJustSaved) {
+    try {
+      const snap = JSON.parse(savedSnapshot)
+      politics.value.factions = snap.factions ?? []
+    } catch { /* ignore */ }
+  }
+})
+
+watch(editRelations, (val, oldVal) => {
+  if (!val && oldVal && !sectionJustSaved) {
+    try {
+      const snap = JSON.parse(savedSnapshot)
+      politics.value.relations = snap.relations ?? []
+    } catch { /* ignore */ }
+  }
+})
 
 // Auto-expand city map when entering edit mode for territories
 watch(editTerritories, (val, oldVal) => {
   if (val) showCityMap.value = true
-  // Cleanup empty territories when exiting edit mode
-  if (!val && oldVal) {
-    politics.value.territories = politics.value.territories.filter(
-      t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
-    )
-    // Also cleanup empty influences from map zones
-    politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
-      ...z,
-      influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
-    }))
+  if (!val && oldVal && !sectionJustSaved) {
+    try {
+      const snap = JSON.parse(savedSnapshot)
+      politics.value.territories = snap.territories ?? []
+      politics.value.territoryZones = snap.territoryZones ?? []
+    } catch { /* ignore */ }
   }
 })
 
@@ -950,8 +1002,31 @@ const savePolitics = () => {
   }))
   localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
   savedSnapshot = JSON.stringify(politics.value)
+  sectionJustSaved = true
   resetAllEdit()
+  nextTick(() => { sectionJustSaved = false })
   toast.success('Mapa Político salvo!', 'Todas as alterações foram registradas.')
+}
+
+const saveSectionPolitics = (section: 'government' | 'factions' | 'relations' | 'territories') => {
+  // Cleanup empty entries before saving
+  politics.value.territories = politics.value.territories.filter(
+    t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
+  )
+  politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
+    ...z,
+    influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
+  }))
+  localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
+  savedSnapshot = JSON.stringify(politics.value)
+  sectionJustSaved = true
+  if (section === 'government') editGovernment.value = false
+  else if (section === 'factions') editFactions.value = false
+  else if (section === 'relations') { editRelations.value = false; editingRelation.value = null }
+  else if (section === 'territories') editTerritories.value = false
+  nextTick(() => { sectionJustSaved = false })
+  const labels: Record<string, string> = { government: 'Governo', factions: 'Facções', relations: 'Relações', territories: 'Territórios' }
+  toast.success(`${labels[section]} salvo!`, 'Alterações registradas com sucesso.')
 }
 
 const cancelEdits = () => {
@@ -1044,8 +1119,13 @@ const addFaction = () => {
   politics.value.factions.push({
     name: '', type: 'independente', color: '#dc2626', description: '', members: []
   })
+  expandedFactionIndex.value = politics.value.factions.length - 1
 }
-const removeFaction = (i: number) => { politics.value.factions.splice(i, 1) }
+const removeFaction = (i: number) => {
+  politics.value.factions.splice(i, 1)
+  if (expandedFactionIndex.value === i) expandedFactionIndex.value = null
+  else if (expandedFactionIndex.value !== null && expandedFactionIndex.value > i) expandedFactionIndex.value--
+}
 
 const addFactionMember = (faction: Faction) => {
   const ranks = getFactionRanks(faction)
@@ -1133,16 +1213,20 @@ const getRelationsForNpc = (npcId: string) => {
     .map(r => ({ relation: r, targetId: r.toNpcId }))
 }
 
+// Star diagram layout constants
+const starDiagramSize = 280
+const starCenter = starDiagramSize / 2
+const starRadius = 110
+
 // Calculate radial positions for connections around a center NPC
 const getRadialPositions = (npcId: string) => {
   const conns = getRelationsForNpc(npcId)
-  const cx = 120, cy = 115, r = 95
   return conns.map((conn, i) => {
     const angle = (2 * Math.PI * i / conns.length) - Math.PI / 2
     return {
       ...conn,
-      x: cx + r * Math.cos(angle),
-      y: cy + r * Math.sin(angle),
+      x: starCenter + starRadius * Math.cos(angle),
+      y: starCenter + starRadius * Math.sin(angle),
     }
   })
 }
@@ -1220,8 +1304,7 @@ const getRoleColor = (title: string) => {
 }
 
 // ── Territories ──
-const addTerritory = () => { politics.value.territories.push({ name: '', controlledBy: '', description: '', controlLevel: 0 }) }
-const removeTerritory = (i: number) => { politics.value.territories.splice(i, 1) }
+
 
 // Expose count for parent
 defineExpose({ count: computed(() => politics.value.factions.length) })
@@ -1262,6 +1345,26 @@ defineExpose({ count: computed(() => politics.value.factions.length) })
 }
 .df-role-card:hover, .df-faction-card:hover, .df-territory-card:hover {
   border-color: #7f1d1d;
+}
+
+/* ═══ Faction Collapse/Expand ═══ */
+.faction-collapse-header {
+  padding: 0.25rem 0;
+  border-radius: 0.375rem;
+  transition: background 0.15s ease;
+}
+.faction-collapse-header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.faction-expand-body {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(74, 74, 90, 0.4);
+  animation: factionExpand 0.2s ease-out;
+}
+@keyframes factionExpand {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ═══ Hierarchy Tree ═══ */
@@ -1467,6 +1570,21 @@ select.df-input option {
 }
 .df-btn-ghost:hover { border-color: #dc2626; color: #c0c0d0; background: rgba(127,29,29,0.1); }
 
+/* ═══ Section Save Button ═══ */
+.df-btn-save-section {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
+  color: #fff; background: linear-gradient(135deg, #991b1b, #7f1d1d);
+  border: 1px solid #dc2626; border-radius: 0.5rem; cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.2);
+}
+.df-btn-save-section:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+  box-shadow: 0 0 14px rgba(220, 38, 38, 0.35);
+}
+
 /* ═══ NPC Detail Modal ═══ */
 .npc-detail-modal {
   background: #0a0a1a;
@@ -1514,20 +1632,20 @@ select.df-input option {
   width: 90px;
 }
 .rel-graph-avatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #4a4a5a;
+  border: 2.5px solid #4a4a5a;
   background: #0a0a1a;
   flex-shrink: 0;
   transition: all 0.3s ease;
 }
 .rel-graph-avatar-center {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-color: #d4a647;
-  box-shadow: 0 0 14px rgba(212, 166, 71, 0.3);
+  box-shadow: 0 0 18px rgba(212, 166, 71, 0.3), 0 0 6px rgba(212, 166, 71, 0.15);
 }
 .rel-graph-connections {
   display: flex;
@@ -1618,14 +1736,15 @@ select.df-input option {
   position: fixed;
   z-index: 9999;
   transform: translate(-50%, -100%);
-  background: #0d0d20;
+  background: linear-gradient(135deg, #0d0d20 0%, #12101f 100%);
   border: 1px solid #7f1d1d;
   border-radius: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  min-width: 180px;
-  max-width: 260px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 12px rgba(127,29,29,0.2);
+  padding: 0.625rem 0.875rem;
+  min-width: 200px;
+  max-width: 280px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.7), 0 0 16px rgba(127,29,29,0.25);
   pointer-events: none;
+  backdrop-filter: blur(8px);
   animation: starTooltipFade 0.12s ease;
 }
 @keyframes starTooltipFade {
@@ -1634,30 +1753,44 @@ select.df-input option {
 }
 .rel-star-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
 }
-@media (max-width: 900px) {
-  .rel-star-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 560px) {
+@media (max-width: 700px) {
   .rel-star-grid { grid-template-columns: 1fr; }
 }
 .rel-star-card {
-  background: #0a0a18;
-  border: 1px solid #1a1a2e;
+  background: linear-gradient(180deg, #0c0c1e 0%, #080815 100%);
+  border: 1px solid #1e1e38;
   border-radius: 0.75rem;
-  padding: 0.5rem;
-  transition: border-color 0.2s ease;
+  overflow: hidden;
+  transition: all 0.25s ease;
 }
 .rel-star-card:hover {
-  border-color: #7f1d1d44;
+  border-color: #d4a64740;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 20px rgba(212,166,71,0.06);
+}
+.rel-star-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(90deg, rgba(127,29,29,0.08) 0%, transparent 100%);
+  border-bottom: 1px solid #1e1e38;
+}
+.rel-graph-avatar-header {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid;
+  flex-shrink: 0;
 }
 .rel-star-diagram {
   position: relative;
-  width: 240px;
-  height: 240px;
-  margin: 0 auto;
+  width: 280px;
+  height: 280px;
+  margin: 0.75rem auto;
 }
 .rel-star-svg {
   position: absolute;
@@ -1668,9 +1801,17 @@ select.df-input option {
   z-index: 0;
 }
 .rel-star-line {
-  filter: drop-shadow(0 0 3px currentColor);
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
+  opacity: 0.55;
+  transition: opacity 0.25s ease;
+}
+.rel-star-line--alliance {
+  filter: drop-shadow(0 0 4px #22c55e);
+}
+.rel-star-line--hatred {
+  filter: drop-shadow(0 0 4px #dc2626);
+}
+.rel-star-line--tension {
+  filter: drop-shadow(0 0 3px #f59e0b);
 }
 .rel-star-card:hover .rel-star-line {
   opacity: 0.85;
@@ -1678,7 +1819,7 @@ select.df-input option {
 .rel-star-center-node {
   position: absolute;
   left: 50%;
-  top: 115px;
+  top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
@@ -1692,6 +1833,23 @@ select.df-input option {
   flex-direction: column;
   align-items: center;
   z-index: 2;
+  transition: transform 0.15s ease;
+}
+.rel-star-node:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  z-index: 4;
+}
+.rel-star-type-badge {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border: 1px solid;
+  border-radius: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  background: rgba(0,0,0,0.5);
 }
 
 /* ═══ Grouped Relations ═══ */
