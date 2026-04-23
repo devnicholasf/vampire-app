@@ -4,7 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { useRuntimeConfig, useState, navigateTo } from '#imports'
-import { computed } from 'vue'
+import { computed, readonly, onMounted } from 'vue'
 import type { AuthUser, LoginCredentials, RegisterData } from '~/types'
 
 export const useAuth = () => {
@@ -200,18 +200,37 @@ export const useAuth = () => {
           .contains('active_players', [user.value.id])
 
         if (liveStates && liveStates.length > 0) {
-          await Promise.all(
+          // Buscar NPCs de cada sessão e ocultar todos (mas não remover da lista)
+          const stateResults = await Promise.all(
             liveStates.map((ls: any) =>
               supabase
+                .from('live_game_state')
+                .select('campaign_id, current_npcs')
+                .eq('campaign_id', ls.campaign_id)
+                .maybeSingle()
+            )
+          )
+
+          await Promise.all(
+            stateResults.map((res: any) => {
+              const state = res.data
+              if (!state) return Promise.resolve()
+              const hiddenNpcs = (state.current_npcs ?? []).map((npc: any) => ({
+                ...npc,
+                isVisible: false,
+                isSpotlight: false,
+              }))
+              return supabase
                 .from('live_game_state')
                 .update({
                   is_live: false,
                   active_players: [],
                   current_scene: '',
+                  current_npcs: hiddenNpcs,
                   timeline_events: [],
                 })
-                .eq('campaign_id', ls.campaign_id)
-            )
+                .eq('campaign_id', state.campaign_id)
+            })
           )
         }
       }

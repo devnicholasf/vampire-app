@@ -4,6 +4,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { useRuntimeConfig, useState } from '#imports'
+import { readonly } from 'vue'
 import { useAuth } from '~/composables/useAuth'
 import type { NPC } from '~/types'
 
@@ -150,25 +151,41 @@ export const useLiveGame = () => {
     error.value = null
 
     try {
+      // Manter NPCs na lista mas ocultar todos da tela dos jogadores
+      const { data: currentState } = await supabase
+        .from('live_game_state')
+        .select('current_npcs')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      const hiddenNpcs = (currentState?.current_npcs ?? []).map((npc: any) => ({
+        ...npc,
+        isVisible: false,
+        isSpotlight: false,
+      }))
+
       const { error: updateError } = await supabase
         .from('live_game_state')
         .update({
           is_live: false,
           active_players: [],
           current_scene: '',
+          current_npcs: hiddenNpcs,
           timeline_events: [],
         })
         .eq('campaign_id', campaignId)
 
       if (updateError) throw updateError
 
-      // Limpar estado local (NPCs são preservados para a próxima sessão)
+      // Atualizar estado local
       isGameLive.value = false
+      currentNpcs.value = hiddenNpcs as any[]
       activePlayers.value = []
       timelineEvents.value = []
       if (liveGameState.value) {
         liveGameState.value.isLive = false
         liveGameState.value.currentScene = ''
+        liveGameState.value.currentNpcs = hiddenNpcs
         liveGameState.value.activePlayers = []
         liveGameState.value.timelineEvents = []
       }

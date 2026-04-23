@@ -56,20 +56,23 @@
         <!-- Botões de ação -->
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <button
-            class="flex items-center justify-center gap-2 px-8 py-3 rounded border border-red-700 text-white font-semibold tracking-wide hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style="background: rgba(127,29,29,0.2);"
             :disabled="startingSession"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:6px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.8rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 12px rgba(127,29,29,0.5);"
+            @mouseover="$event.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'"
+            @mouseout="$event.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'"
             @click="handleStartSession"
           >
-            <svg v-if="startingSession" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-            <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            <svg v-if="startingSession" style="width:16px;height:16px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            <svg v-else style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
             {{ startingSession ? 'Iniciando...' : 'Iniciar Sessão Ao Vivo' }}
           </button>
           <button
-            class="flex items-center gap-2 px-5 py-3 rounded border border-[#4a4a5a]/50 text-[#6b6b7b] text-sm hover:text-white hover:border-[#6b6b7b] transition-colors"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:6px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;"
+            @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }"
+            @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; e.currentTarget.style.background='transparent'; }"
             @click="goBackToMaster"
           >
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
             Voltar ao Dashboard
           </button>
         </div>
@@ -99,18 +102,22 @@
 
           <div class="flex items-center gap-2">
             <button
-              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/40 text-[#6b6b7b] hover:text-white hover:border-[#6b6b7b] transition-colors"
+              style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
+              @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; }"
+              @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; }"
               @click="goBackToMaster"
             >
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
               Dashboard
             </button>
             <button
-              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-red-900 text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50"
               :disabled="stoppingSession"
+              style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:5px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(127,29,29,0.4);"
+              @mouseover="e => { if (!stoppingSession) e.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
+              @mouseout="e => { e.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
               @click="openStopSessionConfirmation"
             >
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+              <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
               {{ stoppingSession ? 'Encerrando...' : 'Encerrar Sessão' }}
             </button>
           </div>
@@ -452,25 +459,41 @@
     <div
       v-if="showStopSessionConfirmModal"
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style="background:rgba(0,0,0,0.65)"
+      style="background:rgba(0,0,0,0.75); backdrop-filter:blur(2px);"
       @click.self="showStopSessionConfirmModal = false"
     >
-      <div class="w-full max-w-md rounded-lg border border-[#7f1d1d] p-5" style="background:#0a0a1a; box-shadow:0 6px 30px rgba(0,0,0,0.6)">
-        <h3 class="text-sm uppercase tracking-wider text-[#d4a647] mb-3">Encerrar Sessão Ao Vivo</h3>
-        <p class="text-sm text-[#c4c4d4] mb-4">Deseja realmente encerrar a sessão? Os jogadores serão desconectados da sala.</p>
+      <div class="relative w-full max-w-md rounded-lg border border-[#7f1d1d] p-6" style="background:#0a0a1a; box-shadow:0 8px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(127,29,29,0.3);">
+        <!-- Corner accents -->
+        <span class="lc lc-tl"/><span class="lc lc-tr"/>
+        <span class="lc lc-bl"/><span class="lc lc-br"/>
+
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-4">
+          <svg class="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+          <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a647]">Encerrar Sessão Ao Vivo</h3>
+        </div>
+
+        <div class="h-px bg-gradient-to-r from-[#7f1d1d]/60 via-[#7f1d1d]/20 to-transparent mb-4"/>
+
+        <p class="text-sm text-[#c4c4d4] leading-relaxed mb-6">Deseja realmente encerrar a sessão? Os jogadores serão desconectados da sala.</p>
 
         <div class="flex justify-end gap-2">
           <button
-            class="px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/50 text-[#6b6b7b] hover:text-white"
+            style="padding:8px 16px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
+            @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; }"
+            @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; }"
             @click="showStopSessionConfirmModal = false"
           >
             Cancelar
           </button>
           <button
-            class="px-3 py-1.5 text-xs rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20 disabled:opacity-50"
             :disabled="stoppingSession"
+            style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:5px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(127,29,29,0.4);"
+            @mouseover="e => { if (!stoppingSession) e.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
+            @mouseout="e => { e.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
             @click="handleStopSession"
           >
+            <svg v-if="stoppingSession" style="width:13px;height:13px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
             {{ stoppingSession ? 'Encerrando...' : 'Confirmar Encerramento' }}
           </button>
         </div>
@@ -711,6 +734,7 @@ const openStopSessionConfirmation = () => {
 const handleStopSession = async () => {
   showStopSessionConfirmModal.value = false
   stoppingSession.value = true
+  pageLoading.value = true
   try {
     await stopLiveGame(campaignId)
     toast.success('Sessão encerrada', 'O jogo ao vivo foi finalizado e voltou ao estado padrão.')
@@ -718,6 +742,7 @@ const handleStopSession = async () => {
   } catch (e: any) {
     console.error('LIVE: Erro ao encerrar sessão:', e)
     toast.error('Erro ao encerrar sessão', e?.message ?? 'Tente novamente em instantes.')
+    pageLoading.value = false
   } finally {
     stoppingSession.value = false
   }

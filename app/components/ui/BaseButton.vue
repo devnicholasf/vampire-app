@@ -1,20 +1,20 @@
 <template>
-  <button 
+  <button
     :type="type"
     :disabled="disabled || loading"
-    :class="buttonClasses"
+    :class="['btn-base', `btn-${variant}`, `btn-${size}`, { 'btn-full': fullWidth }]"
     @click="handleClick"
   >
-    <span v-if="loading" class="mr-2 inline-block animate-spin">⟳</span>
-    <span v-if="iconLeft" class="mr-2">{{ iconLeft }}</span>
+    <span v-if="loading" class="btn-spinner">⟳</span>
+    <span v-if="iconLeft" class="btn-icon-left">{{ iconLeft }}</span>
     <slot />
-    <span v-if="iconRight" class="ml-2">{{ iconRight }}</span>
+    <span v-if="iconRight" class="btn-icon-right">{{ iconRight }}</span>
   </button>
 </template>
 
 <script setup lang="ts">
-// Vue 3 imports
 import { computed } from 'vue'
+
 interface Props {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
   type?: 'button' | 'submit' | 'reset'
@@ -39,118 +39,119 @@ const emit = defineEmits<{
   click: [event: MouseEvent]
 }>()
 
-const buttonClasses = computed(() => {
-  const base = [
-    'font-semibold',
-    'rounded-vampire',
-    'transition-all',
-    'duration-300',
-    'transform',
-    'focus:outline-none',
-    'focus:ring-2',
-    'focus:ring-offset-2',
-    'focus:ring-offset-background',
-    'disabled:opacity-50',
-    'disabled:cursor-not-allowed',
-    'disabled:transform-none',
-    'inline-flex',
-    'items-center',
-    'justify-center',
-  ]
-  
-  const variants = {
-    primary: [
-      'bg-gradient-to-br',
-      'from-[#991b1b]',
-      'to-[#450a0a]',
-      'hover:from-[#b91c1c]',
-      'hover:to-[#7f1d1d]',
-      'text-red-300',
-      'hover:text-white',
-      'border',
-      'border-[#7f1d1d]',
-      'hover:shadow-[0_0_16px_rgba(220,38,38,0.4)]',
-      'hover:scale-105',
-      'focus:ring-red-800',
-      'uppercase',
-      'tracking-wider',
-      'transition-all',
-      'duration-300',
-      'ease-in-out',
-    ],
-    secondary: [
-      'bg-secondary',
-      'hover:bg-secondary-700',
-      'hover:brightness-110',
-      'text-white',
-      'shadow-glow-purple',
-      'hover:scale-105',
-      'focus:ring-secondary',
-      'transition-all',
-      'duration-300',
-      'ease-in-out',
-    ],
-    ghost: [
-      'bg-transparent',
-      'hover:bg-surface-hover',
-      'hover:brightness-110',
-      'text-text-secondary',
-      'hover:text-text-primary',
-      'border',
-      'border-border-primary',
-      'hover:border-secondary',
-      'transition-all',
-      'duration-300',
-      'ease-in-out',
-    ],
-    danger: [
-      'bg-red-600',
-      'hover:bg-red-500',
-      'hover:brightness-110',
-      'text-white',
-      'shadow-glow-red',
-      'hover:shadow-glow-red-hover',
-      'hover:scale-105',
-      'focus:ring-red-400',
-      'transition-all',
-      'duration-300',
-      'ease-in-out',
-    ],
-    outline: [
-      'bg-transparent',
-      'border-2',
-      'border-red-600',
-      'text-red-600',
-      'hover:bg-red-600',
-      'hover:text-white',
-      'hover:brightness-110',
-      'hover:scale-105',
-      'focus:ring-red-400',
-      'transition-all',
-      'duration-300',
-      'ease-in-out',
-    ],
-  }
-  
-  const sizes = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg'
-  }
-  
-  const width = props.fullWidth ? 'w-full' : ''
-  
-  return [
-    ...base,
-    ...variants[props.variant],
-    sizes[props.size],
-    width,
-  ]
-})
-
 const handleClick = (event: MouseEvent) => {
   if (!props.disabled && !props.loading) {
     emit('click', event)
   }
 }
 </script>
+
+<style scoped>
+/* ── Base ── */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  outline: none;
+  position: relative;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn-base:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Sizes ── */
+.btn-sm  { padding: 0.375rem 0.75rem;  font-size: 0.75rem;  }
+.btn-md  { padding: 0.625rem 1.25rem;  font-size: 0.875rem; }
+.btn-lg  { padding: 0.875rem 2rem;     font-size: 1rem;     }
+.btn-full { width: 100%; }
+
+/* ── Primary ── */
+.btn-primary {
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+  border-color: #b91c1c;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 0 2px 10px rgba(127, 29, 29, 0.5);
+}
+.btn-primary:not(:disabled):hover {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border-color: #dc2626;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.55);
+  transform: scale(1.04);
+}
+.btn-primary:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ── Ghost ── */
+.btn-ghost {
+  background: transparent;
+  border-color: #4a4a5a;
+  color: #9b9bbb;
+}
+.btn-ghost:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #9b9bbb;
+  color: #ffffff;
+}
+
+/* ── Danger ── */
+.btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.3);
+}
+.btn-danger:not(:disabled):hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+  transform: scale(1.04);
+}
+
+/* ── Outline ── */
+.btn-outline {
+  background: transparent;
+  border: 2px solid #dc2626;
+  color: #dc2626;
+}
+.btn-outline:not(:disabled):hover {
+  background: #dc2626;
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+/* ── Secondary ── */
+.btn-secondary {
+  background: #4c2b85;
+  border-color: #4c2b85;
+  color: #ffffff;
+}
+.btn-secondary:not(:disabled):hover {
+  background: #5d35a0;
+  transform: scale(1.04);
+}
+
+/* ── Spinner ── */
+.btn-spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  animation: btn-spin 1s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+.btn-icon-left  { margin-right: 0.5rem; }
+.btn-icon-right { margin-left: 0.5rem; }
+</style>
