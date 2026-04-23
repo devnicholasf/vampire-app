@@ -1,10 +1,20 @@
-<template>
+﻿<template>
   <div class="min-h-screen" style="background:#080810; color:#c4c4d4;">
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- AGUARDANDO SESSÃO                              -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <div v-if="!isLiveActive" class="flex flex-col items-center justify-center min-h-screen px-4">
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- CARREGANDO                                     -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div v-if="pageLoading" class="flex items-center justify-center min-h-screen">
+      <div class="flex flex-col items-center gap-4">
+        <svg class="w-8 h-8 text-red-800" style="animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        <p class="text-xs text-[#4a4a5a] uppercase tracking-widest">Carregando sessÃ£o...</p>
+      </div>
+    </div>
+
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- AGUARDANDO SESSÃƒO                              -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <div v-else-if="!isLiveActive" class="flex flex-col items-center justify-center min-h-screen px-4">
       <div class="w-full max-w-lg text-center space-y-8">
         <div class="flex items-center justify-center gap-4">
           <div class="h-px flex-1 bg-gradient-to-r from-transparent to-red-900/60"/>
@@ -15,9 +25,9 @@
         </div>
 
         <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A Máscara V5</p>
+          <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A MÃ¡scara V5</p>
           <h1 class="text-3xl font-bold text-white mb-1">{{ campaignName || 'Carregando...' }}</h1>
-          <p class="text-sm text-[#6b6b7b]">Aguardando o Mestre iniciar a sessão...</p>
+          <p class="text-sm text-[#6b6b7b]">Aguardando o Mestre iniciar a sessÃ£o...</p>
         </div>
 
         <div class="relative border border-[#7f1d1d] rounded-lg p-6"
@@ -26,7 +36,7 @@
           <span class="lc lc-bl"/><span class="lc lc-br"/>
           <div class="flex items-center gap-3">
             <span class="w-2.5 h-2.5 rounded-full bg-[#4a4a5a] shrink-0"/>
-            <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">Sessão Inativa</p>
+            <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">SessÃ£o Inativa</p>
           </div>
         </div>
 
@@ -40,101 +50,97 @@
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- SESSÃO ATIVA — visão do jogador                -->
-    <!-- ═══════════════════════════════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- SESSÃƒO ATIVA â€” visÃ£o do jogador                -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <template v-else>
 
       <!-- Header -->
-      <div style="background:#0a0a1a; border-bottom:1px solid #2d1515;" class="px-6 py-4 sticky top-0 z-30">
+      <div style="background:#0a0a1a; border-bottom:1px solid #2d1515;" class="px-6 py-3 sticky top-0 z-30">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
-              <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"/>
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500" style="animation:pulse 2s ease-in-out infinite"/>
               <span class="text-red-400 font-semibold text-xs uppercase tracking-widest">Ao Vivo</span>
             </div>
-            <h1 class="text-lg font-bold text-white">{{ campaignName }}</h1>
+            <h1 class="text-base font-bold text-white">{{ campaignName }}</h1>
           </div>
           <button
             class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/40 text-[#6b6b7b] hover:text-white hover:border-[#6b6b7b] transition-colors"
             @click="goBack"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Sair do Jogo
+            Sair
           </button>
         </div>
       </div>
 
-      <!-- Conteúdo principal -->
-      <div class="flex items-start justify-center min-h-[calc(100vh-65px)] p-8 gap-8">
+      <!-- ConteÃºdo principal -->
+      <div class="flex flex-col items-center justify-start min-h-[calc(100vh-57px)] px-6 py-8 gap-8">
 
-        <!-- Área central: cena + NPCs visíveis -->
-        <div class="flex-1 max-w-2xl flex flex-col items-center gap-6 text-center">
+        <!-- â”€â”€ Cena Atual â”€â”€ -->
+        <div v-if="currentScene" class="text-center">
+          <p class="text-[11px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-1">Cena</p>
+          <h2 class="text-2xl font-bold text-white">{{ currentScene }}</h2>
+        </div>
+        <div v-else class="text-center">
+          <p class="text-sm text-[#4a4a5a]">Aguardando o Mestre definir a cena...</p>
+        </div>
 
-          <!-- Spotlight NPC -->
+        <!-- â”€â”€ NPCs visÃ­veis â”€â”€ -->
+        <div v-if="displayNPCs.length > 0" class="w-full max-w-4xl">
+
+          <!-- Grid adaptativo: 1, 2 ou 3 colunas -->
           <div
-            v-if="spotlightNPC"
-            class="w-full rounded-xl border border-[#7f1d1d] p-4"
-            style="background:rgba(10,10,26,0.85)"
+            class="grid gap-4"
+            :class="{
+              'grid-cols-1 max-w-sm mx-auto': displayNPCs.length === 1,
+              'grid-cols-2 max-w-xl mx-auto': displayNPCs.length === 2,
+              'grid-cols-3':                  displayNPCs.length >= 3,
+            }"
           >
-            <div class="flex flex-col items-center gap-3">
-              <img
-                v-if="spotlightNPC.photo"
-                :src="spotlightNPC.photo"
-                :alt="spotlightNPC.name"
-                class="w-full max-h-[360px] object-contain rounded-lg border border-[#4a4a5a]"
-              >
-              <div v-else class="w-full h-52 rounded-lg border border-[#4a4a5a] flex items-center justify-center text-[#6b6b7b] text-sm">
-                Sem retrato disponível
+            <div
+              v-for="npc in displayNPCs"
+              :key="npc.id"
+              class="flex flex-col rounded-xl border border-[#7f1d1d] overflow-hidden"
+              style="background:rgba(10,10,26,0.9)"
+            >
+              <!-- Foto -->
+              <div class="w-full overflow-hidden h-[380px]">
+                <img
+                  v-if="npc.photo"
+                  :src="npc.photo"
+                  :alt="npc.name"
+                  class="w-full h-full object-cover object-top"
+                >
+                <div
+                  v-else
+                  class="w-full h-full flex items-center justify-center"
+                  style="background:linear-gradient(135deg,#1a0a0a,#0d0d20)"
+                >
+                  <span class="text-4xl font-bold text-white/20">{{ npc.name.charAt(0) }}</span>
+                </div>
               </div>
-              <div>
-                <h3 class="text-lg font-bold text-white">{{ spotlightNPC.name }}</h3>
-                <p v-if="spotlightNPC.type" class="text-xs text-[#6b6b7b]">{{ spotlightNPC.type }}</p>
+
+              <!-- Nome + tipo -->
+              <div class="px-3 py-2 text-center">
+                <p class="font-semibold text-white text-sm leading-tight">{{ npc.name }}</p>
+                <p v-if="npc.type" class="text-xs text-[#6b6b7b] mt-0.5">{{ npc.type }}</p>
               </div>
             </div>
           </div>
 
-          <!-- Decoração quando sem spotlight -->
-          <svg v-else class="w-20 h-20 text-red-900/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <!-- Indicador se hÃ¡ mais que 3 visÃ­veis -->
+          <p v-if="visibleNPCs.length > 3" class="text-center text-xs text-[#4a4a5a] mt-3">
+            +{{ visibleNPCs.length - 3 }} personagem{{ visibleNPCs.length - 3 > 1 ? 's' : '' }} na cena
+          </p>
+        </div>
+
+        <div v-else class="flex flex-col items-center gap-3 text-center">
+          <svg class="w-16 h-16 text-red-900/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <polygon points="3 11 22 2 13 21 11 13 3 11"/>
           </svg>
-
-          <!-- Cena atual -->
-          <div>
-            <h2 class="text-xl font-bold text-white mb-2">
-              {{ currentScene || 'Aguardando o Mestre...' }}
-            </h2>
-            <p class="text-sm text-[#4a4a5a] max-w-sm">
-              Acompanhe o que o Mestre revela na sessão ao vivo.
-            </p>
-          </div>
-
-          <!-- NPCs visíveis -->
-          <div
-            v-if="visibleNPCs.length > 0"
-            class="w-full border-t border-[#2d1515] pt-4"
-          >
-            <p class="text-xs text-[#4a4a5a] uppercase tracking-wider mb-3">Personagens em Cena</p>
-            <div class="flex flex-wrap gap-2 justify-center">
-              <div
-                v-for="npc in visibleNPCs"
-                :key="npc.id"
-                class="flex items-center gap-2 rounded border border-green-900/40 px-3 py-1.5 text-xs"
-                style="background:rgba(21,128,61,0.08)"
-              >
-                <span
-                  class="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                  style="background:linear-gradient(135deg,#7f1d1d,#d4a647)"
-                >
-                  {{ npc.name.charAt(0) }}
-                </span>
-                <span class="text-green-400 font-medium">{{ npc.name }}</span>
-                <span v-if="npc.type" class="text-[#4a4a5a]">{{ npc.type }}</span>
-              </div>
-            </div>
-          </div>
-
-          <p v-else class="text-sm text-[#4a4a5a]">Nenhum personagem em cena no momento.</p>
+          <p class="text-sm text-[#4a4a5a]">Nenhum personagem em cena no momento.</p>
         </div>
 
       </div>
@@ -146,7 +152,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
-import { useAuth } from '~/composables/useAuth'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { createClient } from '@supabase/supabase-js'
 
@@ -161,23 +166,22 @@ const campaignId = route.params.id as string
 const config     = useRuntimeConfig()
 const supabase   = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
-const { user } = useAuth()
-const { isGameLive, fetchLiveGameState, subscribeToLiveGame } = useLiveGame()
+const { isGameLive, fetchLiveGameState } = useLiveGame()
 
-// ── State ──────────────────────────────────────────
+// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const campaignName = ref('')
 const currentScene = ref('')
 const liveNpcs     = ref<any[]>([])
+const pageLoading  = ref(true)
 
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 
-// ── Computed ───────────────────────────────────────
-// Only show what the master explicitly made visible (green eye)
+// â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const isLiveActive  = computed(() => isGameLive.value)
 const visibleNPCs   = computed(() => liveNpcs.value.filter(n => n.isVisible))
-const spotlightNPC  = computed(() => visibleNPCs.value.find(n => n.isSpotlight) ?? null)
+const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
 
-// ── Load ───────────────────────────────────────────
+// â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const loadState = async () => {
   const { data: campaign } = await supabase
     .from('campaigns')
@@ -200,7 +204,7 @@ const applyState = (data: any) => {
   liveNpcs.value     = data.current_npcs ?? []
 }
 
-// ── Realtime ───────────────────────────────────────
+// â”€â”€ Realtime â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const startRealtime = () => {
   realtimeChannel = supabase
     .channel(`live_player:${campaignId}`)
@@ -210,9 +214,7 @@ const startRealtime = () => {
       (payload) => {
         if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
           applyState(payload.new)
-          // Sync isGameLive from realtime
           if (!(payload.new as any).is_live) {
-            // Session ended — go back
             router.push(`/campaign/${campaignId}/player`)
           }
         }
@@ -221,13 +223,14 @@ const startRealtime = () => {
     .subscribe()
 }
 
-// ── Navigation ─────────────────────────────────────
+// â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const goBack = () => router.push(`/campaign/${campaignId}/player`)
 
-// ── Lifecycle ──────────────────────────────────────
+// â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 onMounted(async () => {
   await loadState()
   startRealtime()
+  pageLoading.value = false
 })
 
 onBeforeUnmount(() => {
@@ -260,6 +263,6 @@ onBeforeUnmount(() => {
 .lc-br { bottom: -1px; right: -1px; }
 .lc-br::before { right: 0; bottom: 0; }
 .lc-br::after  { right: 0; bottom: 0; }
+@keyframes spin  { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.animate-pulse { animation: pulse 2s ease-in-out infinite; }
 </style>

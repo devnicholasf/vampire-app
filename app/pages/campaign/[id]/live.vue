@@ -2,9 +2,19 @@
   <div class="min-h-screen" style="background:#080810; color:#c4c4d4;">
 
     <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- CARREGANDO — evita flash do pré-lobby                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div v-if="pageLoading" class="flex items-center justify-center min-h-screen">
+      <div class="flex flex-col items-center gap-4">
+        <svg class="w-8 h-8 text-red-800" style="animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        <p class="text-xs text-[#4a4a5a] uppercase tracking-widest">Carregando sessão...</p>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
     <!-- PRÉ-LOBBY — sessão não iniciada                       -->
     <!-- ═══════════════════════════════════════════════════════ -->
-    <div v-if="!sessionActive" class="flex flex-col items-center justify-center min-h-screen px-4">
+    <div v-else-if="!sessionActive" class="flex flex-col items-center justify-center min-h-screen px-4">
       <div class="w-full max-w-lg text-center space-y-8">
 
         <!-- Decoração -->
@@ -326,59 +336,61 @@
           </section>
         </div>
 
-        <!-- ── Área Central ── -->
-        <div class="flex-1 relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center px-8" style="background:#060610">
-          <div v-if="spotlightNPC" class="w-full max-w-xl rounded-xl border border-[#7f1d1d] p-4" style="background:rgba(10,10,26,0.85)">
-            <div class="flex flex-col items-center gap-3">
-              <img
-                v-if="spotlightNPC.photo"
-                :src="spotlightNPC.photo"
-                :alt="spotlightNPC.name"
-                class="w-full max-h-[340px] object-contain rounded-lg border border-[#4a4a5a]"
-              >
-              <div v-else class="w-full h-52 rounded-lg border border-[#4a4a5a] flex items-center justify-center text-[#6b6b7b]">
-                Sem retrato disponível
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-white">{{ spotlightNPC.name }}</h3>
-                <p class="text-xs text-[#6b6b7b]">Exibindo para os jogadores conectados</p>
-              </div>
-            </div>
+        <!-- ── Área Central — Preview do Jogador ── -->
+        <div class="flex-1 overflow-y-auto flex flex-col items-center gap-8 px-8 py-8" style="background:#060610">
+
+          <!-- Label de contexto -->
+          <p class="text-[10px] uppercase tracking-widest text-[#4a4a5a] self-start">Preview — Visão dos Jogadores</p>
+
+          <!-- Cena Atual -->
+          <div v-if="currentSceneName" class="text-center">
+            <p class="text-[11px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-1">Cena</p>
+            <h2 class="text-2xl font-bold text-white">{{ currentSceneName }}</h2>
+          </div>
+          <div v-else class="text-center">
+            <p class="text-sm text-[#4a4a5a]">Descreva a cena no painel lateral...</p>
           </div>
 
-          <svg class="w-20 h-20 text-red-900/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-          </svg>
-          <div>
-            <h2 class="text-xl font-bold text-white mb-2">{{ currentSceneName || 'Sem cena definida' }}</h2>
-            <p class="text-sm text-[#4a4a5a] max-w-sm">
-              Descreva a cena no painel lateral e gerencie quais NPCs estão visíveis para os jogadores.
+          <!-- Grid de NPCs visíveis -->
+          <div v-if="visibleNPCs.length > 0" class="w-full max-w-4xl">
+            <div
+              class="grid gap-4"
+              :class="{
+                'grid-cols-1 max-w-sm mx-auto': visibleNPCs.slice(0,3).length === 1,
+                'grid-cols-2 max-w-2xl mx-auto': visibleNPCs.slice(0,3).length === 2,
+                'grid-cols-3':                   visibleNPCs.slice(0,3).length >= 3,
+              }"
+            >
+              <div
+                v-for="npc in visibleNPCs.slice(0, 3)"
+                :key="npc.id"
+                class="flex flex-col rounded-xl border border-[#7f1d1d] overflow-hidden"
+                style="background:rgba(10,10,26,0.9)"
+              >
+                <div class="w-full overflow-hidden h-[380px]">
+                  <img v-if="npc.photo" :src="npc.photo" :alt="npc.name" class="w-full h-full object-cover object-top">
+                  <div v-else class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,#1a0a0a,#0d0d20)">
+                    <span class="text-5xl font-bold" style="color:rgba(255,255,255,0.15)">{{ npc.name.charAt(0) }}</span>
+                  </div>
+                </div>
+                <div class="px-3 py-2 text-center">
+                  <p class="font-semibold text-white text-sm leading-tight">{{ npc.name }}</p>
+                  <p v-if="npc.type" class="text-xs text-[#6b6b7b] mt-0.5">{{ npc.type }}</p>
+                </div>
+              </div>
+            </div>
+            <p v-if="visibleNPCs.length > 3" class="text-center text-xs text-[#4a4a5a] mt-3">
+              +{{ visibleNPCs.length - 3 }} personagem{{ visibleNPCs.length - 3 > 1 ? 's' : '' }} na cena
             </p>
           </div>
 
-          <!-- NPCs visíveis (barra inferior) -->
-          <div
-            v-if="visibleNPCs.length > 0"
-            class="absolute bottom-0 left-0 right-0 border-t border-[#2d1515] px-4 py-3"
-            style="background:rgba(10,10,26,0.95)"
-          >
-            <p class="text-xs text-[#4a4a5a] uppercase tracking-wider mb-2">Visíveis aos Jogadores</p>
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="npc in visibleNPCs"
-                :key="npc.id"
-                class="flex items-center gap-2 rounded border border-green-900/40 px-3 py-1.5 text-xs"
-                style="background:rgba(21,128,61,0.08)"
-              >
-                <span class="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-xs"
-                      style="background:linear-gradient(135deg,#7f1d1d,#d4a647)">
-                  {{ npc.name.charAt(0) }}
-                </span>
-                <span class="text-green-400 font-medium">{{ npc.name }}</span>
-                <span class="text-[#4a4a5a]">{{ npc.type }}</span>
-              </div>
-            </div>
+          <div v-else class="flex flex-col items-center gap-3 text-center mt-8">
+            <svg class="w-16 h-16 text-red-900/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            <p class="text-sm text-[#4a4a5a]">Nenhum personagem visível para os jogadores.</p>
           </div>
+
         </div>
 
         <!-- ── Overlay detalhe de NPC ── -->
@@ -520,7 +532,6 @@ const {
   stopLiveGame,
   fetchLiveGameState,
   updateCurrentScene,
-  subscribeToLiveGame,
   addNPCToGame,
   removeNPCFromGame,
 } = useLiveGame()
@@ -552,6 +563,7 @@ const sessionActive   = computed(() => isGameLive.value)
 const startingSession = ref(false)
 const stoppingSession = ref(false)
 const sessionError    = ref<string | null>(null)
+const pageLoading     = ref(true)
 
 // Timeline from live_game_state (current session events JSONB)
 const sessionTimeline = ref<any[]>([])
@@ -717,7 +729,7 @@ const handleStopSession = async () => {
 const addNPCInline = async (npc: any) => {
   try {
     await addNPCToGame(campaignId, npc, true)
-    // applyLiveNpcState will be triggered by watch(currentNpcs)
+    applyLiveNpcState(currentNpcs.value as any[])
   } catch (e: any) {
     console.error('LIVE: Erro ao adicionar NPC:', e)
     toast.error('Erro ao adicionar NPC', e?.message ?? 'Tente novamente.')
@@ -728,6 +740,7 @@ const removeNPCInline = async (npc: any) => {
   try {
     if (selectedNPC.value?.id === npc.id) selectedNPC.value = null
     await removeNPCFromGame(npc.id, campaignId)
+    applyLiveNpcState(currentNpcs.value as any[])
   } catch (e: any) {
     console.error('LIVE: Erro ao remover NPC:', e)
     toast.error('Erro ao remover NPC', e?.message ?? 'Tente novamente.')
@@ -757,6 +770,7 @@ const fetchLiveNpcsFromDb = async () => {
 
 const toggleNPCVisibility = async (npc: any) => {
   const current = await fetchLiveNpcsFromDb()
+  if (!current.length) return  // Guard: don't wipe NPCs if DB fetch failed or returned empty
   const updated = current.map((currentNpc: any) => {
     if (currentNpc.id !== npc.id) return currentNpc
     return { ...currentNpc, isVisible: !currentNpc.isVisible }
@@ -915,7 +929,32 @@ const confirmAndCreateEvent = async () => {
 // Realtime subscription — sync session state
 // ============================================
 const startRealtime = () => {
-  realtimeChannel = subscribeToLiveGame(campaignId)
+  realtimeChannel = supabase
+    .channel(`live_master:${campaignId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'live_game_state', filter: `campaign_id=eq.${campaignId}` },
+      (payload) => {
+        const ns = payload.new as any
+
+        // Sync game live status
+        if (typeof ns.is_live === 'boolean') {
+          isGameLive.value = ns.is_live
+        }
+
+        // Drive NPC display directly from realtime payload — avoids shared-state race conditions
+        if (Array.isArray(ns.current_npcs)) {
+          currentNpcs.value = ns.current_npcs
+          applyLiveNpcState(ns.current_npcs)
+        }
+
+        // Sync timeline
+        if (Array.isArray(ns.timeline_events)) {
+          timelineEvents.value = ns.timeline_events
+        }
+      }
+    )
+    .subscribe()
 }
 
 // ============================================
@@ -943,11 +982,8 @@ onMounted(async () => {
 
   startRealtime()
   if (process.client) window.addEventListener('beforeunload', handleBeforeUnload)
+  pageLoading.value = false
 })
-
-watch(currentNpcs, (newCurrentNpcs) => {
-  applyLiveNpcState(newCurrentNpcs as any[])
-}, { deep: true })
 
 watch(inGameNPCs, (newInGameNpcs) => {
   if (selectedNPC.value && !newInGameNpcs.some((npc: any) => npc.id === selectedNPC.value.id)) {
