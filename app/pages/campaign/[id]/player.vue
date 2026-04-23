@@ -583,7 +583,7 @@ const goBackToDashboard = () => {
 
 const goToLiveGame = () => {
   if (!isGameLive.value) return
-  navigateTo(`/campaign/${campaignId}/live`)
+  navigateTo(`/campaign/${campaignId}/live-player`)
 }
 
 const openCharacterSheet = () => {

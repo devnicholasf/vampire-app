@@ -208,10 +208,7 @@ export const useAuth = () => {
                   is_live: false,
                   active_players: [],
                   current_scene: '',
-                  current_npcs: [],
                   timeline_events: [],
-                  current_image_url: null,
-                  current_music_url: null,
                 })
                 .eq('campaign_id', ls.campaign_id)
             )

@@ -98,7 +98,7 @@
             <button
               class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-red-900 text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50"
               :disabled="stoppingSession"
-              @click="handleStopSession"
+              @click="openStopSessionConfirmation"
             >
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
               {{ stoppingSession ? 'Encerrando...' : 'Encerrar Sessão' }}
@@ -119,18 +119,13 @@
               <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647]">NPCs</h3>
               <span class="text-xs text-[#4a4a5a]">{{ inGameNPCs.length }} em jogo</span>
             </div>
-            <button
-              class="w-full mb-3 text-xs px-2 py-1.5 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white transition-colors"
-              @click="goToNPCTab"
-            >
-              Ir para Aba NPC
-            </button>
 
-            <div v-if="inGameNPCs.length === 0" class="text-center py-6">
+            <!-- NPCs em jogo -->
+            <div v-if="inGameNPCs.length === 0 && !showNpcPicker" class="text-center py-4">
               <p class="text-xs text-[#4a4a5a]">Nenhum NPC incluído no jogo.</p>
             </div>
 
-            <div v-else class="space-y-2">
+            <div v-if="inGameNPCs.length > 0" class="space-y-2 mb-2">
               <div
                 v-for="npc in inGameNPCs"
                 :key="npc.id"
@@ -152,16 +147,79 @@
                       <p class="text-xs text-[#4a4a5a] truncate">{{ npc.type }}</p>
                     </div>
                   </div>
-                  <button
-                    class="shrink-0 p-1 rounded transition-colors"
-                    :class="npc.visibleToPlayers ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
-                    :title="npc.visibleToPlayers ? 'Visível para jogadores — clique para ocultar' : 'Oculto dos jogadores — clique para revelar'"
-                    @click.stop="toggleNPCVisibility(npc)"
-                  >
-                    <svg v-if="npc.visibleToPlayers" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  </button>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <!-- Visibility toggle -->
+                    <button
+                      class="p-1 rounded transition-colors"
+                      :class="npc.visibleToPlayers ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
+                      :title="npc.visibleToPlayers ? 'Visível para jogadores — clique para ocultar' : 'Oculto dos jogadores — clique para revelar'"
+                      @click.stop="toggleNPCVisibility(npc)"
+                    >
+                      <svg v-if="npc.visibleToPlayers" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                    <!-- Remove from game -->
+                    <button
+                      class="p-1 rounded text-[#4a4a5a] hover:text-red-400 transition-colors"
+                      title="Tirar do jogo"
+                      @click.stop="removeNPCInline(npc)"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- Adicionar NPC ao jogo -->
+            <button
+              class="w-full text-xs px-2 py-1.5 rounded border transition-colors flex items-center justify-center gap-1.5"
+              :class="showNpcPicker
+                ? 'border-red-800 text-red-400 hover:bg-red-950/20'
+                : 'border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white'"
+              @click="showNpcPicker = !showNpcPicker; npcSearch = ''"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line v-if="!showNpcPicker" x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              {{ showNpcPicker ? 'Fechar' : 'Adicionar NPC ao Jogo' }}
+            </button>
+
+            <!-- Picker dropdown -->
+            <div v-if="showNpcPicker" class="mt-2 space-y-1.5">
+              <input
+                v-model="npcSearch"
+                type="text"
+                placeholder="Buscar NPC..."
+                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none focus:border-[#d4a647]"
+              />
+              <div v-if="availableNPCs.length === 0" class="text-center py-3">
+                <p class="text-xs text-[#4a4a5a]">{{ npcSearch ? 'Nenhum resultado.' : 'Todos os NPCs já estão no jogo.' }}</p>
+              </div>
+              <div
+                v-for="npc in availableNPCs"
+                :key="npc.id"
+                class="flex items-center justify-between rounded border border-[#2d1515] px-2 py-1.5 hover:border-red-900/60 transition-colors"
+                style="background:rgba(255,255,255,0.02)"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                       style="background:linear-gradient(135deg,#4a4a5a,#6b6b7b)">
+                    {{ npc.name.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-medium text-white truncate">{{ npc.name }}</p>
+                    <p class="text-[11px] text-[#4a4a5a] truncate">{{ npc.type }}</p>
+                  </div>
+                </div>
+                <button
+                  class="shrink-0 p-1 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:bg-red-950/20 transition-colors"
+                  title="Adicionar ao jogo"
+                  @click="addNPCInline(npc)"
+                >
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
               </div>
             </div>
           </section>
@@ -378,6 +436,35 @@
       </div>
     </div>
 
+    <!-- Confirmação de encerramento da sessão -->
+    <div
+      v-if="showStopSessionConfirmModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style="background:rgba(0,0,0,0.65)"
+      @click.self="showStopSessionConfirmModal = false"
+    >
+      <div class="w-full max-w-md rounded-lg border border-[#7f1d1d] p-5" style="background:#0a0a1a; box-shadow:0 6px 30px rgba(0,0,0,0.6)">
+        <h3 class="text-sm uppercase tracking-wider text-[#d4a647] mb-3">Encerrar Sessão Ao Vivo</h3>
+        <p class="text-sm text-[#c4c4d4] mb-4">Deseja realmente encerrar a sessão? Os jogadores serão desconectados da sala.</p>
+
+        <div class="flex justify-end gap-2">
+          <button
+            class="px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/50 text-[#6b6b7b] hover:text-white"
+            @click="showStopSessionConfirmModal = false"
+          >
+            Cancelar
+          </button>
+          <button
+            class="px-3 py-1.5 text-xs rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20 disabled:opacity-50"
+            :disabled="stoppingSession"
+            @click="handleStopSession"
+          >
+            {{ stoppingSession ? 'Encerrando...' : 'Confirmar Encerramento' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -434,6 +521,8 @@ const {
   fetchLiveGameState,
   updateCurrentScene,
   subscribeToLiveGame,
+  addNPCToGame,
+  removeNPCFromGame,
 } = useLiveGame()
 
 // ============================================
@@ -446,6 +535,8 @@ const selectedNPC      = ref<any>(null)
 const currentSceneName = ref('')
 const selectedSceneImage = ref('')
 const selectedSceneMusic = ref('')
+const showNpcPicker    = ref(false)
+const npcSearch        = ref('')
 
 const eventDraft = ref({
   title: '',
@@ -453,6 +544,7 @@ const eventDraft = ref({
   type: 'narrative',
 })
 const showEventConfirmModal = ref(false)
+const showStopSessionConfirmModal = ref(false)
 const creatingEvent = ref(false)
 
 // Session control
@@ -460,8 +552,6 @@ const sessionActive   = computed(() => isGameLive.value)
 const startingSession = ref(false)
 const stoppingSession = ref(false)
 const sessionError    = ref<string | null>(null)
-const stopConfirmRequestedAt = ref<number | null>(null)
-const stopConfirmWindowMs = 5000
 
 // Timeline from live_game_state (current session events JSONB)
 const sessionTimeline = ref<any[]>([])
@@ -475,6 +565,12 @@ let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 const inGameNPCs = computed(() => allNPCs.value.filter(n => n.inGame))
 const visibleNPCs = computed(() => inGameNPCs.value.filter(n => n.visibleToPlayers))
 const spotlightNPC = computed(() => inGameNPCs.value.find((n: any) => n.isSpotlight) ?? null)
+const availableNPCs = computed(() => {
+  const q = npcSearch.value.toLowerCase()
+  return allNPCs.value
+    .filter(n => !n.inGame)
+    .filter(n => !q || n.name.toLowerCase().includes(q))
+})
 
 const normalizeTimeline = (events: any[]) => {
   const seen = new Set<string>()
@@ -596,22 +692,12 @@ const handleStartSession = async () => {
   }
 }
 
+const openStopSessionConfirmation = () => {
+  showStopSessionConfirmModal.value = true
+}
+
 const handleStopSession = async () => {
-  const now = Date.now()
-  const isWithinConfirmWindow =
-    stopConfirmRequestedAt.value !== null &&
-    (now - stopConfirmRequestedAt.value) <= stopConfirmWindowMs
-
-  if (!isWithinConfirmWindow) {
-    stopConfirmRequestedAt.value = now
-    toast.warning(
-      'Confirmar encerramento',
-      'Clique novamente em Encerrar Sessão em até 5 segundos para confirmar.'
-    )
-    return
-  }
-
-  stopConfirmRequestedAt.value = null
+  showStopSessionConfirmModal.value = false
   stoppingSession.value = true
   try {
     await stopLiveGame(campaignId)
@@ -628,6 +714,26 @@ const handleStopSession = async () => {
 // ============================================
 // NPC controls
 // ============================================
+const addNPCInline = async (npc: any) => {
+  try {
+    await addNPCToGame(campaignId, npc, true)
+    // applyLiveNpcState will be triggered by watch(currentNpcs)
+  } catch (e: any) {
+    console.error('LIVE: Erro ao adicionar NPC:', e)
+    toast.error('Erro ao adicionar NPC', e?.message ?? 'Tente novamente.')
+  }
+}
+
+const removeNPCInline = async (npc: any) => {
+  try {
+    if (selectedNPC.value?.id === npc.id) selectedNPC.value = null
+    await removeNPCFromGame(npc.id, campaignId)
+  } catch (e: any) {
+    console.error('LIVE: Erro ao remover NPC:', e)
+    toast.error('Erro ao remover NPC', e?.message ?? 'Tente novamente.')
+  }
+}
+
 const selectNPC = (npc: any) => {
   const isClosing = selectedNPC.value?.id === npc.id
   selectedNPC.value = isClosing ? null : npc

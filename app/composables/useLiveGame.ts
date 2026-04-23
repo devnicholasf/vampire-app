@@ -156,24 +156,19 @@ export const useLiveGame = () => {
           is_live: false,
           active_players: [],
           current_scene: '',
-          current_npcs: [],
           timeline_events: [],
-          current_image_url: null,
-          current_music_url: null,
         })
         .eq('campaign_id', campaignId)
 
       if (updateError) throw updateError
 
-      // Limpar estado local
+      // Limpar estado local (NPCs são preservados para a próxima sessão)
       isGameLive.value = false
-      currentNpcs.value = []
       activePlayers.value = []
       timelineEvents.value = []
       if (liveGameState.value) {
         liveGameState.value.isLive = false
         liveGameState.value.currentScene = ''
-        liveGameState.value.currentNpcs = []
         liveGameState.value.activePlayers = []
         liveGameState.value.timelineEvents = []
       }
