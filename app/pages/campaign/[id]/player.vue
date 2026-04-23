@@ -16,7 +16,12 @@
               </h1>
             </div>
           </div>
-          <button @click="goToLiveGame" class="df-btn-primary">
+          <button
+            :class="isGameLive ? 'df-btn-primary' : 'df-btn-primary opacity-50 cursor-not-allowed'"
+            :disabled="!isGameLive"
+            :title="!isGameLive ? 'O Mestre ainda não iniciou a sessão' : ''"
+            @click="goToLiveGame"
+          >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
             Entrar no Jogo
           </button>
@@ -381,10 +386,33 @@
               </h3>
 
               <div class="space-y-3">
-                <button @click="goToLiveGame" class="df-btn-primary w-full justify-center">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
-                  Entrar no Jogo Ao Vivo
-                </button>
+                <!-- Live game button — disabled when master hasn't started the session -->
+                <div class="relative group">
+                  <button
+                    :class="isGameLive ? 'df-btn-primary w-full justify-center' : 'df-btn-primary w-full justify-center opacity-50 cursor-not-allowed'"
+                    :disabled="!isGameLive"
+                    @click="goToLiveGame"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
+                    <span v-if="isGameLive" class="flex items-center gap-1.5">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"/>
+                      Entrar no Jogo Ao Vivo
+                    </span>
+                    <span v-else>Jogo Ao Vivo Indisponível</span>
+                  </button>
+                  <!-- Tooltip quando sessão não ativa -->
+                  <div
+                    v-if="!isGameLive"
+                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 pointer-events-none"
+                  >
+                    <div class="rounded border border-[#4a4a5a] px-3 py-2 text-xs text-center whitespace-nowrap"
+                         style="background:#0d0d20; color:#c4c4d4; box-shadow:0 4px 12px rgba(0,0,0,0.6)">
+                      O Mestre ainda não iniciou a sessão
+                    </div>
+                    <div class="w-2 h-2 border-r border-b border-[#4a4a5a] rotate-45 mx-auto -mt-1"
+                         style="background:#0d0d20"/>
+                  </div>
+                </div>
                 <button @click="editCharacter" class="df-btn-outline w-full justify-start">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Editar Personagem
@@ -406,7 +434,7 @@
 // ============================================
 // Vue imports
 // ============================================
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
 // ============================================
 // Nuxt imports
@@ -425,6 +453,8 @@ import { useToast } from '~/composables/useToast'
 // ============================================
 import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
+import { useLiveGame } from '~/composables/useLiveGame'
+import { createClient } from '@supabase/supabase-js'
 
 // ============================================
 // Types
@@ -472,11 +502,20 @@ definePageMeta({
 const { user } = useAuth()
 const { savePlayerSheet, loadPlayerSheet } = useCampaign()
 const toast = useToast()
+const config = useRuntimeConfig()
+const supabaseClient = createClient(config.public.supabaseUrl, config.public.supabaseKey)
+
+const {
+  isGameLive,
+  fetchLiveGameState,
+  subscribeToLiveGame,
+} = useLiveGame()
 
 // ============================================
 // State
 // ============================================
 const loading = ref(true)
+let liveStateChannel: ReturnType<typeof supabaseClient.channel> | null = null
 const campaign = ref<Campaign | null>(null)
 const myCharacter = ref<any>(null)
 const sessionNotes = ref<SessionNote[]>([])
@@ -543,6 +582,7 @@ const goBackToDashboard = () => {
 }
 
 const goToLiveGame = () => {
+  if (!isGameLive.value) return
   navigateTo(`/campaign/${campaignId}/live`)
 }
 
@@ -710,8 +750,18 @@ const handleAvatarUpload = async (event: Event) => {
 // ============================================
 // Lifecycle
 // ============================================
-onMounted(() => {
-  loadCampaignData()
+onMounted(async () => {
+  await loadCampaignData()
+
+  // Check if the session is already live
+  await fetchLiveGameState(campaignId)
+
+  // Subscribe to realtime updates so the button reacts when master starts/stops
+  liveStateChannel = subscribeToLiveGame(campaignId)
+})
+
+onBeforeUnmount(() => {
+  if (liveStateChannel) supabaseClient.removeChannel(liveStateChannel)
 })
 
 // ============================================

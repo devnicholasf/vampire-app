@@ -75,9 +75,14 @@
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar
             </button>
-            <button @click="$emit('addToGame', npc)" class="df-btn-primary px-4 py-2 flex items-center gap-2 text-sm">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v8m-4-4h8"/></svg>
-              Usar no Jogo
+            <button
+              @click="$emit('addToGame', npc)"
+              :class="isInGame ? 'df-btn-danger' : 'df-btn-primary'"
+              class="px-4 py-2 flex items-center gap-2 text-sm"
+            >
+              <svg v-if="isInGame" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v8m-4-4h8"/></svg>
+              {{ isInGame ? 'Tirar do Jogo' : 'Usar no Jogo' }}
             </button>
           </div>
         </div>
@@ -89,8 +94,14 @@
 <script setup lang="ts">
 import type { NPC } from '~/types'
 
-interface Props { npc: NPC }
-defineProps<Props>()
+interface Props {
+  npc: NPC
+  isInGame?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  isInGame: false,
+})
 defineEmits<{ close: []; edit: [npc: NPC]; addToGame: [npc: NPC] }>()
 
 const statusLabel = (s: string) => ({ active: 'Ativo', dead: 'Morto', missing: 'Desaparecido', traitor: 'Traidor' }[s] || s)
@@ -134,6 +145,22 @@ const statusBadgeClass = (s: string) => ({
   transition: all 0.2s ease; box-shadow: 0 0 12px rgba(220,38,38,0.2);
 }
 .df-btn-primary:hover { background: linear-gradient(135deg, #b91c1c, #991b1b); box-shadow: 0 0 20px rgba(220,38,38,0.4); color: #fff; }
+.df-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: linear-gradient(135deg, #7f1d1d, #450a0a);
+  color: #fecaca;
+  border: 1px solid #dc2626;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.df-btn-danger:hover { background: linear-gradient(135deg, #991b1b, #7f1d1d); color: #fff; box-shadow: 0 0 20px rgba(220,38,38,0.3); }
 .df-btn-ghost {
   display: inline-flex; align-items: center; justify-content: center;
   font-weight: 500; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.03em;

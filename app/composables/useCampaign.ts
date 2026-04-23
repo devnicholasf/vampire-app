@@ -3,6 +3,8 @@
 // ============================================
 
 import { createClient } from '@supabase/supabase-js'
+import { useRuntimeConfig, useState } from '#imports'
+import { useAuth } from '~/composables/useAuth'
 import type { Campaign, NPC } from '~/types'
 
 export const useCampaign = () => {

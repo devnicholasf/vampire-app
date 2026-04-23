@@ -11,6 +11,8 @@ export interface Toast {
   persistent?: boolean
 }
 
+import { useState } from '#imports'
+
 export const useToast = () => {
   const toasts = useState<Toast[]>('toasts', () => [])
 

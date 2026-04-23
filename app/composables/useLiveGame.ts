@@ -3,6 +3,8 @@
 // ============================================
 
 import { createClient } from '@supabase/supabase-js'
+import { useRuntimeConfig, useState } from '#imports'
+import { useAuth } from '~/composables/useAuth'
 import type { NPC } from '~/types'
 
 interface LiveGameState {
@@ -144,8 +146,6 @@ export const useLiveGame = () => {
   }
 
   const stopLiveGame = async (campaignId: string) => {
-    if (!liveGameState.value) return
-
     loading.value = true
     error.value = null
 
@@ -154,7 +154,12 @@ export const useLiveGame = () => {
         .from('live_game_state')
         .update({
           is_live: false,
-          active_players: []
+          active_players: [],
+          current_scene: '',
+          current_npcs: [],
+          timeline_events: [],
+          current_image_url: null,
+          current_music_url: null,
         })
         .eq('campaign_id', campaignId)
 
@@ -162,10 +167,15 @@ export const useLiveGame = () => {
 
       // Limpar estado local
       isGameLive.value = false
+      currentNpcs.value = []
       activePlayers.value = []
+      timelineEvents.value = []
       if (liveGameState.value) {
         liveGameState.value.isLive = false
+        liveGameState.value.currentScene = ''
+        liveGameState.value.currentNpcs = []
         liveGameState.value.activePlayers = []
+        liveGameState.value.timelineEvents = []
       }
 
     } catch (err: any) {
@@ -181,8 +191,51 @@ export const useLiveGame = () => {
   // NPCs Management em Tempo Real
   // ============================================
 
-  const addNPCToGame = async (npc: NPC, isVisible: boolean = true) => {
-    if (!liveGameState.value) return
+  const ensureLiveGameState = async (campaignId: string): Promise<LiveGameState> => {
+    const { data: existingState, error: fetchError } = await supabase
+      .from('live_game_state')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+
+    if (existingState) {
+      const converted = convertSupabaseData(existingState as SupabaseLiveGameState)
+      liveGameState.value = converted
+      isGameLive.value = converted.isLive
+      currentNpcs.value = converted.currentNpcs || []
+      activePlayers.value = converted.activePlayers || []
+      timelineEvents.value = converted.timelineEvents || []
+      return converted
+    }
+
+    const { data: createdState, error: createError } = await supabase
+      .from('live_game_state')
+      .insert({
+        campaign_id: campaignId,
+        is_live: false,
+        current_scene: '',
+        current_npcs: [],
+        active_players: [],
+        timeline_events: []
+      })
+      .select()
+      .single()
+
+    if (createError) throw createError
+
+    const converted = convertSupabaseData(createdState as SupabaseLiveGameState)
+    liveGameState.value = converted
+    isGameLive.value = converted.isLive
+    currentNpcs.value = converted.currentNpcs || []
+    activePlayers.value = converted.activePlayers || []
+    timelineEvents.value = converted.timelineEvents || []
+    return converted
+  }
+
+  const addNPCToGame = async (campaignId: string, npc: NPC, isVisible: boolean = true) => {
+    const state = await ensureLiveGameState(campaignId)
 
     const npcData = {
       id: npc.id,
@@ -193,26 +246,30 @@ export const useLiveGame = () => {
     }
 
     try {
-      // Atualizar estado no Supabase
-      const updatedNpcs = [...(liveGameState.value.currentNpcs || []), npcData]
+      // Atualizar estado no Supabase sem gerar eventos técnicos de log.
+      const existingNpcs = state.currentNpcs || []
+      const existingIndex = existingNpcs.findIndex((currentNpc: any) => currentNpc.id === npcData.id)
+      const updatedNpcs = [...existingNpcs]
+
+      if (existingIndex >= 0) {
+        updatedNpcs[existingIndex] = { ...updatedNpcs[existingIndex], ...npcData }
+      } else {
+        updatedNpcs.push(npcData)
+      }
       
       const { error: updateError } = await supabase
         .from('live_game_state')
         .update({
           current_npcs: updatedNpcs
         })
-        .eq('id', liveGameState.value.id)
+        .eq('id', state.id)
 
       if (updateError) throw updateError
 
-      // Adicionar evento na timeline
-      await addTimelineEvent({
-        type: 'npc-appears',
-        title: `${npc.name} entrou na cena`,
-        description: isVisible ? 'Visível para jogadores' : 'Apenas para o mestre',
-        data: npcData,
-        isVisible
-      })
+      if (liveGameState.value) {
+        liveGameState.value.currentNpcs = updatedNpcs
+      }
+      currentNpcs.value = updatedNpcs as NPC[]
 
     } catch (err: any) {
       console.error('Erro ao adicionar NPC ao jogo:', err)
@@ -220,31 +277,41 @@ export const useLiveGame = () => {
     }
   }
 
-  const removeNPCFromGame = async (npcId: string) => {
-    if (!liveGameState.value) return
+  const removeNPCFromGame = async (npcId: string, campaignId?: string) => {
+    let state = liveGameState.value
+
+    if (!state && campaignId) {
+      const { data, error: fetchError } = await supabase
+        .from('live_game_state')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      if (fetchError) throw fetchError
+      if (!data) return
+
+      state = convertSupabaseData(data as SupabaseLiveGameState)
+      liveGameState.value = state
+    }
+
+    if (!state) return
 
     try {
-      const updatedNpcs = liveGameState.value.currentNpcs.filter(npc => npc.id !== npcId)
+      const updatedNpcs = (state.currentNpcs || []).filter((npc: any) => npc.id !== npcId)
       
       const { error: updateError } = await supabase
         .from('live_game_state')
         .update({
           current_npcs: updatedNpcs
         })
-        .eq('id', liveGameState.value.id)
+        .eq('id', state.id)
 
       if (updateError) throw updateError
 
-      // Encontrar nome do NPC removido
-      const removedNpc = liveGameState.value.currentNpcs.find(npc => npc.id === npcId)
-      
-      if (removedNpc) {
-        await addTimelineEvent({
-          type: 'action',
-          title: `${removedNpc.name} saiu da cena`,
-          isVisible: true
-        })
+      if (liveGameState.value) {
+        liveGameState.value.currentNpcs = updatedNpcs
       }
+      currentNpcs.value = updatedNpcs as NPC[]
 
     } catch (err: any) {
       console.error('Erro ao remover NPC do jogo:', err)
@@ -296,16 +363,54 @@ export const useLiveGame = () => {
 
       if (updateError) throw updateError
 
-      // Adicionar evento na timeline
-      await addTimelineEvent({
-        type: 'scene-change',
-        title: `Cena alterada para: ${sceneName}`,
-        isVisible: true
-      })
+      if (liveGameState.value) {
+        liveGameState.value.currentScene = sceneName
+      }
 
     } catch (err: any) {
       console.error('Erro ao atualizar cena:', err)
       throw err
+    }
+  }
+
+  // ============================================
+  // Fetch current state (without starting the game)
+  // Used by players to check if the session is live
+  // ============================================
+
+  const fetchLiveGameState = async (campaignId: string) => {
+    loading.value = true
+    error.value = null
+    try {
+      const { data, error: sbErr } = await supabase
+        .from('live_game_state')
+        .select('*')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      if (sbErr) throw sbErr
+
+      if (data) {
+        liveGameState.value = convertSupabaseData(data as SupabaseLiveGameState)
+        isGameLive.value = (data as SupabaseLiveGameState).is_live
+        currentNpcs.value = (data as SupabaseLiveGameState).current_npcs || []
+        activePlayers.value = (data as SupabaseLiveGameState).active_players || []
+        timelineEvents.value = (data as SupabaseLiveGameState).timeline_events || []
+      } else {
+        isGameLive.value = false
+        liveGameState.value = null
+        currentNpcs.value = []
+        activePlayers.value = []
+        timelineEvents.value = []
+      }
+
+      return data
+    } catch (err: any) {
+      console.error('Erro ao buscar estado do jogo:', err)
+      error.value = err.message
+      return null
+    } finally {
+      loading.value = false
     }
   }
 
@@ -327,7 +432,7 @@ export const useLiveGame = () => {
         (payload) => {
           console.log('Live game state changed:', payload)
           
-          if (payload.eventType === 'UPDATE') {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const newState = payload.new as SupabaseLiveGameState
             
             // Atualizar estado local
@@ -412,6 +517,7 @@ export const useLiveGame = () => {
     // Game State Methods
     startLiveGame,
     stopLiveGame,
+    fetchLiveGameState,
 
     // NPC Methods
     addNPCToGame,

@@ -1,462 +1,904 @@
 <template>
-  <div class="min-h-screen bg-surface-primary">
-    <!-- Header do Live Game -->
-    <div class="bg-surface-card border-b border-border px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-            <span class="text-red-400 font-semibold text-sm uppercase tracking-wider">AO VIVO</span>
+  <div class="min-h-screen" style="background:#080810; color:#c4c4d4;">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PRÉ-LOBBY — sessão não iniciada                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div v-if="!sessionActive" class="flex flex-col items-center justify-center min-h-screen px-4">
+      <div class="w-full max-w-lg text-center space-y-8">
+
+        <!-- Decoração -->
+        <div class="flex items-center justify-center gap-4">
+          <div class="h-px flex-1 bg-gradient-to-r from-transparent to-red-900/60"/>
+          <svg class="w-10 h-10 text-red-800" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/>
+          </svg>
+          <div class="h-px flex-1 bg-gradient-to-l from-transparent to-red-900/60"/>
+        </div>
+
+        <div>
+          <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A Máscara V5</p>
+          <h1 class="text-3xl font-bold text-white mb-1">{{ campaign?.name || 'Carregando...' }}</h1>
+          <p class="text-sm text-[#6b6b7b]">Sala de Jogo — Visão do Mestre</p>
+        </div>
+
+        <!-- Card de status -->
+        <div class="relative border border-[#7f1d1d] rounded-lg p-6 text-left"
+             style="background:#0a0a1a; box-shadow: 0 0 0 1px #4a4a5a;">
+          <span class="lc lc-tl"/><span class="lc lc-tr"/>
+          <span class="lc lc-bl"/><span class="lc lc-br"/>
+
+          <div class="relative z-10 space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#4a4a5a] shrink-0"/>
+              <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">Sessão Inativa</p>
+            </div>
+            <p class="text-sm text-[#6b6b7b]">
+              A sessão de Jogo ao Vivo ainda não foi iniciada.<br>
+              Quando você iniciar, os jogadores poderão entrar na sala.
+            </p>
+            <p class="text-xs text-[#4a4a5a] pt-1">
+              Inicie a sessão para liberar a entrada dos jogadores.
+            </p>
           </div>
-          <h1 class="text-xl font-cinzel font-bold text-text-primary">{{ campaign?.name }}</h1>
         </div>
-        
-        <div class="flex items-center gap-3">
-          <BaseButton variant="secondary" size="sm" @click="togglePlayerView">
-            👁️ Visão do Jogador
-          </BaseButton>
-          <BaseButton variant="outline" size="sm" @click="goBackToMaster">
-            ⚙️ Dashboard
-          </BaseButton>
+
+        <!-- Botões de ação -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            class="flex items-center justify-center gap-2 px-8 py-3 rounded border border-red-700 text-white font-semibold tracking-wide hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style="background: rgba(127,29,29,0.2);"
+            :disabled="startingSession"
+            @click="handleStartSession"
+          >
+            <svg v-if="startingSession" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            {{ startingSession ? 'Iniciando...' : 'Iniciar Sessão Ao Vivo' }}
+          </button>
+          <button
+            class="flex items-center gap-2 px-5 py-3 rounded border border-[#4a4a5a]/50 text-[#6b6b7b] text-sm hover:text-white hover:border-[#6b6b7b] transition-colors"
+            @click="goBackToMaster"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Voltar ao Dashboard
+          </button>
         </div>
+
+        <p v-if="sessionError" class="text-sm text-red-400">{{ sessionError }}</p>
       </div>
     </div>
 
-    <!-- Layout Principal -->
-    <div class="flex h-[calc(100vh-80px)]">
-      <!-- Painel Esquerdo - Controles do Mestre -->
-      <div class="w-80 bg-surface-card border-r border-border p-4 overflow-y-auto">
-        <div class="space-y-6">
-          <!-- NPCs -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold text-text-primary">NPCs Ativos</h3>
-              <BaseButton variant="ghost" size="sm" @click="showAddNPCModal = true">
-                <span class="text-lg">+</span>
-              </BaseButton>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SESSÃO ATIVA — interface completa                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <template v-else>
+
+      <!-- Header -->
+      <div style="background:#0a0a1a; border-bottom:1px solid #2d1515;" class="px-6 py-4 sticky top-0 z-30">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"/>
+              <span class="text-red-400 font-semibold text-xs uppercase tracking-widest">Ao Vivo</span>
             </div>
-            <div class="space-y-2">
-              <div 
-                v-for="npc in activeNPCs" 
+            <h1 class="text-lg font-bold text-white">{{ campaign?.name }}</h1>
+            <span class="text-xs text-[#4a4a5a] border border-[#4a4a5a]/40 px-2 py-0.5 rounded">
+              {{ activePlayers.length }} jogador{{ activePlayers.length !== 1 ? 'es' : '' }} conectado{{ activePlayers.length !== 1 ? 's' : '' }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/40 text-[#6b6b7b] hover:text-white hover:border-[#6b6b7b] transition-colors"
+              @click="goBackToMaster"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Dashboard
+            </button>
+            <button
+              class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-red-900 text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-50"
+              :disabled="stoppingSession"
+              @click="handleStopSession"
+            >
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+              {{ stoppingSession ? 'Encerrando...' : 'Encerrar Sessão' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout principal -->
+      <div class="flex" style="height:calc(100vh - 65px);">
+
+        <!-- ── Painel Esquerdo ── -->
+        <div class="w-72 overflow-y-auto border-r border-[#2d1515] p-4 space-y-6 shrink-0" style="background:#0a0a1a;">
+
+          <!-- NPCs -->
+          <section>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647]">NPCs</h3>
+              <span class="text-xs text-[#4a4a5a]">{{ inGameNPCs.length }} em jogo</span>
+            </div>
+            <button
+              class="w-full mb-3 text-xs px-2 py-1.5 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white transition-colors"
+              @click="goToNPCTab"
+            >
+              Ir para Aba NPC
+            </button>
+
+            <div v-if="inGameNPCs.length === 0" class="text-center py-6">
+              <p class="text-xs text-[#4a4a5a]">Nenhum NPC incluído no jogo.</p>
+            </div>
+
+            <div v-else class="space-y-2">
+              <div
+                v-for="npc in inGameNPCs"
                 :key="npc.id"
-                class="bg-surface-primary p-3 rounded-vampire border border-border hover:border-red-500/50 transition-colors cursor-pointer"
+                class="rounded border p-2.5 cursor-pointer transition-all"
+                :class="selectedNPC?.id === npc.id
+                  ? 'border-red-700 bg-red-950/30'
+                  : 'border-[#2d1515] hover:border-red-900/60'"
+                style="background:rgba(255,255,255,0.02)"
                 @click="selectNPC(npc)"
-                :class="{ 'border-red-500': selectedNPC?.id === npc.id }"
               >
                 <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-red-600 to-gold-500 flex items-center justify-center text-white font-semibold text-sm">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                         style="background:linear-gradient(135deg,#7f1d1d,#d4a647)">
                       {{ npc.name.charAt(0).toUpperCase() }}
                     </div>
-                    <div>
-                      <p class="font-medium text-text-primary text-sm">{{ npc.name }}</p>
-                      <p class="text-text-muted text-xs">{{ npc.type }}</p>
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium text-white truncate">{{ npc.name }}</p>
+                      <p class="text-xs text-[#4a4a5a] truncate">{{ npc.type }}</p>
                     </div>
                   </div>
-                  
-                  <!-- Controle de visibilidade para jogadores -->
-                  <div class="flex items-center gap-1">
-                    <BaseButton 
-                      variant="ghost" 
-                      size="sm" 
-                      @click.stop="toggleNPCVisibility(npc)"
-                      :class="npc.visibleToPlayers ? 'text-green-400' : 'text-gray-500'"
-                    >
-                      {{ npc.visibleToPlayers ? '👁️' : '🙈' }}
-                    </BaseButton>
-                  </div>
+                  <button
+                    class="shrink-0 p-1 rounded transition-colors"
+                    :class="npc.visibleToPlayers ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
+                    :title="npc.visibleToPlayers ? 'Visível para jogadores — clique para ocultar' : 'Oculto dos jogadores — clique para revelar'"
+                    @click.stop="toggleNPCVisibility(npc)"
+                  >
+                    <svg v-if="npc.visibleToPlayers" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Música/Ambientação -->
-          <div>
-            <h3 class="font-semibold text-text-primary mb-3">Ambientação</h3>
-            <div class="space-y-3">
-              <div class="bg-surface-primary p-3 rounded-vampire border border-border">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-text-primary text-sm font-medium">Música</span>
-                  <BaseButton variant="ghost" size="sm" @click="toggleMusic">
-                    {{ isPlaying ? '⏸️' : '▶️' }}
-                  </BaseButton>
-                </div>
-                <select 
-                  v-model="selectedTrack" 
-                  @change="changeTrack"
-                  class="w-full bg-surface-card border border-border rounded px-2 py-1 text-sm text-text-primary"
+          <!-- Cena Atual -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Cena Atual</h3>
+            <input
+              v-model="currentSceneName"
+              type="text"
+              placeholder="Descreva a cena atual..."
+              class="w-full rounded border border-[#4a4a5a]/50 px-3 py-2 text-sm text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none focus:border-[#d4a647] transition-colors"
+              @blur="saveSceneName"
+            />
+          </section>
+
+          <!-- Mídia da Cena (integração com aba Mídia) -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Mídia da Cena</h3>
+            <div class="space-y-2 rounded border border-[#2d1515] p-3" style="background:rgba(255,255,255,0.02)">
+              <div>
+                <label class="text-[11px] text-[#6b6b7b] uppercase tracking-wider">Imagem</label>
+                <select
+                  v-model="selectedSceneImage"
+                  class="mt-1 w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
                 >
-                  <option value="">Nenhuma música</option>
-                  <option v-for="track in musicTracks" :key="track.id" :value="track.id">
-                    {{ track.name }}
-                  </option>
+                  <option value="">Nenhuma imagem selecionada</option>
+                  <option v-if="campaign?.current_image_url" :value="campaign.current_image_url">Imagem atual da campanha</option>
                 </select>
               </div>
-            </div>
-          </div>
-
-          <!-- Cenários/Mapas -->
-          <div>
-            <h3 class="font-semibold text-text-primary mb-3">Cenários</h3>
-            <div class="space-y-3">
-              <div class="bg-surface-primary p-3 rounded-vampire border border-border">
-                <span class="text-text-primary text-sm font-medium">Mapa Ativo</span>
-                <select 
-                  v-model="selectedScene" 
-                  @change="changeScene"
-                  class="w-full mt-2 bg-surface-card border border-border rounded px-2 py-1 text-sm text-text-primary"
+              <div>
+                <label class="text-[11px] text-[#6b6b7b] uppercase tracking-wider">Música</label>
+                <select
+                  v-model="selectedSceneMusic"
+                  class="mt-1 w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
                 >
-                  <option value="">Nenhum mapa</option>
-                  <option v-for="scene in scenes" :key="scene.id" :value="scene.id">
-                    {{ scene.name }}
-                  </option>
+                  <option value="">Nenhuma música selecionada</option>
+                  <option v-if="campaign?.current_music_url" :value="campaign.current_music_url">Música atual da campanha</option>
                 </select>
               </div>
-              
-              <div v-if="selectedScene" class="bg-surface-primary p-3 rounded-vampire border border-border">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-text-primary text-sm font-medium">Controles</span>
-                </div>
-                <div class="space-y-2">
-                  <BaseButton variant="ghost" size="sm" @click="addMarker" class="w-full text-xs">
-                    📍 Adicionar Marcador
-                  </BaseButton>
-                  <BaseButton variant="ghost" size="sm" @click="clearMarkers" class="w-full text-xs">
-                    🧹 Limpar Marcadores
-                  </BaseButton>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Timeline Rápida -->
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold text-text-primary">Timeline</h3>
-              <BaseButton variant="ghost" size="sm" @click="addEvent">
-                <span class="text-lg">+</span>
-              </BaseButton>
-            </div>
-            <div class="space-y-2 max-h-48 overflow-y-auto">
-              <div 
-                v-for="event in recentEvents" 
-                :key="event.id"
-                class="bg-surface-primary p-2 rounded border border-border"
+              <button
+                class="w-full text-xs px-2 py-1.5 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white transition-colors"
+                @click="goToMediaTab"
               >
-                <p class="text-text-primary text-xs font-medium">{{ event.title }}</p>
-                <p class="text-text-muted text-xs">{{ formatTime(event.timestamp) }}</p>
+                Gerenciar na Aba Mídia
+              </button>
+              <p class="text-[11px] text-[#4a4a5a]">Esses campos usarão os arquivos enviados na aba Mídia.</p>
+            </div>
+          </section>
+
+          <!-- Criar Evento Narrativo -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Criar Evento Narrativo</h3>
+            <div class="space-y-2 rounded border border-[#2d1515] p-3" style="background:rgba(255,255,255,0.02)">
+              <input
+                v-model="eventDraft.title"
+                type="text"
+                placeholder="Título do acontecimento"
+                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none"
+              >
+              <textarea
+                v-model="eventDraft.description"
+                rows="2"
+                placeholder="Descrição (opcional)"
+                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none resize-none"
+              />
+              <select
+                v-model="eventDraft.type"
+                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
+              >
+                <option value="narrative">Narrativo</option>
+                <option value="social">Social</option>
+                <option value="combat">Combate</option>
+                <option value="discovery">Descoberta</option>
+                <option value="political">Político</option>
+                <option value="other">Outro</option>
+              </select>
+              <button
+                class="w-full text-xs px-2 py-1.5 rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20 transition-colors"
+                :disabled="creatingEvent"
+                @click="openEventConfirmation"
+              >
+                {{ creatingEvent ? 'Salvando...' : 'Registrar Evento' }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Eventos da Sessão -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Eventos da Sessão</h3>
+            <div v-if="sessionTimeline.length === 0" class="text-center py-4">
+              <p class="text-xs text-[#4a4a5a]">Nenhum evento ainda.</p>
+            </div>
+            <div v-else class="space-y-1.5 max-h-48 overflow-y-auto">
+              <div
+                v-for="ev in sessionTimeline"
+                :key="ev.id"
+                class="rounded border border-[#2d1515] p-2" style="background:rgba(255,255,255,0.02)"
+              >
+                <p class="text-xs font-medium text-white">{{ ev.title }}</p>
+                <p class="text-xs text-[#4a4a5a]">{{ formatTime(new Date(ev.timestamp)) }}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── Área Central ── -->
+        <div class="flex-1 relative overflow-hidden flex flex-col items-center justify-center gap-6 text-center px-8" style="background:#060610">
+          <div v-if="spotlightNPC" class="w-full max-w-xl rounded-xl border border-[#7f1d1d] p-4" style="background:rgba(10,10,26,0.85)">
+            <div class="flex flex-col items-center gap-3">
+              <img
+                v-if="spotlightNPC.photo"
+                :src="spotlightNPC.photo"
+                :alt="spotlightNPC.name"
+                class="w-full max-h-[340px] object-contain rounded-lg border border-[#4a4a5a]"
+              >
+              <div v-else class="w-full h-52 rounded-lg border border-[#4a4a5a] flex items-center justify-center text-[#6b6b7b]">
+                Sem retrato disponível
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">{{ spotlightNPC.name }}</h3>
+                <p class="text-xs text-[#6b6b7b]">Exibindo para os jogadores conectados</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Área Central - Mapa Compartilhado -->
-      <div class="flex-1 relative">
-        <div v-if="selectedScene" class="h-full bg-surface-primary">
-          <MapViewer 
-            :campaign-id="campaignId"
-            :is-master="true"
-            :initial-map="getCurrentMap()"
-            @map-changed="onMapChanged"
-            @marker-moved="onMarkerMoved"
-            class="h-full"
-          />
-        </div>
-        
-        <div v-else class="h-full bg-surface-primary flex items-center justify-center">
-          <div class="text-center text-text-muted">
-            <div class="text-6xl mb-4">🗺️</div>
-            <h2 class="text-xl font-semibold mb-2">Selecione um Cenário</h2>
-            <p class="text-sm">Escolha um mapa no painel lateral para compartilhar com os jogadores</p>
+          <svg class="w-20 h-20 text-red-900/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+          <div>
+            <h2 class="text-xl font-bold text-white mb-2">{{ currentSceneName || 'Sem cena definida' }}</h2>
+            <p class="text-sm text-[#4a4a5a] max-w-sm">
+              Descreva a cena no painel lateral e gerencie quais NPCs estão visíveis para os jogadores.
+            </p>
           </div>
-        </div>
-        
-        <!-- NPCs visíveis aos jogadores -->
-        <div v-if="visibleNPCs.length > 0" class="absolute bottom-4 left-4 right-4">
-          <div class="bg-surface-card/90 backdrop-blur-sm rounded-vampire border border-border p-4">
-            <h4 class="text-text-primary font-semibold mb-3 text-sm">NPCs Presentes</h4>
-            <div class="flex flex-wrap gap-3">
-              <div 
-                v-for="npc in visibleNPCs" 
+
+          <!-- NPCs visíveis (barra inferior) -->
+          <div
+            v-if="visibleNPCs.length > 0"
+            class="absolute bottom-0 left-0 right-0 border-t border-[#2d1515] px-4 py-3"
+            style="background:rgba(10,10,26,0.95)"
+          >
+            <p class="text-xs text-[#4a4a5a] uppercase tracking-wider mb-2">Visíveis aos Jogadores</p>
+            <div class="flex flex-wrap gap-2">
+              <div
+                v-for="npc in visibleNPCs"
                 :key="npc.id"
-                class="bg-surface-primary p-3 rounded-vampire border border-border hover:border-red-500/50 transition-all duration-200 cursor-pointer group"
-                @click="highlightNPC(npc)"
+                class="flex items-center gap-2 rounded border border-green-900/40 px-3 py-1.5 text-xs"
+                style="background:rgba(21,128,61,0.08)"
               >
-                <div class="flex items-center gap-3">
-                  <!-- Avatar do NPC -->
-                  <div class="relative">
-                    <div v-if="npc.photo" class="w-12 h-12 rounded-full overflow-hidden border-2 border-red-500/30">
-                      <img :src="npc.photo" :alt="npc.name" class="w-full h-full object-cover" />
-                    </div>
-                    <div v-else class="w-12 h-12 rounded-full bg-gradient-to-r from-red-600 to-gold-500 flex items-center justify-center text-white font-bold">
-                      {{ npc.name.charAt(0).toUpperCase() }}
-                    </div>
-                    <!-- Indicador de status -->
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-surface-card"></div>
-                  </div>
-                  
-                  <!-- Nome do NPC -->
-                  <div>
-                    <p class="font-medium text-text-primary text-sm group-hover:text-red-400 transition-colors">{{ npc.name }}</p>
-                    <p class="text-text-muted text-xs">Presente na cena</p>
-                  </div>
-                </div>
+                <span class="w-5 h-5 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                      style="background:linear-gradient(135deg,#7f1d1d,#d4a647)">
+                  {{ npc.name.charAt(0) }}
+                </span>
+                <span class="text-green-400 font-medium">{{ npc.name }}</span>
+                <span class="text-[#4a4a5a]">{{ npc.type }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Overlay de Informações -->
-        <div v-if="selectedNPC" class="absolute top-4 right-4 w-64 bg-surface-card border border-border rounded-vampire p-4 shadow-lg">
-          <h4 class="font-semibold text-text-primary mb-2">{{ selectedNPC.name }}</h4>
-          <div class="space-y-2 text-sm">
-            <p><span class="text-text-muted">Tipo:</span> <span class="text-text-primary">{{ selectedNPC.type }}</span></p>
-            <div class="flex gap-2 mt-3">
-              <BaseButton variant="outline" size="sm" @click="selectedNPC = null">Fechar</BaseButton>
-            </div>
+        <!-- ── Overlay detalhe de NPC ── -->
+        <div
+          v-if="selectedNPC"
+          class="absolute top-[65px] right-4 w-64 rounded border border-[#4a4a5a] p-4 z-20"
+          style="background:#0d0d20; box-shadow:0 4px 24px rgba(0,0,0,0.6)"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <h4 class="font-semibold text-white">{{ selectedNPC.name }}</h4>
+            <button class="text-[#4a4a5a] hover:text-white" @click="selectedNPC = null; setNpcSpotlight(null)">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
+          <div class="space-y-1.5 text-sm">
+            <p><span class="text-[#4a4a5a]">Tipo: </span><span class="text-white">{{ selectedNPC.type }}</span></p>
+            <p v-if="selectedNPC.clan"><span class="text-[#4a4a5a]">Clã: </span><span class="text-white">{{ selectedNPC.clan }}</span></p>
+            <p v-if="selectedNPC.description" class="text-[#6b6b7b] text-xs mt-2 leading-relaxed">{{ selectedNPC.description }}</p>
+          </div>
+        </div>
+
+      </div><!-- /flex layout -->
+    </template>
+
+    <!-- Confirmação de evento narrativo -->
+    <div
+      v-if="showEventConfirmModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style="background:rgba(0,0,0,0.65)"
+      @click.self="showEventConfirmModal = false"
+    >
+      <div class="w-full max-w-md rounded-lg border border-[#7f1d1d] p-5" style="background:#0a0a1a; box-shadow:0 6px 30px rgba(0,0,0,0.6)">
+        <h3 class="text-sm uppercase tracking-wider text-[#d4a647] mb-3">Confirmar Evento</h3>
+        <p class="text-xs text-[#6b6b7b] mb-1">Título</p>
+        <p class="text-sm text-white mb-3">{{ eventDraft.title || 'Sem título' }}</p>
+        <p class="text-xs text-[#6b6b7b] mb-1">Tipo</p>
+        <p class="text-sm text-white mb-3">{{ eventDraft.type }}</p>
+        <p v-if="eventDraft.description" class="text-xs text-[#c4c4d4] mb-4">{{ eventDraft.description }}</p>
+
+        <div class="flex justify-end gap-2">
+          <button
+            class="px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/50 text-[#6b6b7b] hover:text-white"
+            @click="showEventConfirmModal = false"
+          >
+            Cancelar
+          </button>
+          <button
+            class="px-3 py-1.5 text-xs rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20"
+            :disabled="creatingEvent"
+            @click="confirmAndCreateEvent"
+          >
+            Confirmar Evento
+          </button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
+// ============================================
+// Vue + Nuxt imports
+// ============================================
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
+
+// ============================================
+// Middleware: only master can access live
+// ============================================
 definePageMeta({
   middleware: 'is-master',
   layout: false
 })
 
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'nuxt/app'
-import BaseButton from '~/components/ui/BaseButton.vue'
-import MapViewer from '~/components/campaign/MapViewer.vue'
+// ============================================
+// Composable imports
+// ============================================
+import { useCampaign } from '~/composables/useCampaign'
+import { useAuth } from '~/composables/useAuth'
+import { useLiveGame } from '~/composables/useLiveGame'
+import { useToast } from '~/composables/useToast'
+import { createClient } from '@supabase/supabase-js'
 
-const route = useRoute()
+// ============================================
+// Route
+// ============================================
+const route  = useRoute()
 const router = useRouter()
 const campaignId = route.params.id as string
 
-// Estado da interface
-const selectedNPC = ref<any>(null)
-const selectedScene = ref('')
-const selectedTrack = ref('')
-const isPlaying = ref(false)
-const showAddNPCModal = ref(false)
+// ============================================
+// Supabase (for NPC queries + realtime)
+// ============================================
+const config  = useRuntimeConfig()
+const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
-// Mock data - NPCs com controle de visibilidade
-const activeNPCs = ref([
-  {
-    id: '1',
-    name: 'Vampiro Ancião',
-    type: 'Antagonista',
-    description: 'Um vampiro antigo e poderoso que controla parte da cidade',
-    photo: '/npcs/vampire-elder.jpg',
-    visibleToPlayers: false,
-    details: {
-      clan: 'Ventrue',
-      generation: 7,
-      disciplines: ['Dominação', 'Presença', 'Fortitude'],
-      background: 'Ex-nobre português do século XVIII'
+// ============================================
+// Composables
+// ============================================
+const { getCampaignById }  = useCampaign()
+const { user }             = useAuth()
+const toast                = useToast()
+const {
+  isGameLive,
+  currentNpcs,
+  timelineEvents,
+  activePlayers,
+  startLiveGame,
+  stopLiveGame,
+  fetchLiveGameState,
+  updateCurrentScene,
+  subscribeToLiveGame,
+} = useLiveGame()
+
+// ============================================
+// Local state
+// ============================================
+const campaign         = ref<any>(null)
+const allNPCs          = ref<any[]>([])
+const playerCount      = ref(0)
+const selectedNPC      = ref<any>(null)
+const currentSceneName = ref('')
+const selectedSceneImage = ref('')
+const selectedSceneMusic = ref('')
+
+const eventDraft = ref({
+  title: '',
+  description: '',
+  type: 'narrative',
+})
+const showEventConfirmModal = ref(false)
+const creatingEvent = ref(false)
+
+// Session control
+const sessionActive   = computed(() => isGameLive.value)
+const startingSession = ref(false)
+const stoppingSession = ref(false)
+const sessionError    = ref<string | null>(null)
+const stopConfirmRequestedAt = ref<number | null>(null)
+const stopConfirmWindowMs = 5000
+
+// Timeline from live_game_state (current session events JSONB)
+const sessionTimeline = ref<any[]>([])
+
+// Realtime subscription handle
+let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+// ============================================
+// Computed
+// ============================================
+const inGameNPCs = computed(() => allNPCs.value.filter(n => n.inGame))
+const visibleNPCs = computed(() => inGameNPCs.value.filter(n => n.visibleToPlayers))
+const spotlightNPC = computed(() => inGameNPCs.value.find((n: any) => n.isSpotlight) ?? null)
+
+const normalizeTimeline = (events: any[]) => {
+  const seen = new Set<string>()
+  return (events || []).filter((event: any) => {
+    const key = `${event?.id ?? ''}|${event?.title ?? ''}|${event?.timestamp ?? ''}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+const isTechnicalTimelineEvent = (event: any) => {
+  const type = String(event?.type ?? '').toLowerCase()
+  const title = String(event?.title ?? '').toLowerCase()
+  return (
+    type === 'scene-change' ||
+    type === 'npc-appears' ||
+    title.startsWith('cena alterada para:') ||
+    title.includes(' entrou na cena') ||
+    title.includes(' saiu da cena')
+  )
+}
+
+const sanitizeTimeline = (events: any[]) => {
+  return normalizeTimeline(events).filter((event: any) => !isTechnicalTimelineEvent(event))
+}
+
+const applyLiveNpcState = (liveNpcs: any[] = []) => {
+  const inGameNpcIds = new Set((liveNpcs || []).map((npc: any) => npc.id))
+  const visibleNpcIds = new Set((liveNpcs || []).filter((npc: any) => npc.isVisible).map((npc: any) => npc.id))
+  const spotlightNpcIds = new Set((liveNpcs || []).filter((npc: any) => npc.isSpotlight).map((npc: any) => npc.id))
+
+  allNPCs.value = allNPCs.value.map((npc: any) => ({
+    ...npc,
+    inGame: inGameNpcIds.has(npc.id),
+    visibleToPlayers: visibleNpcIds.has(npc.id),
+    isSpotlight: spotlightNpcIds.has(npc.id),
+  }))
+}
+
+// ============================================
+// Load data
+// ============================================
+const loadCampaignData = async () => {
+  try {
+    const data = await getCampaignById(campaignId)
+    if (data) {
+      campaign.value = data
+      playerCount.value = data.campaign_players?.length ?? 0
     }
-  },
-  {
-    id: '2', 
-    name: 'Bartender Joe',
-    type: 'Informante',
-    description: 'Conhece todos os segredos da cidade e está disposto a compartilhá-los... por um preço',
-    photo: '/npcs/bartender.jpg',
-    visibleToPlayers: true,
-    details: {
-      clan: 'Nosferatu',
-      generation: 9,
-      disciplines: ['Ofuscação', 'Animalismo'],
-      background: 'Ex-detetive que foi abraçado nos anos 80'
-    }
-  },
-  {
-    id: '3',
-    name: 'Madame Clarissa',
-    type: 'Aliada',
-    description: 'Proprietária de uma galeria de arte, conhece muitos segredos da sociedade vampíresca',
-    photo: '/npcs/madame-clarissa.jpg',
-    visibleToPlayers: false,
-    details: {
-      clan: 'Toreador',
-      generation: 8,
-      disciplines: ['Auspícios', 'Presença', 'Celeridade'],
-      background: 'Artista renomada abraçada na Belle Époque'
-    }
+  } catch (e) {
+    console.error('LIVE: Erro ao carregar campanha:', e)
   }
-])
+}
 
-// Computed - NPCs visíveis aos jogadores
-const visibleNPCs = computed(() => {
-  return activeNPCs.value.filter(npc => npc.visibleToPlayers)
+const loadNPCs = async () => {
+  try {
+    const { data: npcRows, error: npcErr } = await supabase
+      .from('npcs')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('name')
+
+    if (npcErr) throw npcErr
+
+    // Merge with visibility status from live_game_state.current_npcs
+    const { data: liveState } = await supabase
+      .from('live_game_state')
+      .select('current_npcs')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    const liveNpcIds: string[] = (liveState?.current_npcs ?? []).map((n: any) => n.id)
+    const liveVisibleIds: string[] = (liveState?.current_npcs ?? [])
+      .filter((n: any) => n.isVisible)
+      .map((n: any) => n.id)
+    const liveSpotlightIds: string[] = (liveState?.current_npcs ?? [])
+      .filter((n: any) => n.isSpotlight)
+      .map((n: any) => n.id)
+
+    allNPCs.value = (npcRows ?? []).map((npc: any) => ({
+      ...npc,
+      photo: npc.photo_url ?? null,
+      description: npc.bio ?? null,
+      inGame: liveNpcIds.includes(npc.id),
+      visibleToPlayers: liveVisibleIds.includes(npc.id),
+      isSpotlight: liveSpotlightIds.includes(npc.id),
+    }))
+  } catch (e) {
+    console.error('LIVE: Erro ao carregar NPCs:', e)
+  }
+}
+
+// ============================================
+// Session control
+// ============================================
+const handleStartSession = async () => {
+  startingSession.value = true
+  sessionError.value = null
+  try {
+    await startLiveGame(campaignId)
+    const { data } = await supabase
+      .from('live_game_state')
+      .select('current_scene, timeline_events, current_npcs')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    await loadNPCs()
+
+    if (data) {
+      currentSceneName.value = (data as any).current_scene ?? ''
+      sessionTimeline.value  = sanitizeTimeline((data as any).timeline_events ?? [])
+      applyLiveNpcState((data as any).current_npcs ?? [])
+    }
+  } catch (e: any) {
+    sessionError.value = e.message ?? 'Erro ao iniciar sessão'
+  } finally {
+    startingSession.value = false
+  }
+}
+
+const handleStopSession = async () => {
+  const now = Date.now()
+  const isWithinConfirmWindow =
+    stopConfirmRequestedAt.value !== null &&
+    (now - stopConfirmRequestedAt.value) <= stopConfirmWindowMs
+
+  if (!isWithinConfirmWindow) {
+    stopConfirmRequestedAt.value = now
+    toast.warning(
+      'Confirmar encerramento',
+      'Clique novamente em Encerrar Sessão em até 5 segundos para confirmar.'
+    )
+    return
+  }
+
+  stopConfirmRequestedAt.value = null
+  stoppingSession.value = true
+  try {
+    await stopLiveGame(campaignId)
+    toast.success('Sessão encerrada', 'O jogo ao vivo foi finalizado e voltou ao estado padrão.')
+    await router.push(`/campaign/${campaignId}/master`)
+  } catch (e: any) {
+    console.error('LIVE: Erro ao encerrar sessão:', e)
+    toast.error('Erro ao encerrar sessão', e?.message ?? 'Tente novamente em instantes.')
+  } finally {
+    stoppingSession.value = false
+  }
+}
+
+// ============================================
+// NPC controls
+// ============================================
+const selectNPC = (npc: any) => {
+  const isClosing = selectedNPC.value?.id === npc.id
+  selectedNPC.value = isClosing ? null : npc
+  setNpcSpotlight(isClosing ? null : npc.id)
+}
+
+const fetchLiveNpcsFromDb = async () => {
+  const { data, error } = await supabase
+    .from('live_game_state')
+    .select('current_npcs')
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('LIVE: Erro ao buscar current_npcs:', error)
+    return []
+  }
+
+  return (data?.current_npcs ?? []) as any[]
+}
+
+const toggleNPCVisibility = async (npc: any) => {
+  const current = await fetchLiveNpcsFromDb()
+  const updated = current.map((currentNpc: any) => {
+    if (currentNpc.id !== npc.id) return currentNpc
+    return { ...currentNpc, isVisible: !currentNpc.isVisible }
+  })
+
+  const { error } = await supabase
+    .from('live_game_state')
+    .update({ current_npcs: updated })
+    .eq('campaign_id', campaignId)
+
+  if (error) {
+    console.error('LIVE: Erro ao atualizar visibilidade de NPC:', error)
+    return
+  }
+
+  applyLiveNpcState(updated)
+}
+
+const setNpcSpotlight = async (npcId: string | null) => {
+  const current = await fetchLiveNpcsFromDb()
+  if (!current.length) return
+
+  if (npcId && !current.some((currentNpc: any) => currentNpc.id === npcId)) {
+    return
+  }
+
+  const updated = current.map((currentNpc: any) => ({
+    ...currentNpc,
+    isSpotlight: npcId ? currentNpc.id === npcId : false,
+  }))
+
+  const { error } = await supabase
+    .from('live_game_state')
+    .update({ current_npcs: updated })
+    .eq('campaign_id', campaignId)
+
+  if (error) {
+    console.error('LIVE: Erro ao destacar NPC na cena:', error)
+    return
+  }
+
+  applyLiveNpcState(updated)
+}
+
+// ============================================
+// Scene name
+// ============================================
+const saveSceneName = async () => {
+  if (!isGameLive.value) return
+  try {
+    await updateCurrentScene(currentSceneName.value)
+  } catch (e) {
+    console.error('LIVE: Erro ao salvar cena:', e)
+  }
+}
+
+// ============================================
+// Helpers
+// ============================================
+const formatTime = (d: Date) =>
+  new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(d)
+
+const goBackToMaster = () => router.push(`/campaign/${campaignId}/master`)
+const goToNPCTab = () => router.push(`/campaign/${campaignId}/master#npcs`)
+const goToMediaTab = () => router.push(`/campaign/${campaignId}/master#media`)
+
+const purgeSessionTechnicalEvents = async (timeline: any[]) => {
+  const cleanedTimeline = sanitizeTimeline(timeline)
+  const changed = cleanedTimeline.length !== (timeline || []).length
+  if (!changed) return cleanedTimeline
+
+  const { error } = await supabase
+    .from('live_game_state')
+    .update({ timeline_events: cleanedTimeline })
+    .eq('campaign_id', campaignId)
+
+  if (error) {
+    console.error('LIVE: Erro ao limpar eventos técnicos da sessão:', error)
+  }
+
+  return cleanedTimeline
+}
+
+const openEventConfirmation = () => {
+  if (!eventDraft.value.title.trim()) {
+    alert('Informe um título para o evento antes de confirmar.')
+    return
+  }
+  showEventConfirmModal.value = true
+}
+
+const confirmAndCreateEvent = async () => {
+  if (!user.value?.id) {
+    alert('Usuário não autenticado para registrar evento.')
+    return
+  }
+
+  creatingEvent.value = true
+  try {
+    const payload = {
+      campaign_id: campaignId,
+      title: eventDraft.value.title.trim(),
+      description: eventDraft.value.description.trim() || null,
+      type: eventDraft.value.type,
+      created_by: user.value.id,
+      npc_ids: [],
+      player_names: [],
+      metadata: { source: 'live-manual' },
+    }
+
+    const { error: insertError } = await supabase
+      .from('campaign_events')
+      .insert(payload)
+
+    if (insertError) throw insertError
+
+    const current = await fetchLiveNpcsFromDb()
+    const { data: liveData } = await supabase
+      .from('live_game_state')
+      .select('timeline_events')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    const newTimelineEvent = {
+      id: `story-${Date.now()}`,
+      type: eventDraft.value.type,
+      title: eventDraft.value.title.trim(),
+      description: eventDraft.value.description.trim() || undefined,
+      timestamp: new Date().toISOString(),
+      isVisible: true,
+      source: 'narrative',
+    }
+
+    const updatedTimeline = sanitizeTimeline([...(liveData?.timeline_events ?? []), newTimelineEvent])
+
+    await supabase
+      .from('live_game_state')
+      .update({
+        current_npcs: current,
+        timeline_events: updatedTimeline,
+      })
+      .eq('campaign_id', campaignId)
+
+    sessionTimeline.value = updatedTimeline
+    showEventConfirmModal.value = false
+    eventDraft.value = { title: '', description: '', type: 'narrative' }
+  } catch (e) {
+    console.error('LIVE: Erro ao criar evento narrativo:', e)
+    alert('Não foi possível registrar o evento. Verifique se a migration de campaign_events já foi aplicada no banco.')
+  } finally {
+    creatingEvent.value = false
+  }
+}
+
+// ============================================
+// Realtime subscription — sync session state
+// ============================================
+const startRealtime = () => {
+  realtimeChannel = subscribeToLiveGame(campaignId)
+}
+
+// ============================================
+// Lifecycle
+// ============================================
+
+// Stop live session when master navigates away (handles logout + manual navigation)
+const handleBeforeUnload = () => {
+  if (isGameLive.value) {
+    // Best-effort stop on tab close/refresh
+    stopLiveGame(campaignId)
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([loadCampaignData(), loadNPCs()])
+
+  // Restore state if master refreshed mid-session
+  const state = await fetchLiveGameState(campaignId)
+  if (state) {
+    currentSceneName.value = (state as any).current_scene ?? ''
+    sessionTimeline.value  = await purgeSessionTechnicalEvents((state as any).timeline_events ?? [])
+    applyLiveNpcState((state as any).current_npcs ?? [])
+  }
+
+  startRealtime()
+  if (process.client) window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
-// Estados
-const campaign = ref({ name: 'Campanha Teste' })
+watch(currentNpcs, (newCurrentNpcs) => {
+  applyLiveNpcState(newCurrentNpcs as any[])
+}, { deep: true })
 
-const musicTracks = ref([
-  { id: '1', name: 'Gothic Atmosphere', url: '/music/gothic1.mp3' },
-  { id: '2', name: 'City by Night', url: '/music/city.mp3' },
-  { id: '3', name: 'Vampire Court', url: '/music/court.mp3' }
-])
-
-// Mock data - Cenários/Mapas
-const scenes = ref([
-  { 
-    id: '1', 
-    name: 'Mansão Tremere', 
-    imageUrl: '/maps/mansion.jpg',
-    description: 'Antiga mansão gótica com segredos sombrios'
-  },
-  { 
-    id: '2', 
-    name: 'Centro da Cidade', 
-    imageUrl: '/maps/downtown.jpg',
-    description: 'Ruas movimentadas da metrópole noturna'
-  },
-  { 
-    id: '3', 
-    name: 'Cemitério Sombrio', 
-    imageUrl: '/maps/cemetery.jpg',
-    description: 'Local de descanso eterno e encontros secretos'
-  },
-  { 
-    id: '4', 
-    name: 'Bar Elysium', 
-    imageUrl: '/maps/bar.jpg',
-    description: 'Territorio neutro para todas as criaturas da noite'
+watch(inGameNPCs, (newInGameNpcs) => {
+  if (selectedNPC.value && !newInGameNpcs.some((npc: any) => npc.id === selectedNPC.value.id)) {
+    selectedNPC.value = null
   }
-])
+}, { deep: true })
 
-const recentEvents = ref([
-  {
-    id: '1',
-    title: 'Encontro com Vampiro Ancião',
-    timestamp: new Date(Date.now() - 300000)
-  },
-  {
-    id: '2',
-    title: 'Investigação no Bar',
-    timestamp: new Date(Date.now() - 600000)
+watch(timelineEvents, (newEvents) => {
+  sessionTimeline.value = sanitizeTimeline(newEvents as any[])
+}, { deep: true })
+
+watch(sessionActive, async (isActive) => {
+  if (!isActive) return
+
+  await loadNPCs()
+  const state = await fetchLiveGameState(campaignId)
+  if (state) {
+    applyLiveNpcState((state as any).current_npcs ?? [])
   }
-])
+})
 
-// Métodos
-const selectNPC = (npc: any) => {
-  selectedNPC.value = selectedNPC.value?.id === npc.id ? null : npc
-}
-
-const toggleMusic = () => {
-  isPlaying.value = !isPlaying.value
-  console.log('Música:', isPlaying.value ? 'Tocando' : 'Pausada')
-}
-
-const changeTrack = () => {
-  if (selectedTrack.value) {
-    isPlaying.value = true
-  } else {
-    isPlaying.value = false
-  }
-}
-
-const addEvent = () => {
-  const newEvent = {
-    id: Date.now().toString(),
-    title: `Evento ${recentEvents.value.length + 1}`,
-    timestamp: new Date()
-  }
-  recentEvents.value.unshift(newEvent)
-}
-
-// Métodos - Controle de NPCs
-const toggleNPCVisibility = (npc: any) => {
-  npc.visibleToPlayers = !npc.visibleToPlayers
-  console.log(`NPC ${npc.name} ${npc.visibleToPlayers ? 'visível' : 'oculto'} para jogadores`)
-  // TODO: Sincronizar com jogadores via WebSocket
-}
-
-const highlightNPC = (npc: any) => {
-  // Destacar NPC quando jogadores clicam nele
-  console.log('Destacando NPC:', npc.name)
-  // TODO: Adicionar efeito visual de destaque
-}
-
-// Métodos - Controle de Mapa
-const getCurrentMap = () => {
-  const scene = scenes.value.find(s => s.id === selectedScene.value)
-  if (!scene) return null
-  
-  return {
-    id: scene.id,
-    name: scene.name,
-    url: scene.imageUrl,
-    type: 'regional' as const,
-    description: scene.description,
-    createdAt: new Date(),
-    markers: []
-  }
-}
-
-const changeScene = () => {
-  console.log('Mapa alterado para:', selectedScene.value)
-  // TODO: Sincronizar com jogadores via WebSocket
-}
-
-const addMarker = () => {
-  console.log('Adicionando marcador ao mapa')
-  // TODO: Implementar adição de marcador
-}
-
-const clearMarkers = () => {
-  console.log('Limpando todos os marcadores')
-  // TODO: Implementar limpeza de marcadores
-}
-
-const onMapChanged = (map: any) => {
-  console.log('Mapa modificado:', map)
-  // TODO: Sincronizar mudanças com jogadores
-}
-
-const onMarkerMoved = (marker: any) => {
-  console.log('Marcador movido:', marker)
-  // TODO: Sincronizar posição com jogadores
-}
-
-const formatTime = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date)
-}
-
-const goBackToMaster = () => {
-  router.push(`/campaign/${campaignId}/master`)
-}
-
-const togglePlayerView = () => {
-  console.log('Toggle player view')
-}
-
-onMounted(() => {
-  console.log('Live Game iniciado para campanha:', campaignId)
+onBeforeUnmount(async () => {
+  if (process.client) window.removeEventListener('beforeunload', handleBeforeUnload)
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
 })
 </script>
 
 <style scoped>
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* ── Corner decorations ── */
+.lc {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  z-index: 2;
 }
+.lc::before, .lc::after {
+  content: '';
+  position: absolute;
+  background: #dc2626;
+}
+.lc::before { width: 12px; height: 1px; }
+.lc::after  { width: 1px; height: 12px; }
+.lc-tl { top: -1px; left: -1px; }
+.lc-tr { top: -1px; right: -1px; }
+.lc-tr::before { right: 0; }
+.lc-tr::after  { right: 0; }
+.lc-bl { bottom: -1px; left: -1px; }
+.lc-bl::before { bottom: 0; }
+.lc-bl::after  { bottom: 0; }
+.lc-br { bottom: -1px; right: -1px; }
+.lc-br::before { right: 0; bottom: 0; }
+.lc-br::after  { right: 0; bottom: 0; }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: .5;
-  }
-}
+/* ── Animations ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+@keyframes spin  { to{transform:rotate(360deg)} }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-spin  { animation: spin 1s linear infinite; }
 </style>

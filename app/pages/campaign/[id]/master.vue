@@ -174,6 +174,12 @@
           ref="politicsTabRef"
         />
 
+        <EventsTab
+          v-if="currentTab === 'events'"
+          :campaign-id="campaignId"
+          :players="(campaign as any)?.players ?? []"
+        />
+
         <SettingsTab
           v-if="currentTab === 'settings'"
           :campaign="campaign"
@@ -224,6 +230,7 @@ import PoliticsTab from '~/components/campaign/master/PoliticsTab.vue'
 import SettingsTab from '~/components/campaign/master/SettingsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
 import OverviewTab from '~/components/campaign/master/OverviewTab.vue'
+import EventsTab from '~/components/campaign/master/EventsTab.vue'
 
 // ============================================
 // SVG Icon Components for Tabs
@@ -266,6 +273,13 @@ const IconMedia: FunctionalComponent = () =>
     h('path', { d: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z' })
   ])
 
+const IconEvents: FunctionalComponent = () =>
+  h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
+    h('path', { d: 'M12 2L2 7l10 5 10-5-10-5z' }),
+    h('path', { d: 'M2 17l10 5 10-5' }),
+    h('path', { d: 'M2 12l10 5 10-5' })
+  ])
+
 // ============================================
 // Composables
 // ============================================
@@ -290,7 +304,7 @@ const campaign = ref<Campaign | null>(null)
 const error = ref<string | null>(null)
 const localLoading = ref(false)
 // Persist tab via URL hash
-const validTabs = ['overview', 'players', 'npcs', 'notes', 'settings', 'media']
+const validTabs = ['overview', 'players', 'npcs', 'notes', 'events', 'settings', 'media']
 const hashTab = route.hash?.replace('#', '')
 const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'overview')
 
@@ -323,6 +337,7 @@ const tabs = ref([
   { id: 'players', label: 'Jogadores', iconComponent: IconPlayers },
   { id: 'npcs', label: 'NPCs', iconComponent: IconNPCs },
   { id: 'notes', label: 'Política', iconComponent: IconPolitics },
+  { id: 'events', label: 'Eventos', iconComponent: IconEvents },
   { id: 'settings', label: 'Configurações', iconComponent: IconSettings },
   { id: 'media', label: 'Mídia', iconComponent: IconMedia }
 ])

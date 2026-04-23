@@ -153,7 +153,14 @@
 
     <!-- NPC Details Modal -->
     <Teleport to="body">
-      <NPCDetailsModal v-if="viewingNPC" :npc="viewingNPC" @close="closeDetailsModal" @edit="editNPC" @add-to-game="addToGame" />
+      <NPCDetailsModal
+        v-if="viewingNPC"
+        :npc="viewingNPC"
+        :is-in-game="isNpcInGame(viewingNPC.id)"
+        @close="closeDetailsModal"
+        @edit="editNPC"
+        @add-to-game="addToGame"
+      />
     </Teleport>
 
     <!-- NPC Sheet Modal -->
@@ -200,7 +207,7 @@ interface Props { campaignId: string }
 const props = defineProps<Props>()
 
 const { campaignNPCs: npcs, loadCampaignNPCs, createNPC: createNPCInCampaign, updateNPC, deleteNPC, subscribeToNPCs, loading } = useCampaign()
-const { addNPCToGame, isGameLive } = useLiveGame()
+const { addNPCToGame, removeNPCFromGame, fetchLiveGameState, subscribeToLiveGame, currentNpcs } = useLiveGame()
 const toast = useToast()
 
 const sortedNPCs = computed(() => [...npcs.value].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')))
@@ -242,12 +249,22 @@ const viewingSheet = ref<NPC | null>(null)
 const showDeleteModal = ref(false)
 const npcToDelete = ref<NPC | null>(null)
 let npcSubscription: any = null
+let liveGameSubscription: any = null
 
 onMounted(async () => {
   await loadCampaignNPCs(props.campaignId)
+  await fetchLiveGameState(props.campaignId)
   npcSubscription = subscribeToNPCs(props.campaignId)
+  liveGameSubscription = subscribeToLiveGame(props.campaignId)
 })
-onUnmounted(() => { npcSubscription?.unsubscribe() })
+onUnmounted(() => {
+  npcSubscription?.unsubscribe()
+  liveGameSubscription?.unsubscribe()
+})
+
+const isNpcInGame = (npcId: string) => {
+  return (currentNpcs.value || []).some((npc: any) => npc.id === npcId)
+}
 
 const createNPC = () => { showCreateModal.value = true }
 const editNPC = (npc: any) => { viewingNPC.value = null; editingNPC.value = npc; showCreateModal.value = true }
@@ -278,15 +295,32 @@ const saveNPCSheet = async (npcData: any) => {
 }
 
 const addToGame = async (npc: any) => {
-  if (!isGameLive.value) { toast.error('Jogo inativo', 'Nenhum jogo está ativo'); return }
-  try { await addNPCToGame(npc, true); toast.success('NPC adicionado!', `${npc.name} entrou no jogo ao vivo`) }
+  if (isNpcInGame(npc.id)) {
+    try {
+      await removeNPCFromGame(npc.id)
+      toast.success('NPC removido do jogo', `${npc.name} foi removido da sessão ao vivo`)
+    } catch (error: any) {
+      console.error('Erro:', error)
+      toast.error('Erro ao remover do jogo', error?.message || 'Tente novamente')
+    }
+    return
+  }
+
+  try {
+    await addNPCToGame(props.campaignId, npc, true)
+    toast.success('NPC adicionado!', `${npc.name} foi marcado como usado no jogo`)
+  }
   catch (error: any) { console.error('Erro:', error); toast.error('Erro ao adicionar ao jogo', error?.message || 'Tente novamente') }
 }
 
 const confirmDeleteNPC = (npc: any) => { npcToDelete.value = npc; showDeleteModal.value = true }
 const executeDeleteNPC = async () => {
   if (npcToDelete.value) {
-    try { await deleteNPC(npcToDelete.value.id); toast.success('NPC removido!', `${npcToDelete.value.name} foi removido`) }
+    try {
+      await removeNPCFromGame(npcToDelete.value.id, props.campaignId)
+      await deleteNPC(npcToDelete.value.id)
+      toast.success('NPC removido!', `${npcToDelete.value.name} foi removido`)
+    }
     catch (error: any) { console.error('Erro:', error); toast.error('Erro ao remover NPC', error?.message || 'Tente novamente') }
   }
   closeDeleteModal()

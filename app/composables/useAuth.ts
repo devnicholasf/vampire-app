@@ -3,6 +3,8 @@
 // ============================================
 
 import { createClient } from '@supabase/supabase-js'
+import { useRuntimeConfig, useState, navigateTo } from '#imports'
+import { computed } from 'vue'
 import type { AuthUser, LoginCredentials, RegisterData } from '~/types'
 
 export const useAuth = () => {
@@ -188,6 +190,38 @@ export const useAuth = () => {
   // Logout
   // ============================================
   const logout = async () => {
+    // Reset active live sessions for this user before signing out
+    try {
+      if (user.value?.id) {
+        const { data: liveStates } = await supabase
+          .from('live_game_state')
+          .select('campaign_id')
+          .eq('is_live', true)
+          .contains('active_players', [user.value.id])
+
+        if (liveStates && liveStates.length > 0) {
+          await Promise.all(
+            liveStates.map((ls: any) =>
+              supabase
+                .from('live_game_state')
+                .update({
+                  is_live: false,
+                  active_players: [],
+                  current_scene: '',
+                  current_npcs: [],
+                  timeline_events: [],
+                  current_image_url: null,
+                  current_music_url: null,
+                })
+                .eq('campaign_id', ls.campaign_id)
+            )
+          )
+        }
+      }
+    } catch (_) {
+      // Non-blocking: proceed with logout even if cleanup fails
+    }
+
     if (supabase) {
       await supabase.auth.signOut()
     }
