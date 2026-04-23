@@ -5,9 +5,9 @@
     <!-- CARREGANDO                                     -->
     <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div v-if="pageLoading" class="flex items-center justify-center min-h-screen">
-      <div class="flex flex-col items-center gap-4">
-        <svg class="w-8 h-8 text-red-800" style="animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-        <p class="text-xs text-[#4a4a5a] uppercase tracking-widest">Carregando sessÃ£o...</p>
+      <div class="text-center">
+        <div class="df-spinner"></div>
+        <p class="df-text-muted mt-4">Carregando sessão...</p>
       </div>
     </div>
 
@@ -265,4 +265,18 @@ onBeforeUnmount(() => {
 .lc-br::after  { right: 0; bottom: 0; }
 @keyframes spin  { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+/* ── Spinner padrão do sistema ── */
+.df-spinner {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #7f1d1d;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.df-text-muted {
+  color: #6b6b7b;
+  font-size: 0.8rem;
+}
 </style>
