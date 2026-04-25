@@ -16,6 +16,8 @@ interface LiveGameState {
   currentNpcs: any[]
   activePlayers: string[]
   timelineEvents: any[]
+  currentImageUrl: string
+  currentAudioUrl: string
   createdAt: Date
   updatedAt: Date
 }
@@ -29,6 +31,8 @@ interface SupabaseLiveGameState {
   current_npcs: any[]
   active_players: string[]
   timeline_events: any[]
+  current_image_url?: string
+  current_audio_url?: string
   created_at: string
   updated_at: string
 }
@@ -62,6 +66,8 @@ export const useLiveGame = () => {
     currentNpcs: supabaseData.current_npcs || [],
     activePlayers: supabaseData.active_players || [],
     timelineEvents: supabaseData.timeline_events || [],
+    currentImageUrl: supabaseData.current_image_url ?? '',
+    currentAudioUrl: supabaseData.current_audio_url ?? '',
     createdAt: new Date(supabaseData.created_at),
     updatedAt: new Date(supabaseData.updated_at)
   })
@@ -72,6 +78,7 @@ export const useLiveGame = () => {
   const currentNpcs = useState<NPC[]>('currentNpcs', () => [])
   const activePlayers = useState<string[]>('activePlayers', () => [])
   const isGameLive = useState<boolean>('isGameLive', () => false)
+  const currentSceneMedia = useState<{ imageUrl: string; audioUrl: string }>('liveGame.sceneMedia', () => ({ imageUrl: '', audioUrl: '' }))
   const loading = useState<boolean>('liveGame.loading', () => false)
   const error = useState<string | null>('liveGame.error', () => null)
 
@@ -408,6 +415,10 @@ export const useLiveGame = () => {
         currentNpcs.value = (data as SupabaseLiveGameState).current_npcs || []
         activePlayers.value = (data as SupabaseLiveGameState).active_players || []
         timelineEvents.value = (data as SupabaseLiveGameState).timeline_events || []
+        currentSceneMedia.value = {
+          imageUrl: (data as any).current_image_url ?? '',
+          audioUrl: (data as any).current_audio_url ?? '',
+        }
       } else {
         isGameLive.value = false
         liveGameState.value = null
@@ -453,6 +464,10 @@ export const useLiveGame = () => {
             currentNpcs.value = newState.current_npcs || []
             activePlayers.value = newState.active_players || []
             timelineEvents.value = newState.timeline_events || []
+            currentSceneMedia.value = {
+              imageUrl: (newState as any).current_image_url ?? '',
+              audioUrl: (newState as any).current_audio_url ?? '',
+            }
           }
         }
       )
@@ -508,12 +523,36 @@ export const useLiveGame = () => {
   }
 
   // Limpar dados quando sair
+  const updateSceneMedia = async (campaignId: string, imageUrl: string, audioUrl: string) => {
+    try {
+      const { error: updateError } = await supabase
+        .from('live_game_state')
+        .update({
+          current_image_url: imageUrl,
+          current_audio_url: audioUrl,
+        })
+        .eq('campaign_id', campaignId)
+
+      if (updateError) throw updateError
+
+      currentSceneMedia.value = { imageUrl, audioUrl }
+      if (liveGameState.value) {
+        liveGameState.value.currentImageUrl = imageUrl
+        liveGameState.value.currentAudioUrl = audioUrl
+      }
+    } catch (err: any) {
+      console.error('Erro ao atualizar mídia da cena:', err)
+      throw err
+    }
+  }
+
   const clearLiveGameData = () => {
     liveGameState.value = null
     timelineEvents.value = []
     currentNpcs.value = []
     activePlayers.value = []
     isGameLive.value = false
+    currentSceneMedia.value = { imageUrl: '', audioUrl: '' }
   }
 
   return {
@@ -523,6 +562,7 @@ export const useLiveGame = () => {
     currentNpcs: readonly(currentNpcs),
     activePlayers: readonly(activePlayers),
     isGameLive: readonly(isGameLive),
+    currentSceneMedia: readonly(currentSceneMedia),
     loading: readonly(loading),
     error: readonly(error),
 
@@ -538,6 +578,7 @@ export const useLiveGame = () => {
     // Timeline Methods
     addTimelineEvent,
     updateCurrentScene,
+    updateSceneMedia,
 
     // Player Methods
     joinGame,

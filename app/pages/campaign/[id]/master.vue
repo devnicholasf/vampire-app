@@ -338,8 +338,8 @@ const tabs = ref([
   { id: 'npcs', label: 'NPCs', iconComponent: IconNPCs },
   { id: 'notes', label: 'Política', iconComponent: IconPolitics },
   { id: 'events', label: 'Eventos', iconComponent: IconEvents },
+  { id: 'media', label: 'Mídia', iconComponent: IconMedia },
   { id: 'settings', label: 'Configurações', iconComponent: IconSettings },
-  { id: 'media', label: 'Mídia', iconComponent: IconMedia }
 ])
 
 // ============================================

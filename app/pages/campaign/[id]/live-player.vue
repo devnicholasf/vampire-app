@@ -78,13 +78,32 @@
       <!-- ConteÃºdo principal -->
       <div class="flex flex-col items-center justify-start min-h-[calc(100vh-57px)] px-6 py-8 gap-8">
 
-        <!-- â”€â”€ Cena Atual â”€â”€ -->
+        <!-- ── Cena Atual ── -->
         <div v-if="currentScene" class="text-center">
           <p class="text-[11px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-1">Cena</p>
           <h2 class="text-2xl font-bold text-white">{{ currentScene }}</h2>
         </div>
         <div v-else class="text-center">
           <p class="text-sm text-[#4a4a5a]">Aguardando o Mestre definir a cena...</p>
+        </div>
+
+        <!-- ── Imagem da Cena ── -->
+        <div v-if="currentImageUrl" class="w-full max-w-3xl rounded-xl overflow-hidden border border-[#7f1d1d]"
+             style="box-shadow:0 4px 32px rgba(127,29,29,0.35)">
+          <img :src="currentImageUrl" alt="Imagem da cena" style="width:100%;object-fit:contain;max-height:65vh;display:block;">
+        </div>
+
+        <!-- ── Música da Cena ── -->
+        <div v-if="currentAudioUrl" class="w-full max-w-xl rounded-lg border border-[#2d1515] px-4 py-3"
+             style="background:#0a0a1a">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-2">Música da Cena</p>
+          <audio
+            ref="audioPlayerRef"
+            controls
+            :src="currentAudioUrl"
+            class="w-full"
+            style="color-scheme:dark;accent-color:#d4a647;"
+          ></audio>
         </div>
 
         <!-- â”€â”€ NPCs visÃ­veis â”€â”€ -->
@@ -150,7 +169,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { createClient } from '@supabase/supabase-js'
@@ -169,10 +188,13 @@ const supabase   = createClient(config.public.supabaseUrl, config.public.supabas
 const { isGameLive, fetchLiveGameState } = useLiveGame()
 
 // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const campaignName = ref('')
-const currentScene = ref('')
-const liveNpcs     = ref<any[]>([])
-const pageLoading  = ref(true)
+const campaignName    = ref('')
+const currentScene    = ref('')
+const liveNpcs        = ref<any[]>([])
+const currentImageUrl = ref('')
+const currentAudioUrl = ref('')
+const audioPlayerRef  = ref<HTMLAudioElement | null>(null)
+const pageLoading     = ref(true)
 
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 
@@ -193,15 +215,22 @@ const loadState = async () => {
 
   const state = await fetchLiveGameState(campaignId)
   if (state) {
-    currentScene.value = (state as any).current_scene ?? ''
-    liveNpcs.value     = (state as any).current_npcs ?? []
+    currentScene.value    = (state as any).current_scene ?? ''
+    liveNpcs.value        = (state as any).current_npcs ?? []
+    currentImageUrl.value = (state as any).current_image_url ?? ''
+    currentAudioUrl.value = (state as any).current_audio_url ?? ''
   }
 }
 
 const applyState = (data: any) => {
   if (!data) return
-  currentScene.value = data.current_scene ?? ''
-  liveNpcs.value     = data.current_npcs ?? []
+  currentScene.value    = data.current_scene ?? ''
+  liveNpcs.value        = data.current_npcs ?? []
+  currentImageUrl.value = data.current_image_url ?? ''
+  const newAudio        = data.current_audio_url ?? ''
+  if (newAudio !== currentAudioUrl.value) {
+    currentAudioUrl.value = newAudio
+  }
 }
 
 // â”€â”€ Realtime â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -222,6 +251,15 @@ const startRealtime = () => {
     )
     .subscribe()
 }
+// ── Autoplay audio when master changes track ──────────────
+watch(currentAudioUrl, async (newUrl) => {
+  if (!newUrl) return
+  await nextTick()
+  if (audioPlayerRef.value) {
+    try { await audioPlayerRef.value.play() } catch (_) { /* autoplay blocked */ }
+  }
+})
+
 
 // â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const goBack = () => router.push(`/campaign/${campaignId}/player`)

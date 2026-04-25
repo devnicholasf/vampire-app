@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="min-h-screen" style="background:#080810; color:#c4c4d4;">
 
     <!-- ═══════════════════════════════════════════════════════ -->
@@ -58,8 +58,8 @@
           <button
             :disabled="startingSession"
             style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:6px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.8rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 12px rgba(127,29,29,0.5);"
-            @mouseover="$event.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'"
-            @mouseout="$event.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'"
+            @mouseover="($event.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'"
+            @mouseout="($event.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'"
             @click="handleStartSession"
           >
             <svg v-if="startingSession" style="width:16px;height:16px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
@@ -68,8 +68,8 @@
           </button>
           <button
             style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 28px;border-radius:6px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;"
-            @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; e.currentTarget.style.background='rgba(255,255,255,0.05)'; }"
-            @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; e.currentTarget.style.background='transparent'; }"
+            @mouseover="e => { const el = e.currentTarget as HTMLElement; el.style.color='#fff'; el.style.borderColor='#9b9bbb'; el.style.background='rgba(255,255,255,0.05)'; }"
+            @mouseout="e => { const el = e.currentTarget as HTMLElement; el.style.color='#9b9bbb'; el.style.borderColor='#4a4a5a'; el.style.background='transparent'; }"
             @click="goBackToMaster"
           >
             <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -103,8 +103,8 @@
           <div class="flex items-center gap-2">
             <button
               style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
-              @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; }"
-              @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; }"
+              @mouseover="e => { const el = e.currentTarget as HTMLElement; el.style.color='#fff'; el.style.borderColor='#9b9bbb'; }"
+              @mouseout="e => { const el = e.currentTarget as HTMLElement; el.style.color='#9b9bbb'; el.style.borderColor='#4a4a5a'; }"
               @click="goBackToMaster"
             >
               <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -113,8 +113,8 @@
             <button
               :disabled="stoppingSession"
               style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:5px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(127,29,29,0.4);"
-              @mouseover="e => { if (!stoppingSession) e.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
-              @mouseout="e => { e.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
+              @mouseover="e => { if (!stoppingSession) (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
+              @mouseout="e => { (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
               @click="openStopSessionConfirmation"
             >
               <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
@@ -253,38 +253,184 @@
             />
           </section>
 
-          <!-- Mídia da Cena (integração com aba Mídia) -->
+          <!-- Mídia da Cena -->
           <section>
-            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Mídia da Cena</h3>
-            <div class="space-y-2 rounded border border-[#2d1515] p-3" style="background:rgba(255,255,255,0.02)">
-              <div>
-                <label class="text-[11px] text-[#6b6b7b] uppercase tracking-wider">Imagem</label>
-                <select
-                  v-model="selectedSceneImage"
-                  class="mt-1 w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
-                >
-                  <option value="">Nenhuma imagem selecionada</option>
-                  <option v-if="campaign?.current_image_url" :value="campaign.current_image_url">Imagem atual da campanha</option>
-                </select>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-5">Mídia da Cena</h3>
+
+            <!-- ── Imagens ── -->
+            <div class="mb-3">
+              <p class="text-[11px] uppercase tracking-wider mb-1.5" style="color:#ffffff">Imagens</p>
+
+              <div v-if="inSceneImages.length === 0 && !showImagePicker" class="text-center py-1.5 mb-1">
+                <p class="text-xs text-[#4a4a5a]">Nenhuma imagem na cena.</p>
               </div>
-              <div>
-                <label class="text-[11px] text-[#6b6b7b] uppercase tracking-wider">Música</label>
-                <select
-                  v-model="selectedSceneMusic"
-                  class="mt-1 w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
+
+              <div v-if="inSceneImages.length > 0" class="space-y-1.5 mb-2">
+                <div
+                  v-for="item in inSceneImages"
+                  :key="item.url"
+                  class="rounded border p-2 flex items-center justify-between gap-1.5 transition-all"
+                  :style="`border-color:${item.visibleToPlayers ? 'rgba(22,101,52,0.6)' : '#2d1515'};background:${item.visibleToPlayers ? 'rgba(0,50,0,0.18)' : 'rgba(255,255,255,0.02)'};`"
                 >
-                  <option value="">Nenhuma música selecionada</option>
-                  <option v-if="campaign?.current_music_url" :value="campaign.current_music_url">Música atual da campanha</option>
-                </select>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded shrink-0 overflow-hidden" style="background:#0d0d20">
+                      <img :src="item.url" :alt="item.name" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-xs font-medium truncate" style="color:#ffffff">{{ item.name }}</p>
+                  </div>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <button
+                      class="p-1 rounded transition-colors"
+                      :class="item.visibleToPlayers ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
+                      :title="item.visibleToPlayers ? 'Visível aos jogadores — clique para ocultar' : 'Oculto — clique para mostrar'"
+                      @click="toggleMediaVisibility(item)"
+                    >
+                      <svg v-if="item.visibleToPlayers" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                    <button
+                      class="p-1 rounded text-[#4a4a5a] hover:text-red-400 transition-colors"
+                      title="Remover da cena"
+                      @click="removeMediaFromScene(item)"
+                    >
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
+
               <button
-                class="w-full text-xs px-2 py-1.5 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white transition-colors"
-                @click="goToMediaTab"
+                class="w-full text-xs px-2 py-1.5 rounded border transition-colors flex items-center justify-center gap-1.5"
+                :class="showImagePicker ? 'border-red-800 text-red-400 hover:bg-red-950/20' : 'border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white'"
+                @click="showImagePicker = !showImagePicker; showAudioPicker = false; mediaPickerSearch = ''"
               >
-                Gerenciar na Aba Mídia
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line v-if="!showImagePicker" x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                {{ showImagePicker ? 'Fechar' : 'Adicionar Imagem' }}
               </button>
-              <p class="text-[11px] text-[#4a4a5a]">Esses campos usarão os arquivos enviados na aba Mídia.</p>
+
+              <div v-if="showImagePicker" class="mt-2 space-y-1.5">
+                <input
+                  v-model="mediaPickerSearch"
+                  type="text"
+                  placeholder="Buscar imagem..."
+                  class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none focus:border-[#d4a647]"
+                />
+                <div v-if="availableImagesPicker.length === 0" class="text-center py-3">
+                  <p class="text-xs text-[#4a4a5a]">{{ loadingMedia ? 'Carregando...' : 'Nenhuma imagem disponível.' }}</p>
+                </div>
+                <div
+                  v-for="img in availableImagesPicker"
+                  :key="img.url"
+                  class="flex items-center justify-between rounded border border-[#2d1515] px-2 py-1.5 hover:border-red-900/60 transition-colors"
+                  style="background:rgba(255,255,255,0.02)"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded shrink-0 overflow-hidden" style="background:#0d0d20">
+                      <img :src="img.url" :alt="img.name" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-xs font-medium truncate" style="color:#ffffff">{{ img.name }}</p>
+                  </div>
+                  <button
+                    class="shrink-0 p-1 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:bg-red-950/20 transition-colors"
+                    title="Adicionar à cena"
+                    @click="addMediaToScene(img, 'image')"
+                  >
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                </div>
+              </div>
             </div>
+
+            <!-- ── Áudio ── -->
+            <div class="mb-3">
+              <p class="text-[11px] uppercase tracking-wider mb-1.5" style="color:#ffffff">Áudio</p>
+
+              <div v-if="inSceneAudios.length === 0 && !showAudioPicker" class="text-center py-1.5 mb-1">
+                <p class="text-xs text-[#4a4a5a]">Nenhuma música na cena.</p>
+              </div>
+
+              <div v-if="inSceneAudios.length > 0" class="space-y-1.5 mb-2">
+                <div
+                  v-for="item in inSceneAudios"
+                  :key="item.url"
+                  class="rounded border p-2 flex items-center justify-between gap-1.5 transition-all"
+                  :style="`border-color:${item.visibleToPlayers ? 'rgba(22,101,52,0.6)' : '#2d1515'};background:${item.visibleToPlayers ? 'rgba(0,50,0,0.18)' : 'rgba(255,255,255,0.02)'};`"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center" style="background:linear-gradient(135deg,#4a4a5a,#6b6b7b)">
+                      <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    </div>
+                    <p class="text-xs font-medium truncate" style="color:#ffffff">{{ item.name }}</p>
+                  </div>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    <button
+                      class="p-1 rounded transition-colors"
+                      :class="item.visibleToPlayers ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
+                      :title="item.visibleToPlayers ? 'Tocando para jogadores — clique para parar' : 'Parado — clique para tocar'"
+                      @click="toggleMediaVisibility(item)"
+                    >
+                      <svg v-if="item.visibleToPlayers" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    </button>
+                    <button
+                      class="p-1 rounded text-[#4a4a5a] hover:text-red-400 transition-colors"
+                      title="Remover da cena"
+                      @click="removeMediaFromScene(item)"
+                    >
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class="w-full text-xs px-2 py-1.5 rounded border transition-colors flex items-center justify-center gap-1.5"
+                :class="showAudioPicker ? 'border-red-800 text-red-400 hover:bg-red-950/20' : 'border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:text-white'"
+                @click="showAudioPicker = !showAudioPicker; showImagePicker = false; mediaPickerSearch = ''"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line v-if="!showAudioPicker" x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                {{ showAudioPicker ? 'Fechar' : 'Adicionar Áudio' }}
+              </button>
+
+              <div v-if="showAudioPicker" class="mt-2 space-y-1.5">
+                <input
+                  v-model="mediaPickerSearch"
+                  type="text"
+                  placeholder="Buscar áudio..."
+                  class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none focus:border-[#d4a647]"
+                />
+                <div v-if="availableAudiosPicker.length === 0" class="text-center py-3">
+                  <p class="text-xs text-[#4a4a5a]">{{ loadingMedia ? 'Carregando...' : 'Nenhum áudio disponível.' }}</p>
+                </div>
+                <div
+                  v-for="aud in availableAudiosPicker"
+                  :key="aud.url"
+                  class="flex items-center justify-between rounded border border-[#2d1515] px-2 py-1.5 hover:border-red-900/60 transition-colors"
+                  style="background:rgba(255,255,255,0.02)"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-6 h-6 rounded-full shrink-0 flex items-center justify-center" style="background:linear-gradient(135deg,#4a4a5a,#6b6b7b)">
+                      <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    </div>
+                    <p class="text-xs font-medium truncate" style="color:#ffffff">{{ aud.name }}</p>
+                  </div>
+                  <button
+                    class="shrink-0 p-1 rounded border border-[#4a4a5a]/40 text-[#d4a647] hover:border-[#d4a647] hover:bg-red-950/20 transition-colors"
+                    title="Adicionar à cena"
+                    @click="addMediaToScene(aud, 'audio')"
+                  >
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </section>
 
           <!-- Criar Evento Narrativo -->
@@ -356,6 +502,24 @@
           </div>
           <div v-else class="text-center">
             <p class="text-sm text-[#4a4a5a]">Descreva a cena no painel lateral...</p>
+          </div>
+
+          <!-- Imagem da Cena Ativa -->
+          <div v-if="currentSceneMedia.imageUrl" class="w-full max-w-2xl rounded-xl overflow-hidden border border-[#7f1d1d]"
+               style="box-shadow:0 4px 32px rgba(127,29,29,0.3)">
+            <img :src="currentSceneMedia.imageUrl" alt="Imagem da cena" style="width:100%;object-fit:cover;max-height:400px;display:block;">
+          </div>
+
+          <!-- Áudio da Cena Ativo -->
+          <div v-if="currentSceneMedia.audioUrl" class="w-full max-w-2xl rounded-lg border border-[#2d1515] px-4 py-3"
+               style="background:#0a0a1a">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-2">Música da Cena</p>
+            <audio
+              controls
+              :src="currentSceneMedia.audioUrl"
+              class="w-full"
+              style="color-scheme:dark;accent-color:#d4a647;"
+            ></audio>
           </div>
 
           <!-- Grid de NPCs visíveis -->
@@ -480,8 +644,8 @@
         <div class="flex justify-end gap-2">
           <button
             style="padding:8px 16px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
-            @mouseover="e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#9b9bbb'; }"
-            @mouseout="e => { e.currentTarget.style.color='#9b9bbb'; e.currentTarget.style.borderColor='#4a4a5a'; }"
+            @mouseover="e => { const el = e.currentTarget as HTMLElement; el.style.color='#fff'; el.style.borderColor='#9b9bbb'; }"
+            @mouseout="e => { const el = e.currentTarget as HTMLElement; el.style.color='#9b9bbb'; el.style.borderColor='#4a4a5a'; }"
             @click="showStopSessionConfirmModal = false"
           >
             Cancelar
@@ -489,8 +653,8 @@
           <button
             :disabled="stoppingSession"
             style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:5px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(127,29,29,0.4);"
-            @mouseover="e => { if (!stoppingSession) e.currentTarget.style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
-            @mouseout="e => { e.currentTarget.style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
+            @mouseover="e => { if (!stoppingSession) (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
+            @mouseout="e => { (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
             @click="handleStopSession"
           >
             <svg v-if="stoppingSession" style="width:13px;height:13px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
@@ -551,10 +715,12 @@ const {
   currentNpcs,
   timelineEvents,
   activePlayers,
+  currentSceneMedia,
   startLiveGame,
   stopLiveGame,
   fetchLiveGameState,
   updateCurrentScene,
+  updateSceneMedia,
   addNPCToGame,
   removeNPCFromGame,
 } = useLiveGame()
@@ -567,10 +733,19 @@ const allNPCs          = ref<any[]>([])
 const playerCount      = ref(0)
 const selectedNPC      = ref<any>(null)
 const currentSceneName = ref('')
-const selectedSceneImage = ref('')
-const selectedSceneMusic = ref('')
 const showNpcPicker    = ref(false)
 const npcSearch        = ref('')
+
+// Media items in scene (NPC-style picker)
+interface MediaItem { name: string; url: string; type: 'image' | 'audio'; visibleToPlayers: boolean }
+const sceneMediaItems   = ref<MediaItem[]>([])
+const showImagePicker   = ref(false)
+const showAudioPicker   = ref(false)
+const mediaPickerSearch = ref('')
+// Available files from Storage (populated by loadMediaFiles)
+const sceneImages = ref<{ name: string; url: string }[]>([])
+const sceneAudios = ref<{ name: string; url: string }[]>([])
+const loadingMedia = ref(false)
 
 const eventDraft = ref({
   title: '',
@@ -607,6 +782,21 @@ const availableNPCs = computed(() => {
     .filter(n => !q || n.name.toLowerCase().includes(q))
 })
 
+// Media computed
+const inSceneImages = computed(() => sceneMediaItems.value.filter(m => m.type === 'image'))
+const inSceneAudios = computed(() => sceneMediaItems.value.filter(m => m.type === 'audio'))
+const availableImagesPicker = computed(() => {
+  const q = mediaPickerSearch.value.toLowerCase()
+  return sceneImages.value.filter(i =>
+    !sceneMediaItems.value.some(m => m.url === i.url) && (!q || i.name.toLowerCase().includes(q))
+  )
+})
+const availableAudiosPicker = computed(() => {
+  const q = mediaPickerSearch.value.toLowerCase()
+  return sceneAudios.value.filter(a =>
+    !sceneMediaItems.value.some(m => m.url === a.url) && (!q || a.name.toLowerCase().includes(q))
+  )
+})
 const normalizeTimeline = (events: any[]) => {
   const seen = new Set<string>()
   return (events || []).filter((event: any) => {
@@ -858,9 +1048,77 @@ const saveSceneName = async () => {
 const formatTime = (d: Date) =>
   new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(d)
 
+const getFileName = (url: string) => {
+  const parts = url.split('/')
+  return decodeURIComponent(parts[parts.length - 1] ?? '')
+}
+
+const loadMediaFiles = async () => {
+  loadingMedia.value = true
+  try {
+    const { data: files, error: listError } = await supabase.storage
+      .from('campaign-media')
+      .list(campaignId, { sortBy: { column: 'name', order: 'asc' } })
+
+    if (listError) throw listError
+
+    const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+    const audioExts = ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac']
+
+    sceneImages.value = []
+    sceneAudios.value = []
+
+    for (const file of (files ?? [])) {
+      if (!file.name || file.name === '.emptyFolderPlaceholder') continue
+      const lower = file.name.toLowerCase()
+      const { data: urlData } = supabase.storage
+        .from('campaign-media')
+        .getPublicUrl(`${campaignId}/${file.name}`)
+      const url = urlData.publicUrl
+
+      if (imageExts.some(ext => lower.endsWith(ext))) {
+        sceneImages.value.push({ name: file.name, url })
+      } else if (audioExts.some(ext => lower.endsWith(ext))) {
+        sceneAudios.value.push({ name: file.name, url })
+      }
+    }
+  } catch (e) {
+    console.error('LIVE: Erro ao carregar mídias do Storage:', e)
+  } finally {
+    loadingMedia.value = false
+  }
+}
+
+const addMediaToScene = (item: { name: string; url: string }, type: 'image' | 'audio') => {
+  sceneMediaItems.value.push({ ...item, type, visibleToPlayers: false })
+  showImagePicker.value = false
+  showAudioPicker.value = false
+  mediaPickerSearch.value = ''
+}
+
+const removeMediaFromScene = async (item: MediaItem) => {
+  sceneMediaItems.value = sceneMediaItems.value.filter(m => m.url !== item.url)
+  if (item.visibleToPlayers) {
+    const visImg = sceneMediaItems.value.find(m => m.type === 'image' && m.visibleToPlayers)?.url ?? ''
+    const visAud = sceneMediaItems.value.find(m => m.type === 'audio' && m.visibleToPlayers)?.url ?? ''
+    await updateSceneMedia(campaignId, visImg, visAud)
+  }
+}
+
+const toggleMediaVisibility = async (item: MediaItem) => {
+  const newVisible = !item.visibleToPlayers
+  sceneMediaItems.value = sceneMediaItems.value.map(m => {
+    if (m.url === item.url) return { ...m, visibleToPlayers: newVisible }
+    if (m.type === item.type && newVisible) return { ...m, visibleToPlayers: false }
+    return m
+  })
+  const visImg = sceneMediaItems.value.find(m => m.type === 'image' && m.visibleToPlayers)?.url ?? ''
+  const visAud = sceneMediaItems.value.find(m => m.type === 'audio' && m.visibleToPlayers)?.url ?? ''
+  await updateSceneMedia(campaignId, visImg, visAud)
+}
+
 const goBackToMaster = () => router.push(`/campaign/${campaignId}/master`)
 const goToNPCTab = () => router.push(`/campaign/${campaignId}/master#npcs`)
-const goToMediaTab = () => router.push(`/campaign/${campaignId}/master#media`)
 
 const purgeSessionTechnicalEvents = async (timeline: any[]) => {
   const cleanedTimeline = sanitizeTimeline(timeline)
@@ -962,20 +1220,14 @@ const startRealtime = () => {
       (payload) => {
         const ns = payload.new as any
 
-        // Sync game live status
-        if (typeof ns.is_live === 'boolean') {
-          isGameLive.value = ns.is_live
-        }
-
         // Drive NPC display directly from realtime payload — avoids shared-state race conditions
         if (Array.isArray(ns.current_npcs)) {
-          currentNpcs.value = ns.current_npcs
           applyLiveNpcState(ns.current_npcs)
         }
 
-        // Sync timeline
+        // Sync local session timeline
         if (Array.isArray(ns.timeline_events)) {
-          timelineEvents.value = ns.timeline_events
+          sessionTimeline.value = sanitizeTimeline(ns.timeline_events)
         }
       }
     )
@@ -995,7 +1247,7 @@ const handleBeforeUnload = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadCampaignData(), loadNPCs()])
+  await Promise.all([loadCampaignData(), loadNPCs(), loadMediaFiles()])
 
   // Restore state if master refreshed mid-session
   const state = await fetchLiveGameState(campaignId)
@@ -1003,6 +1255,12 @@ onMounted(async () => {
     currentSceneName.value = (state as any).current_scene ?? ''
     sessionTimeline.value  = await purgeSessionTechnicalEvents((state as any).timeline_events ?? [])
     applyLiveNpcState((state as any).current_npcs ?? [])
+    // Restore active media into scene items
+    sceneMediaItems.value = []
+    const imgUrl = (state as any).current_image_url ?? ''
+    const audUrl = (state as any).current_audio_url ?? ''
+    if (imgUrl) sceneMediaItems.value.push({ name: getFileName(imgUrl), url: imgUrl, type: 'image', visibleToPlayers: true })
+    if (audUrl) sceneMediaItems.value.push({ name: getFileName(audUrl), url: audUrl, type: 'audio', visibleToPlayers: true })
   }
 
   startRealtime()
