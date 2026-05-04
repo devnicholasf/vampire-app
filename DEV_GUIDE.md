@@ -266,11 +266,22 @@ const { permissions } = useCampaign(campaignId)
 
 ##  Próximos Passos
 
-### Pendente
-- [ ] Integrar NPCs com Supabase
-- [ ] Timeline persistente no banco
-- [ ] Upload real de mídia (Supabase Storage)
-- [ ] Completar jogo ao vivo
+### Concluído (v5.0.0)
+- [x] Integrar NPCs com Supabase (live.vue)
+- [x] Timeline persistente no banco
+- [x] Upload real de mídia (Supabase Storage — MediaTab.vue)
+- [x] Jogo ao vivo funcional (live.vue + live-player.vue)
+  - [x] Transmissão de imagens e áudio em tempo real
+  - [x] NPCs visíveis com spotlight
+  - [x] Eventos narrativos na timeline
+
+### ⚠️ Pendente imediato
+- [ ] **EXECUTAR SQL**: `database/add-live-media-columns.sql` no Supabase SQL Editor
+- [ ] Testar fluxo completo: upload → picker → adicionar à cena → olho → jogador vê
+- [ ] Testar autoplay de áudio nos navegadores (pode precisar de interação do usuário primeiro)
+
+### Pendente (v6.0+)
+- [ ] Chat em tempo real (30% concluído)
 - [ ] Combat Tracker funcional
-- [ ] Chat em tempo real
 - [ ] Atualizar NPCSheet.vue para V5
+- [ ] Transmissão de documentos no jogo ao vivo (live-player.vue)

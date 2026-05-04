@@ -1,7 +1,7 @@
 ﻿#  STATUS DE IMPLEMENTAÇÃO - Vampire RPG
 
-**Última Atualização:** Fevereiro 12, 2026
-**Versão Atual:** 4.0.0
+**Última Atualização:** Abril/Maio 2026
+**Versão Atual:** 5.0.0
 
 ---
 
@@ -9,22 +9,107 @@
 
 | Área | Status | Progresso |
 |------|--------|-----------|
-| Autenticação |  Completo | 100% |
-| Campanhas |  Completo | 100% |
-| Convites |  Completo | 100% |
-| Dashboard Jogador |  Completo | 100% |
-| Ficha V5 (PlayerSheet) |  Completo | 100% |
-| Dashboard Mestre |  Completo | 95% |
-| NPCs |  Funcional | 90% |
-| Timeline |  Funcional | 85% |
-| Mídia/Upload |  Parcial | 50% |
-| Jogo ao Vivo |  Parcial | 40% |
-| Chat |  Parcial | 30% |
-| Combate |  Pendente | 10% |
+| Autenticação | ✅ Completo | 100% |
+| Campanhas | ✅ Completo | 100% |
+| Convites | ✅ Completo | 100% |
+| Dashboard Jogador | ✅ Completo | 100% |
+| Ficha V5 (PlayerSheet) | ✅ Completo | 100% |
+| Dashboard Mestre | ✅ Completo | 95% |
+| NPCs | ✅ Funcional | 90% |
+| Timeline | ✅ Funcional | 85% |
+| Mídia/Upload (MediaTab) | ✅ Funcional | 85% |
+| Jogo ao Vivo — Mestre (live.vue) | ✅ Funcional | 90% |
+| Jogo ao Vivo — Jogador (live-player.vue) | ✅ Funcional | 85% |
+| Chat | ⚠️ Parcial | 30% |
+| Combate | ❌ Pendente | 10% |
 
 ---
 
-##  FICHA DE PERSONAGEM V5 (PlayerSheet.vue)
+## ⚠️ AÇÃO PENDENTE — BANCO DE DADOS
+
+Execute este SQL no Supabase SQL Editor antes de testar o sistema de mídia ao vivo:
+
+```sql
+-- database/add-live-media-columns.sql
+ALTER TABLE live_game_state
+  ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+```
+
+---
+
+##  SISTEMA DE JOGO AO VIVO (v5.0.0)
+
+### Arquitetura de Mídia ao Vivo
+
+```
+Mestre (live.vue)
+  └─ Picker de Imagens / Áudio (do Storage bucket 'campaign-media')
+       └─ Clica olho → toggleMediaVisibility()
+            └─ updateSceneMedia(campaignId, imgUrl, audUrl)
+                 └─ Supabase UPDATE live_game_state
+                      └─ Realtime NOTIFY
+                           └─ Jogador (live-player.vue) recebe e exibe
+```
+
+### Componentes/Composables do Sistema ao Vivo
+
+| Arquivo | Status | Descrição |
+|---------|--------|-----------|
+| `app/pages/campaign/[id]/live.vue` | ✅ | Tela do mestre — NPCs, cena, mídia, eventos |
+| `app/pages/campaign/[id]/live-player.vue` | ✅ | Tela do jogador — recebe estado ao vivo |
+| `app/composables/useLiveGame.ts` | ✅ | Estado compartilhado + updateSceneMedia |
+| `app/components/campaign/master/MediaTab.vue` | ✅ | Upload/gerência de arquivos |
+| `database/add-live-media-columns.sql` | ⚠️ | EXECUTAR NO SUPABASE |
+
+### Tabela live_game_state — Colunas relevantes
+```sql
+campaign_id        uuid FK
+is_live            boolean
+current_scene      text
+current_npcs       jsonb   -- array de NPCs com isVisible, isSpotlight
+timeline_events    jsonb   -- eventos da sessão
+current_image_url  text    -- URL da imagem transmitida (NOVA)
+current_audio_url  text    -- URL do áudio transmitido (NOVA)
+```
+
+### Interface MediaItem (live.vue)
+```typescript
+interface MediaItem {
+  name: string
+  url: string
+  type: 'image' | 'audio'
+  visibleToPlayers: boolean
+}
+```
+
+### Funções principais em live.vue
+```typescript
+loadMediaFiles()           // Carrega imagens/áudios do Storage bucket
+addMediaToScene(item, type)  // Adiciona ao painel da cena
+removeMediaFromScene(item)   // Remove; limpa transmissão se visível
+toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
+```
+
+---
+
+##  ABA MÍDIA — MediaTab.vue
+
+### Bucket Storage: `campaign-media`
+- Arquivos organizados em pastas: `{campaignId}/{filename}`
+- Nome do arquivo preservado (sem timestamp)
+- `upsert: true` permite re-upload do mesmo arquivo
+
+### Tipos suportados
+| Tipo | Extensões |
+|------|-----------|
+| Imagem | .jpg, .jpeg, .png, .gif, .webp, .svg |
+| Áudio | .mp3, .wav, .ogg, .flac, .m4a, .aac |
+| Documento | .pdf, .txt, .doc, .docx, .ppt, .pptx, .xls, .xlsx |
+
+---
+
+
 
 ### Componente: `app/components/campaign/PlayerSheet.vue` (~1206 linhas)
 

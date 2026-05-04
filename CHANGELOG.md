@@ -1,5 +1,49 @@
 ﻿#  CHANGELOG - Vampire RPG
 
+##  Versão 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real
+**Data:** Abril/Maio 2026
+
+###  **MÍDIAS NA ABA MÍDIA (MediaTab.vue)**
+- Player de áudio com cores douradas (`#d4a647`) e esquema escuro
+- Título "Mídia da Campanha" em prata (`#c0c0d0`)
+- Sub-tabs em dourado
+- Fix de encoding TXT: fallback UTF-8 → Windows-1252 para acentos
+- Sem flash branco ao abrir visualizador de documento
+- Texto mais claro no visualizador e modal de upload
+- Botão X visível no visualizador
+- **Filename preservado**: arquivos salvos com nome original (sem prefixo `Date.now()`), `upsert: true`
+
+###  **COMPOSABLE useLiveGame.ts**
+- `currentSceneMedia` — `useState<{ imageUrl: string; audioUrl: string }>` compartilhado entre Mestre e Jogador
+- `updateSceneMedia(campaignId, imageUrl, audioUrl)` — persiste no banco e sincroniza o estado
+- `fetchLiveGameState` e `subscribeToLiveGame` sincronizam `currentSceneMedia` do banco
+
+###  **JOGO AO VIVO — MESTRE (live.vue)**
+- **Redesign completo de "Mídia da Cena"** no estilo do painel de NPCs:
+  - Bloco **Imagens**: picker expansível com busca, thumbnail, botão olho e botão remover
+  - Bloco **Áudio**: picker expansível com busca, ícone, botão olho e botão remover
+  - Documentos removidos (ficam apenas na aba Mídia do dashboard)
+  - Olho verde = transmitindo para jogadores, cinza = oculto
+  - Máximo 1 imagem e 1 áudio ativos por vez
+  - `toggleMediaVisibility` → `updateSceneMedia` → Supabase Realtime → jogadores veem instantaneamente
+- Botão "Gerenciar na Aba Mídia" removido
+- Correções TypeScript: `EventTarget` cast, refs readonly, undefined string
+
+###  **JOGO AO VIVO — JOGADOR (live-player.vue)**
+- Exibe imagem transmitida pelo mestre em tempo real
+- Toca áudio transmitido com autoplay quando URL muda
+
+###  **BANCO DE DADOS**
+- Novo script `database/add-live-media-columns.sql`:
+  ```sql
+  ALTER TABLE live_game_state
+    ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
+    ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+  ```
+  **⚠️ Executar no Supabase SQL Editor antes de usar o sistema de mídia ao vivo.**
+
+---
+
 ##  Versão 4.0.0 - Ficha de Personagem V5 Completa
 **Data:** Fevereiro 12, 2026
 

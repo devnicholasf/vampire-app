@@ -1,118 +1,180 @@
 ﻿#  NOTAS DE MIGRAÇÃO - Vampire RPG
 
-**Última Sessão:** Fevereiro 12, 2026
-**Versão:** 4.0.0 - Ficha V5 Completa
+**Última Sessão:** Abril/Maio 2026
+**Versão:** 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real
 
 ---
 
-##  RESUMO DA ÚLTIMA SESSÃO
+## ⚠️ AÇÃO PENDENTE — BANCO DE DADOS (CRÍTICO)
 
-Sessão focada na **reformulação completa da ficha de personagem (PlayerSheet.vue)** para seguir o padrão oficial do Vampire: The Masquerade 5ª Edição (V5).
+Antes de usar o sistema de mídia ao vivo, execute este SQL no Supabase SQL Editor:
+
+```sql
+-- Arquivo: database/add-live-media-columns.sql
+ALTER TABLE live_game_state
+  ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+```
+
+Sem isso, `updateSceneMedia()` vai falhar silenciosamente.
+
+---
+
+##  RESUMO DA ÚLTIMA SESSÃO (Abril/Maio 2026)
+
+Sessão focada na **implementação completa do sistema de Jogo ao Vivo (live.vue)** com transmissão de mídia em tempo real para os jogadores via Supabase Realtime.
 
 ### O que foi feito nesta sessão:
 
-1. **Reordenar habilidades** para ordem oficial V5 em PT-BR
-2. **Adicionar Vitalidade** (vitality) com 10 bolinhas verdes
-3. **Disciplinas como dropdown** (15 opções V5)
-4. **Substituir emoji lixeira** por botão X com SVG
-5. **Remover campo "Jogador"** do cabeçalho
-6. **Alinhar cabeçalho** em grid 3+3 (Nome/Conceito/Clã | Geração/Seita/Refúgio)
-7. **Remover "Notas Gerais"** do final da ficha
-8. **Adicionar Fome** com 5 bolinhas vermelhas (padrão 1)
-9. **Adicionar Condições Narrativas** com add/remove e sync com dashboard
-10. **Remover "Níveis de Saúde"** (não é V5)
-11. **Mover Experiência** para coluna da Potência (preencher espaço)
-12. **Redesign do cabeçalho** com avatar circular + nome vermelho grande
-13. **Adicionar borda vampírica** com ornamentos nos cantos e sombra vermelha
-14. **Corrigir clipping da borda** movendo ornamentos para fora do scroll
-15. **Substituir "Idade e Datas"** por dropdown "Geração do Abraço" (Cria/Neófito/Ancião)
+**MediaTab.vue (app/components/campaign/master/MediaTab.vue):**
+1. **Correção de cores** — player de áudio dourado (`#d4a647`), título "Mídia da Campanha" em prata (`#c0c0d0`)
+2. **Fix de encoding de TXT** — fallback UTF-8 → Windows-1252 para caracteres acentuados
+3. **Sub-tabs em dourado** (`#d4a647`)
+4. **Sem flash branco** ao abrir visualizador de docs
+5. **Texto mais claro** no visualizador e modal de upload
+6. **Botão X visível** no visualizador de docs
+7. **Filename sem prefixo de timestamp** — arquivo salvo com o nome original; `upsert: true` para re-uploads
+
+**useLiveGame.ts (app/composables/useLiveGame.ts):**
+8. **Adicionado `currentSceneMedia`** — `useState` com `imageUrl` e `audioUrl`
+9. **Adicionado `updateSceneMedia(campaignId, imageUrl, audioUrl)`** — atualiza colunas `current_image_url` / `current_audio_url` na tabela `live_game_state`
+10. **`fetchLiveGameState` e `subscribeToLiveGame`** sincronizam `currentSceneMedia` do banco
+
+**live.vue (app/pages/campaign/[id]/live.vue):**
+11. **Redesign completo de "Mídia da Cena"** — agora igual ao painel de NPCs (picker estilo NPC)
+    - Dois blocos: **Imagens** e **Áudio** (sem documentos — docs são só na aba Mídia)
+    - Botão "Adicionar Imagem/Áudio" expande picker com busca e lista de arquivos do Storage
+    - Cada arquivo adicionado aparece na lista com thumbnail (imagem) ou ícone (áudio)
+    - **Botão olho** alterna visibilidade para jogadores (verde = visível, cinza = oculto)
+    - **Botão X** remove da cena; ao remover mídia visível, limpa transmissão
+    - Somente 1 imagem e 1 áudio podem estar visíveis por vez
+    - `toggleMediaVisibility` → chama `updateSceneMedia` → Supabase Realtime → jogadores veem
+12. **Botão "Gerenciar na Aba Mídia" removido** (era inútil)
+13. **Correções TypeScript:**
+    - `EventTarget.style` → cast para `(e.currentTarget as HTMLElement).style`
+    - `parts[last]` undefined → `?? ''`
+    - `isGameLive.value = ...` (readonly) → removida atribuição direta
+    - `currentNpcs.value = ...` (readonly) → removida; mantida apenas `applyLiveNpcState()`
+    - `timelineEvents.value = ...` (readonly) → substituída por `sessionTimeline.value`
+
+**live-player.vue (app/pages/campaign/[id]/live-player.vue):**
+14. **Exibe imagem e áudio em tempo real** — `currentImageUrl` e `currentAudioUrl` via Supabase Realtime
+15. **Autoplay de áudio** ao receber novo URL
+
+**database/add-live-media-columns.sql (NOVO):**
+16. Script SQL para adicionar `current_image_url` e `current_audio_url` na tabela `live_game_state`
 
 ---
 
 ##  ARQUIVOS MODIFICADOS NESTA SESSÃO
 
-### Arquivos Principais:
-
 ```
-app/components/campaign/PlayerSheet.vue  (~1206 linhas)
-   Reformulação completa da ficha V5
-   Todas as mudanças de layout, campos e visual
+app/components/campaign/master/MediaTab.vue
+   Correções visuais (cores, encoding TXT, botões)
+   Fix de filename: sem Date.now() prefix, upsert: true
 
-app/types/index.ts
-   Interface CharacterSheet atualizada
-   Campos removidos: healthLevels, trueAge, apparentAge, dateOfBirth, dateOfDeath
-   Campos adicionados: embraceGeneration, hunger, conditions, vitality
+app/composables/useLiveGame.ts
+   currentSceneMedia (useState)
+   updateSceneMedia(campaignId, imageUrl, audioUrl)
+   fetchLiveGameState + subscribeToLiveGame sincronizam currentSceneMedia
 
-app/pages/campaign/[id]/player.vue  (~851 linhas, NÃO modificado nesta sessão)
-   Dashboard do jogador - já suportava fome, condições, humanidade, vontade
+app/pages/campaign/[id]/live.vue
+   Redesign completo de "Mídia da Cena" (NPC-style picker)
+   Interface MediaItem { name, url, type: 'image'|'audio', visibleToPlayers }
+   Funções: loadMediaFiles, addMediaToScene, removeMediaFromScene, toggleMediaVisibility
+   Correções TypeScript (readonly refs, EventTarget cast)
+
+app/pages/campaign/[id]/live-player.vue
+   Exibe imagem + áudio transmitidos pelo mestre em tempo real
+
+database/add-live-media-columns.sql  (NOVO — EXECUTAR NO SUPABASE)
+   ALTER TABLE live_game_state ADD COLUMN current_image_url TEXT DEFAULT '';
+   ALTER TABLE live_game_state ADD COLUMN current_audio_url  TEXT DEFAULT '';
 ```
 
-### Campos da Interface CharacterSheet (estado final):
-```typescript
-export interface CharacterSheet {
-  // Cabeçalho
-  name: string; concept: string; clan: string
-  generation: number; sect: string; haven: string; player: string
-  avatar?: string
+---
 
-  // Campos V5
-  resonance?: string; chronicleTenets?: string
-  touchstonesConvictions?: string; clanBane?: string
-  advantages?: Array<{ name: string; level: number }>
-  bloodPotency?: number; bloodSurge?: string
-  powerBonus?: string; feedingPenalty?: string; baneSeverity?: string
+##  ESTADO ATUAL DAS FEATURES PRINCIPAIS
 
-  // Informações pessoais
-  embraceGeneration?: string  // "Cria (Childer)", "Neófito (Neonate)", "Ancião (Ancilla)"
-  appearance?: string; distinguishingFeatures?: string; history?: string
+### Jogo ao Vivo — live.vue (Mestre)
+| Feature | Status |
+|---------|--------|
+| Iniciar/Encerrar sessão | ✅ Funcional |
+| Nome da cena | ✅ Funcional |
+| NPCs (picker + olho + spotlight) | ✅ Funcional |
+| Mídia da Cena — Imagens | ✅ Funcional |
+| Mídia da Cena — Áudio | ✅ Funcional |
+| Transmissão ao vivo (Realtime) | ✅ Funcional (requer SQL migration) |
+| Eventos narrativos | ✅ Funcional |
 
-  // Mecânicas
-  attributes: { physical, social, mental }
-  skills: { talents, skills, knowledges }
-  disciplines: Array<{ name: string; level: number }>
-  virtues: { conscience: number; selfControl: number; courage: number }
-  humanity: number; willpower: number
-  vitality?: number   // 0-10
-  hunger?: number     // 0-5, padrão 1
-  conditions?: string[]
-
-  // Experiência
-  xpTotal?: number; xpAvailable?: number; xpSpent?: number
-  notes?: string
-}
-```
+### Jogo ao Vivo — live-player.vue (Jogador)
+| Feature | Status |
+|---------|--------|
+| Receber imagem em tempo real | ✅ Funcional |
+| Receber áudio em tempo real | ✅ Funcional (autoplay tenta iniciar) |
+| Ver NPCs visíveis | ✅ Funcional |
+| Ver cena atual | ✅ Funcional |
 
 ---
 
 ##  PONTOS IMPORTANTES PARA CONTINUAÇÃO
 
-### 1. NPCSheet.vue ainda usa modelo antigo
-O arquivo `app/components/campaign/master/NPCSheet.vue` **NÃO foi atualizado** nesta sessão. Ele ainda pode ter campos `healthLevels` e layout antigo. Se precisar atualizar a ficha de NPC para V5, usar PlayerSheet.vue como referência.
+### 1. SQL migration obrigatória
+Execute `database/add-live-media-columns.sql` no Supabase SQL Editor antes de testar o sistema de mídia ao vivo.
 
-### 2. Fluxo de dados do Dashboard do Jogador
-O `player.vue` lê os dados da ficha assim:
-```typescript
-// player.vue - leitura de dados
-const hunger = computed(() => playerData.value?.sheet?.hunger ?? 1)
-const humanity = computed(() => playerData.value?.sheet?.humanity ?? 7)
-const willpower = computed(() => playerData.value?.sheet?.willpower ?? 3)
-const conditions = computed(() => playerData.value?.sheet?.conditions ?? [])
+### 2. Bucket de Storage
+O bucket `campaign-media` deve estar configurado como **público** no Supabase Storage. Os arquivos são organizados por `campaignId/filename`.
+
+### 3. Regra de CSS crítica
+**NUNCA usar classes Tailwind arbitrárias em arrays computed** (ex: `` `text-[${cor}]` ``). Valores dinâmicos de cor devem sempre usar `:style` inline ou `<style scoped>`. Classes Tailwind estáticas são OK.
+
+### 4. Imports sempre explícitos
+```vue
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
+</script>
 ```
 
-O salvamento funciona assim:
+### 5. Padrões de navegação
 ```typescript
-// player.vue - salvamento
-const saveCharacterSheet = async (updatedPlayer) => {
-  await savePlayerSheet(campaignId, playerId, updatedPlayer.sheet)
-  await loadCampaignData() // recarrega tudo do banco
-}
+router.push(...)    // OK — live.vue usa useRouter() explícito
+navigateTo(...)     // OK — Nuxt helper
+// NUNCA: $router.push(...)
 ```
 
-### 3. Padrões de desenvolvimento a seguir
-- **Imports**: Sempre explícitos, não confiar no auto-import do Nuxt 4
-- **Navegação**: Usar `navigateTo()` e nunca `$router.push()`
-- **Botões**: Sempre usar `<BaseButton>` com variantes
-- **Modais**: Sem `<Teleport>`, usar z-index adequado
+### 6. NPCSheet.vue ainda usa modelo antigo
+`app/components/campaign/master/NPCSheet.vue` não foi atualizado para V5. Ainda pode ter campos `healthLevels`. Usar `PlayerSheet.vue` como referência se precisar atualizar.
+
+---
+
+##  SESSÃO ANTERIOR (Fevereiro 2026 — v4.0.0)
+
+Sessão focada na **reformulação completa da ficha de personagem (PlayerSheet.vue)** para V5. Veja CHANGELOG.md para detalhes completos.
+
+Arquivos modificados naquela sessão:
+- `app/components/campaign/PlayerSheet.vue` (~1206 linhas) — Ficha V5 completa
+- `app/types/index.ts` — Interface CharacterSheet atualizada
+
+---
+
+##  COMANDOS PARA CONTINUAR
+
+```bash
+# Iniciar em desenvolvimento
+npm run dev
+
+# Build de verificação (deve ser exit code 0)
+npx nuxi build
+
+# Limpar cache se necessário
+rm -rf .nuxt ; npm run postinstall
+```
+
+URLs de teste:
+- `http://localhost:3000/campaign/[id]/live` — Tela do mestre ao vivo
+- `http://localhost:3000/campaign/[id]/player` — Dashboard do jogador
+- `http://localhost:3000/campaign/[id]/master` — Dashboard do mestre (aba Mídia)
 - **Salvamento**: Sempre filtrar dados vazios antes de salvar
 
 ### 4. Build verificado

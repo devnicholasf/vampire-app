@@ -1,11 +1,129 @@
 ﻿#  RELATÓRIO DE MUDANÇAS ARQUITETURAIS
 
-**Data:** Fevereiro 12, 2026
-**Versão:** 4.0.0 - Ficha V5 Completa
+**Data:** Abril/Maio 2026
+**Versão:** 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real
 
 ---
 
-##  MUDANÇAS DA SESSÃO ATUAL (Fevereiro 2026)
+##  MUDANÇAS DA SESSÃO ATUAL (Abril/Maio 2026)
+
+### 1. Extensão do Composable useLiveGame.ts
+
+**Padrão: `useState` para estado compartilhado entre Mestre e Jogador**
+
+```typescript
+// Novo estado global de mídia da cena
+const currentSceneMedia = useState<{ imageUrl: string; audioUrl: string }>(
+  'liveGame.sceneMedia',
+  () => ({ imageUrl: '', audioUrl: '' })
+)
+
+// Nova função: persiste no banco + sincroniza estado local
+async function updateSceneMedia(campaignId: string, imageUrl: string, audioUrl: string) {
+  await supabase
+    .from('live_game_state')
+    .update({ current_image_url: imageUrl, current_audio_url: audioUrl })
+    .eq('campaign_id', campaignId)
+  currentSceneMedia.value = { imageUrl, audioUrl }
+}
+```
+
+**Exports são `readonly`** — componentes externos não podem atribuir `.value` diretamente:
+```typescript
+export const useLiveGame = () => ({
+  isGameLive: readonly(isGameLive),
+  currentNpcs: readonly(currentNpcs),
+  timelineEvents: readonly(timelineEvents),
+  currentSceneMedia: readonly(currentSceneMedia),  // NOVO
+  updateSceneMedia,  // NOVO
+  // ...
+})
+```
+
+### 2. Novo Schema de Banco de Dados
+
+**Tabela: `live_game_state` — colunas adicionadas:**
+```sql
+ALTER TABLE live_game_state
+  ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+```
+
+**Script**: `database/add-live-media-columns.sql` (executar no Supabase SQL Editor).
+
+### 3. Padrão de Design "NPC-style Picker" para Mídia
+
+**Antes (v4.x):** seção de mídia usava dropdowns simples.
+
+**Depois (v5.0):** cada tipo de mídia tem um painel colapsável com:
+- Lista de itens em cena (com thumbnail ou ícone)
+- Botão olho (verde = visível para jogadores)
+- Botão X (remover da cena)
+- Botão "Adicionar [tipo]" que expande picker com campo de busca e itens do Storage
+
+```
+[ IMAGENS ]
+  ┌─ imagem1.jpg  [👁] [✕]
+  ├─ imagem2.png  [   ] [✕]
+  └─ [+ Adicionar Imagem]
+       └─ [Busca...] → lista de arquivos do Storage
+
+[ ÁUDIO ]
+  ┌─ musica.mp3   [👁] [✕]
+  └─ [+ Adicionar Áudio]
+       └─ [Busca...] → lista de arquivos do Storage
+```
+
+Documentos removidos do painel ao vivo (disponíveis apenas na aba Mídia do dashboard).
+
+### 4. Fluxo de Transmissão de Mídia em Tempo Real
+
+```
+1. Mestre clica no olho de uma imagem/áudio em live.vue
+2. toggleMediaVisibility(item) é chamada
+3. Somente 1 imagem e 1 áudio podem estar visíveis por vez
+4. updateSceneMedia(campaignId, imageUrl, audioUrl) é chamada
+5. Supabase UPDATE em live_game_state
+6. Supabase Realtime NOTIFY para todos os subscribers
+7. live-player.vue recebe UPDATE via subscribeToLiveGame
+8. applyState(data) seta currentImageUrl e currentAudioUrl
+9. Template reativo exibe <img> e <audio> ao jogador
+```
+
+### 5. Regras de TypeScript Aprendidas
+
+**EventTarget não tem `.style`:**
+```typescript
+// ERRADO:
+e.currentTarget.style.backgroundColor = '#...'
+
+// CERTO:
+const el = e.currentTarget as HTMLElement
+el.style.backgroundColor = '#...'
+```
+
+**Refs readonly de composable:**
+```typescript
+// ERRADO (em live.vue):
+isGameLive.value = data.is_live  // TypeError: readonly
+
+// CERTO: usar função do composable ou ref local
+applyLiveNpcState(data.current_npcs)
+sessionTimeline.value = sanitizeTimeline(data.timeline_events)  // ref local
+```
+
+**String possivelmente undefined:**
+```typescript
+// ERRADO:
+const name = parts[parts.length - 1]  // string | undefined
+
+// CERTO:
+const name = parts[parts.length - 1] ?? ''
+```
+
+---
+
+##  MUDANÇAS DA SESSÃO ANTERIOR (Fevereiro 2026 — v4.0.0)
 
 ### 1. Reformulação Completa da Ficha de Personagem V5
 
