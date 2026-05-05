@@ -164,10 +164,10 @@
           >
             <!-- Timeline dot -->
             <span
-              class="absolute -left-3 flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-[#0a0a1a]"
-              :style="`background: ${eventColor(event.type)}22; border: 1px solid ${eventColor(event.type)}66;`"
+              class="absolute -left-3 flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-[#0a0a1a] timeline-dot"
+              :style="`--dot-color: ${eventColor(event.type)}; background: ${eventColor(event.type)}22; border: 1px solid ${eventColor(event.type)}66;`"
             >
-              <span class="w-2 h-2 rounded-full" :style="`background: ${eventColor(event.type)}`"/>
+              <span class="w-2 h-2 rounded-full timeline-dot-inner" :style="`background: ${eventColor(event.type)}`"/>
             </span>
 
             <!-- Content -->
@@ -283,38 +283,12 @@
       </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════ -->
-    <!-- CARD 4: Acesso rápido ao Jogo ao Vivo                -->
-    <!-- ══════════════════════════════════════════════════════ -->
-    <div class="df-card border-red-900/60">
-      <div class="df-card-corner df-card-corner-tl"/>
-      <div class="df-card-corner df-card-corner-tr"/>
-      <div class="df-card-corner df-card-corner-bl"/>
-      <div class="df-card-corner df-card-corner-br"/>
-
-      <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h4 class="text-base font-bold text-df-gold uppercase tracking-wider mb-1">Criar Novos Eventos</h4>
-          <p class="text-xs text-df-muted leading-relaxed max-w-md">
-            Eventos são registrados durante o <strong class="text-white">Jogo ao Vivo</strong>.
-            Inicie uma sessão para adicionar acontecimentos à crônica — eles aparecerão automaticamente aqui.
-          </p>
-        </div>
-        <a
-          :href="`/campaign/${campaignId}/live`"
-          class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded border border-red-800 text-red-400 hover:bg-red-900/20 text-sm font-medium transition-colors"
-        >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-          Jogo ao Vivo
-        </a>
-      </div>
-    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useEvents, type EventType, EVENT_TYPE_CONFIG } from '~/composables/useEvents'
 
 // ── Props ──────────────────────────────────────────────────
@@ -333,11 +307,13 @@ const {
   loading,
   error,
   fetchEvents,
+  subscribeToEvents,
+  unsubscribeFromEvents,
   EVENT_TYPE_CONFIG: typeCfg,
 } = useEvents(props.campaignId)
 
 // ── Local state ────────────────────────────────────────────
-const filterType      = ref<EventType | null>(null)
+const filterType        = ref<EventType | null>(null)
 const selectedCharacter = ref<string | null>(null)
 
 // ── Computed ───────────────────────────────────────────────
@@ -379,8 +355,24 @@ watch(
   { immediate: true }
 )
 
+// ── Refetch when browser tab regains focus ────────────────
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    fetchEvents()
+  }
+}
+
 // ── Load on mount ──────────────────────────────────────────
-onMounted(fetchEvents)
+onMounted(() => {
+  fetchEvents()
+  subscribeToEvents()
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  unsubscribeFromEvents()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+})
 </script>
 
 <style scoped>
@@ -467,18 +459,36 @@ onMounted(fetchEvents)
 
 /* ── Event item ── */
 .ev-item {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(74,74,90,0.2);
+  background: #0f0c22;
+  border: 1px solid rgba(127,29,29,0.35);
   border-radius: 0.375rem;
   padding: 0.75rem 1rem;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, background 0.2s;
 }
 .ev-item:hover {
-  border-color: rgba(74,74,90,0.4);
+  border-color: rgba(212,166,71,0.4);
+  background: #130f28;
 }
 .ev-item--secret {
-  border-color: rgba(220,38,38,0.2);
-  background: rgba(127,29,29,0.08);
+  border-color: rgba(220,38,38,0.4);
+  background: rgba(80,10,10,0.35);
+}
+
+/* ── Timeline dot animations ── */
+@keyframes timeline-ring-pulse {
+  0% { box-shadow: 0 0 0 0 var(--dot-color, #d4a647); }
+  65% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes timeline-dot-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+}
+.timeline-dot {
+  animation: timeline-ring-pulse 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.timeline-dot-inner {
+  animation: timeline-dot-breathe 2.8s ease-in-out infinite;
 }
 
 /* ── Character tabs ── */

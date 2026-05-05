@@ -152,6 +152,56 @@ export const useEvents = (campaignId: string) => {
     events.value.filter(e => e.isSecret).length
   )
 
+  // ── Realtime subscription ──
+  let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+
+  const subscribeToEvents = () => {
+    realtimeChannel = supabase
+      .channel(`campaign_events:${campaignId}`)
+      .on(
+        'postgres_changes',
+        // No filter here — DELETE payloads don't carry row data for filtered channels
+        { event: 'INSERT', schema: 'public', table: 'campaign_events' },
+        (payload) => {
+          if ((payload.new as any)?.campaign_id === campaignId) {
+            fetchEvents()
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'campaign_events' },
+        (payload) => {
+          // payload.old contains the deleted row (requires REPLICA IDENTITY FULL)
+          // As a safe fallback, always re-fetch on delete
+          const deletedId = (payload.old as any)?.id
+          if (deletedId) {
+            events.value = events.value.filter(e => e.id !== deletedId)
+          } else {
+            fetchEvents()
+          }
+        }
+      )
+      .subscribe()
+  }
+
+  const unsubscribeFromEvents = () => {
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel)
+      realtimeChannel = null
+    }
+  }
+
+  const deleteEvent = async (eventId: string): Promise<void> => {
+    const { error: deleteError } = await supabase
+      .from('campaign_events')
+      .delete()
+      .eq('id', eventId)
+    if (deleteError) throw deleteError
+    // Optimistic update — remove from local state immediately
+    events.value = events.value.filter(e => e.id !== eventId)
+  }
+
   return {
     events,
     visibleEvents,
@@ -163,6 +213,9 @@ export const useEvents = (campaignId: string) => {
     loading,
     error,
     fetchEvents,
+    deleteEvent,
+    subscribeToEvents,
+    unsubscribeFromEvents,
     EVENT_TYPE_CONFIG,
   }
 }

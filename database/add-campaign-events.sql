@@ -87,5 +87,7 @@ CREATE POLICY "Players can view non-secret events"
     )
   );
 
--- Enable realtime (run in Supabase dashboard → Database → Replication)
+-- Enable realtime
+ALTER TABLE campaign_events REPLICA IDENTITY FULL;
+-- Note: if supabase_realtime publication already includes this table, skip the line below
 -- ALTER PUBLICATION supabase_realtime ADD TABLE campaign_events;

@@ -17,53 +17,38 @@
 		</div>
 
 		<!-- ═══════════════════════════════════════════════ -->
-		<!-- CARD 1: A Crônica — Nome + Status              -->
+		<!-- HERO: Título da Crônica (estilo Vampiro)       -->
 		<!-- ═══════════════════════════════════════════════ -->
-		<div class="df-card">
-			<div class="df-card-corner df-card-corner-tl"></div>
-			<div class="df-card-corner df-card-corner-tr"></div>
-			<div class="df-card-corner df-card-corner-bl"></div>
-			<div class="df-card-corner df-card-corner-br"></div>
-			<div class="relative z-10 space-y-0">
+		<div class="flex flex-col items-center py-6 select-none">
+			<!-- Dividers + Blood drop -->
+			<div class="flex items-center gap-4 w-full mb-4">
+				<div class="flex-1 h-px bg-gradient-to-r from-transparent via-red-900/60 to-red-900/60"/>
+				<svg class="w-5 h-7 shrink-0" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M10 1 C10 1 1 12 1 18 C1 23.523 5.477 27 10 27 C14.523 27 19 23.523 19 18 C19 12 10 1 10 1Z" fill="#991b1b" stroke="#7f1d1d" stroke-width="1"/>
+				</svg>
+				<div class="flex-1 h-px bg-gradient-to-l from-transparent via-red-900/60 to-red-900/60"/>
+			</div>
 
-				<!-- Section Title -->
-				<div class="flex items-center gap-2 mb-6 pb-4 border-b border-df-border-red/30">
-					<svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-						<path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-					</svg>
-					<h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">A Crônica</h4>
+			<!-- Subtitle -->
+			<p class="text-xs uppercase tracking-[0.22em] text-red-700/80 mb-2 font-medium">Vampiro: A Máscara V5</p>
+
+			<!-- Campaign name -->
+			<h2 class="text-3xl font-black uppercase tracking-widest text-white text-center">
+				{{ overview.name || campaign?.name || 'Sem nome' }}
+			</h2>
+
+			<!-- Bottom divider -->
+			<div class="flex items-center gap-4 w-full mt-4">
+				<div class="flex-1 h-px bg-gradient-to-r from-transparent via-red-900/60 to-red-900/60"/>
+				<div class="flex-1 h-px bg-gradient-to-l from-transparent via-red-900/60 to-red-900/60"/>
+			</div>
+
+			<!-- Edit mode input -->
+			<div v-if="editMode" class="w-full mt-5 max-w-md mx-auto">
+				<div class="flex flex-col gap-1">
+					<label class="text-xs text-df-muted uppercase tracking-wider">Nome da Crônica</label>
+					<input v-model="overview.name" class="df-input text-sm text-center" placeholder="Ex: Crônica de Manaus..." />
 				</div>
-
-				<!-- Row: Nome da Crônica -->
-				<div class="ov-row">
-					<div class="ov-row-label">
-						<svg class="w-4 h-4 text-df-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-						<span>Nome da Crônica</span>
-					</div>
-					<div class="ov-row-value">
-						<p class="text-white text-lg font-bold">{{ overview.name || campaign?.name || 'Sem nome' }}</p>
-					</div>
-				</div>
-
-				<!-- Row: Status Atual -->
-				<div class="ov-row">
-					<div class="ov-row-label">
-						<svg class="w-4 h-4 text-df-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-						<span>Status Atual</span>
-					</div>
-					<div class="ov-row-value">
-						<template v-if="editMode">
-							<input v-model="overview.status" class="df-input text-sm" placeholder="Ex: Em andamento, Sessão 12, Arco do Príncipe..." />
-						</template>
-						<template v-else>
-							<div class="flex items-center gap-2.5">
-								<span class="w-2 h-2 rounded-full flex-shrink-0" :class="overview.status ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-df-muted/50'"></span>
-								<p class="text-df-silver text-sm">{{ overview.status || 'Nenhum status definido' }}</p>
-							</div>
-						</template>
-					</div>
-				</div>
-
 			</div>
 		</div>
 
@@ -153,43 +138,7 @@
 		</div>
 
 		<!-- ═══════════════════════════════════════════════ -->
-		<!-- CARD 4: Linha do Tempo                         -->
-		<!-- ═══════════════════════════════════════════════ -->
-		<div class="df-card">
-			<div class="df-card-corner df-card-corner-tl"></div>
-			<div class="df-card-corner df-card-corner-tr"></div>
-			<div class="df-card-corner df-card-corner-bl"></div>
-			<div class="df-card-corner df-card-corner-br"></div>
-			<div class="relative z-10">
-
-				<!-- Section Title -->
-				<div class="flex items-center gap-2 mb-5 pb-4 border-b border-df-border-red/30">
-					<svg class="w-5 h-5 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-						<circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-					</svg>
-					<h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Linha do Tempo</h4>
-				</div>
-
-				<!-- Timeline placeholder -->
-				<div class="flex items-start gap-4 p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
-					<div class="w-10 h-10 rounded-full bg-df-red/15 border border-df-red/30 flex items-center justify-center flex-shrink-0">
-						<svg class="w-5 h-5 text-df-red/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-							<circle cx="12" cy="12" r="10" /><path d="M12 8v4l3 3" />
-						</svg>
-					</div>
-					<div>
-						<h6 class="text-sm font-semibold text-df-silver mb-1">Linha do Tempo Resumida</h6>
-						<p class="text-df-muted text-xs leading-relaxed">
-							Esta informação será preenchida automaticamente a partir do Jogo ao Vivo quando implementado.
-						</p>
-					</div>
-				</div>
-
-			</div>
-		</div>
-
-		<!-- ═══════════════════════════════════════════════ -->
-		<!-- CARD 5: Último Evento Registrado               -->
+		<!-- CARD 4: Último Evento Registrado               -->
 		<!-- ═══════════════════════════════════════════════ -->
 		<div class="df-card">
 			<div class="df-card-corner df-card-corner-tl"></div>
@@ -206,10 +155,27 @@
 					<h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Último Evento Registrado</h4>
 				</div>
 
-				<div class="p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
-					<p class="text-df-muted text-sm leading-relaxed">
-						Nenhum evento registrado. Esta informação será preenchida automaticamente a partir do Jogo ao Vivo quando implementado.
-					</p>
+				<!-- Loading -->
+				<div v-if="loadingLastEvent" class="flex items-center gap-2 text-df-muted text-sm py-2">
+					<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+					Carregando...
+				</div>
+
+				<!-- Event found -->
+				<div v-else-if="lastEvent" class="p-4 rounded-lg border border-df-border-silver/10" style="background:rgba(255,255,255,0.02)">
+					<div class="flex items-start justify-between gap-3 mb-2">
+						<p class="text-sm font-semibold text-white leading-snug">{{ lastEvent.title }}</p>
+						<span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider border border-df-red/30 bg-df-red/10 text-df-red font-semibold">
+							{{ eventTypeLabel(lastEvent.type) }}
+						</span>
+					</div>
+					<p v-if="lastEvent.description" class="text-xs text-df-silver leading-relaxed mb-3">{{ lastEvent.description }}</p>
+					<p class="text-[11px] text-df-muted">{{ formatEventDate(lastEvent.occurred_at) }}</p>
+				</div>
+
+				<!-- No events -->
+				<div v-else class="p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
+					<p class="text-df-muted text-sm leading-relaxed">Nenhum evento registrado ainda.</p>
 				</div>
 
 			</div>
@@ -230,6 +196,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRuntimeConfig } from '#imports'
+import { createClient } from '@supabase/supabase-js'
 import { useToast } from '~/composables/useToast'
 import BaseButton from '~/components/ui/BaseButton.vue'
 
@@ -238,6 +206,8 @@ const props = defineProps<{
 	campaign: { id: string; name: string; description?: string } | null
 }>()
 
+const config = useRuntimeConfig()
+const supabase = createClient(config.public.supabaseUrl as string, config.public.supabaseKey as string)
 const toast = useToast()
 const editMode = ref(false)
 
@@ -305,6 +275,50 @@ const addCustomTone = () => {
 	newCustomTone.value = ''
 }
 
+// ── Last event from DB ──
+const lastEvent = ref<any>(null)
+const loadingLastEvent = ref(false)
+
+const eventTypeLabel = (type: string): string => {
+	const map: Record<string, string> = {
+		narrative: 'Narrativo', combat: 'Combate', social: 'Social',
+		discovery: 'Descoberta', political: 'Político', death: 'Morte',
+		embrace: 'Abraço', diablerie: 'Diablerie', feeding: 'Alimentação', other: 'Outro',
+	}
+	return map[type] ?? type
+}
+
+const formatEventDate = (iso: string): string => {
+	if (!iso) return ''
+	try {
+		return new Date(iso).toLocaleString('pt-BR', {
+			day: '2-digit', month: '2-digit', year: 'numeric',
+			hour: '2-digit', minute: '2-digit',
+		})
+	} catch {
+		return iso
+	}
+}
+
+const fetchLastEvent = async () => {
+	if (!props.campaignId) return
+	loadingLastEvent.value = true
+	try {
+		const { data } = await supabase
+			.from('campaign_events')
+			.select('id, title, description, type, occurred_at')
+			.eq('campaign_id', props.campaignId)
+			.order('occurred_at', { ascending: false })
+			.limit(1)
+			.maybeSingle()
+		lastEvent.value = data ?? null
+	} catch {
+		lastEvent.value = null
+	} finally {
+		loadingLastEvent.value = false
+	}
+}
+
 // ── Persistence ──
 const loadOverview = () => {
 	try {
@@ -349,6 +363,7 @@ const cancelEdits = () => {
 // ── Lifecycle ──
 onMounted(() => {
 	loadOverview()
+	fetchLastEvent()
 })
 
 watch(() => props.campaign, (val) => {

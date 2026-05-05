@@ -247,6 +247,7 @@
             <input
               v-model="currentSceneName"
               type="text"
+              maxlength="85"
               placeholder="Descreva a cena atual..."
               class="w-full rounded border border-[#4a4a5a]/50 px-3 py-2 text-sm text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none focus:border-[#d4a647] transition-colors"
               @blur="saveSceneName"
@@ -440,12 +441,14 @@
               <input
                 v-model="eventDraft.title"
                 type="text"
+                maxlength="20"
                 placeholder="Título do acontecimento"
                 class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none"
               >
               <textarea
                 v-model="eventDraft.description"
                 rows="2"
+                maxlength="60"
                 placeholder="Descrição (opcional)"
                 class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white placeholder-[#4a4a5a] bg-[#0d0d20] focus:outline-none resize-none"
               />
@@ -476,14 +479,23 @@
             <div v-if="sessionTimeline.length === 0" class="text-center py-4">
               <p class="text-xs text-[#4a4a5a]">Nenhum evento ainda.</p>
             </div>
-            <div v-else class="space-y-1.5 max-h-48 overflow-y-auto">
+            <div v-else class="space-y-1.5">
               <div
-                v-for="ev in sessionTimeline"
+                v-for="ev in visibleSessionTimeline"
                 :key="ev.id"
-                class="rounded border border-[#2d1515] p-2" style="background:rgba(255,255,255,0.02)"
+                class="rounded border border-[#2d1515] p-2 flex items-start justify-between gap-2" style="background:rgba(255,255,255,0.02)"
               >
-                <p class="text-xs font-medium text-white">{{ ev.title }}</p>
-                <p class="text-xs text-[#4a4a5a]">{{ formatTime(new Date(ev.timestamp)) }}</p>
+                <div class="min-w-0">
+                  <p class="text-xs font-medium text-white">{{ ev.title }}</p>
+                  <p class="text-xs text-[#4a4a5a]">{{ formatTime(new Date(ev.timestamp)) }}</p>
+                </div>
+                <button
+                  class="shrink-0 p-0.5 rounded text-[#4a4a5a] hover:text-red-400 transition-colors"
+                  title="Apagar evento"
+                  @click="openDeleteEventConfirm(ev)"
+                >
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </div>
             </div>
           </section>
@@ -664,6 +676,51 @@
       </div>
     </div>
 
+    <!-- Confirmação de exclusão de evento -->
+    <div
+      v-if="showDeleteEventModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style="background:rgba(0,0,0,0.75); backdrop-filter:blur(2px);"
+      @click.self="showDeleteEventModal = false"
+    >
+      <div class="relative w-full max-w-md rounded-lg border border-[#7f1d1d] p-6" style="background:#0a0a1a; box-shadow:0 8px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(127,29,29,0.3);">
+        <span class="lc lc-tl"/><span class="lc lc-tr"/>
+        <span class="lc lc-bl"/><span class="lc lc-br"/>
+
+        <div class="flex items-center gap-3 mb-4">
+          <svg class="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          <h3 class="text-xs font-semibold uppercase tracking-[0.2em] text-[#d4a647]">Apagar Evento</h3>
+        </div>
+
+        <div class="h-px bg-gradient-to-r from-[#7f1d1d]/60 via-[#7f1d1d]/20 to-transparent mb-4"/>
+
+        <p class="text-sm text-[#c4c4d4] leading-relaxed mb-1">Deseja apagar o evento:</p>
+        <p class="text-sm font-semibold text-white mb-5 truncate">{{ eventToDelete?.title }}</p>
+        <p class="text-xs text-[#6b6b7b] mb-6">Esta ação removerá o evento do histórico permanentemente.</p>
+
+        <div class="flex justify-end gap-2">
+          <button
+            style="padding:8px 16px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
+            @mouseover="e => { const el = e.currentTarget as HTMLElement; el.style.color='#fff'; el.style.borderColor='#9b9bbb'; }"
+            @mouseout="e => { const el = e.currentTarget as HTMLElement; el.style.color='#9b9bbb'; el.style.borderColor='#4a4a5a'; }"
+            @click="showDeleteEventModal = false"
+          >
+            Cancelar
+          </button>
+          <button
+            :disabled="deletingEvent"
+            style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:5px;border:1px solid #b91c1c;background:linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%);color:#fff;font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(127,29,29,0.4);"
+            @mouseover="e => { if (!deletingEvent) (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#dc2626 0%,#991b1b 100%)'; }"
+            @mouseout="e => { (e.currentTarget as HTMLElement).style.background='linear-gradient(135deg,#b91c1c 0%,#7f1d1d 100%)'; }"
+            @click="confirmDeleteEvent"
+          >
+            <svg v-if="deletingEvent" style="width:13px;height:13px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            {{ deletingEvent ? 'Apagando...' : 'Confirmar Exclusão' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -754,6 +811,9 @@ const eventDraft = ref({
 })
 const showEventConfirmModal = ref(false)
 const showStopSessionConfirmModal = ref(false)
+const showDeleteEventModal = ref(false)
+const eventToDelete = ref<any>(null)
+const deletingEvent = ref(false)
 const creatingEvent = ref(false)
 
 // Session control
@@ -785,6 +845,9 @@ const availableNPCs = computed(() => {
 // Media computed
 const inSceneImages = computed(() => sceneMediaItems.value.filter(m => m.type === 'image'))
 const inSceneAudios = computed(() => sceneMediaItems.value.filter(m => m.type === 'audio'))
+
+// Show only the 4 most recent events; older ones are kept in DB but hidden
+const visibleSessionTimeline = computed(() => sessionTimeline.value.slice(-4).reverse())
 const availableImagesPicker = computed(() => {
   const q = mediaPickerSearch.value.toLowerCase()
   return sceneImages.value.filter(i =>
@@ -1164,9 +1227,11 @@ const confirmAndCreateEvent = async () => {
       metadata: { source: 'live-manual' },
     }
 
-    const { error: insertError } = await supabase
+    const { data: insertedEvent, error: insertError } = await supabase
       .from('campaign_events')
       .insert(payload)
+      .select('id')
+      .single()
 
     if (insertError) throw insertError
 
@@ -1179,6 +1244,7 @@ const confirmAndCreateEvent = async () => {
 
     const newTimelineEvent = {
       id: `story-${Date.now()}`,
+      dbId: insertedEvent?.id ?? null,
       type: eventDraft.value.type,
       title: eventDraft.value.title.trim(),
       description: eventDraft.value.description.trim() || undefined,
@@ -1205,6 +1271,72 @@ const confirmAndCreateEvent = async () => {
     alert('Não foi possível registrar o evento. Verifique se a migration de campaign_events já foi aplicada no banco.')
   } finally {
     creatingEvent.value = false
+  }
+}
+
+const openDeleteEventConfirm = (ev: any) => {
+  eventToDelete.value = ev
+  showDeleteEventModal.value = true
+}
+
+const confirmDeleteEvent = async () => {
+  if (!eventToDelete.value) return
+  deletingEvent.value = true
+  try {
+    // Step 1: Resolve the real DB UUID — prefer stored dbId, else query by title+type
+    let resolvedId: string | null = eventToDelete.value.dbId ?? null
+
+    if (!resolvedId) {
+      const { data: found, error: findError } = await supabase
+        .from('campaign_events')
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .eq('title', eventToDelete.value.title)
+        .eq('type', eventToDelete.value.type)
+        .order('occurred_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (findError) throw findError
+      resolvedId = found?.id ?? null
+    }
+
+    // Step 2: Delete from campaign_events
+    if (resolvedId) {
+      const { error: deleteError } = await supabase
+        .from('campaign_events')
+        .delete()
+        .eq('id', resolvedId)
+
+      if (deleteError) throw deleteError
+    }
+
+    // Step 3: Remove from live_game_state.timeline_events
+    const { data: liveData } = await supabase
+      .from('live_game_state')
+      .select('timeline_events')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    const updatedTimeline = (liveData?.timeline_events ?? []).filter(
+      (ev: any) => ev.id !== eventToDelete.value!.id
+    )
+
+    const { error: updateError } = await supabase
+      .from('live_game_state')
+      .update({ timeline_events: updatedTimeline })
+      .eq('campaign_id', campaignId)
+
+    if (updateError) throw updateError
+
+    sessionTimeline.value = sanitizeTimeline(updatedTimeline)
+    showDeleteEventModal.value = false
+    eventToDelete.value = null
+  } catch (e) {
+    console.error('LIVE: Erro ao apagar evento:', e)
+    alert('Não foi possível apagar o evento: ' + (e as any)?.message)
+  } finally {
+    deletingEvent.value = false
   }
 }
 
