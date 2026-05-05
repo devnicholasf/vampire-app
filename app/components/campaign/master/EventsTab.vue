@@ -1,5 +1,13 @@
 <template>
-  <div class="space-y-8">
+  <!-- Loading state: shown until first fetch completes -->
+  <div v-if="!ready" class="flex items-center justify-center min-h-96">
+    <div class="text-center">
+      <div class="df-spinner"></div>
+      <p class="text-sm mt-4" style="color:#4a4a5a">Carregando eventos...</p>
+    </div>
+  </div>
+
+  <div v-else class="space-y-8">
 
     <!-- ── Header ──────────────────────────────────────────── -->
     <div class="flex items-center justify-between">
@@ -151,7 +159,7 @@
         </div>
 
         <!-- Skeleton loader -->
-        <div v-if="loading" class="space-y-4">
+        <div v-if="!ready || loading" class="space-y-4">
           <div v-for="i in 3" :key="i" class="ml-9 space-y-2">
             <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
             <div class="h-14 rounded bg-white/5 animate-pulse"/>
@@ -240,7 +248,7 @@
           <!-- Events for selected character -->
           <div v-if="selectedCharacter">
             <!-- Skeleton loader -->
-            <div v-if="loading" class="space-y-4">
+            <div v-if="!ready || loading" class="space-y-4">
               <div v-for="i in 2" :key="i" class="ml-9 space-y-2">
                 <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
                 <div class="h-14 rounded bg-white/5 animate-pulse"/>
@@ -282,7 +290,6 @@
       </div>
     </div>
 
-
   </div>
 </template>
 
@@ -313,6 +320,7 @@ const {
 } = useEvents(props.campaignId)
 
 // ── Local state ────────────────────────────────────────────
+const ready             = ref(false)
 const filterType        = ref<EventType | null>(null)
 const selectedCharacter = ref<string | null>(null)
 
@@ -363,8 +371,9 @@ const handleVisibilityChange = () => {
 }
 
 // ── Load on mount ──────────────────────────────────────────
-onMounted(() => {
-  fetchEvents()
+onMounted(async () => {
+  await fetchEvents()
+  ready.value = true
   subscribeToEvents()
   document.addEventListener('visibilitychange', handleVisibilityChange)
 })
@@ -376,6 +385,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* ── Loading spinner ── */
+.df-spinner {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #7f1d1d;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin-spinner 1s linear infinite;
+}
+@keyframes spin-spinner { to { transform: rotate(360deg); } }
+
 /* ═══ Section windows (same visual language as Politics / Overview) ═══ */
 .df-card {
   position: relative;

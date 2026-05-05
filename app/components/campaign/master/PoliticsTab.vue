@@ -1,5 +1,13 @@
 <template>
-  <div class="space-y-6">
+  <!-- Loading state -->
+  <div v-if="!ready" class="flex items-center justify-center min-h-96">
+    <div class="text-center">
+      <div class="df-spinner"></div>
+      <p class="text-sm mt-4" style="color:#4a4a5a">Carregando mapa político...</p>
+    </div>
+  </div>
+
+  <div v-else class="space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
       <h3 class="df-section-title text-xl flex items-center gap-2">
@@ -818,6 +826,7 @@ const editGovernment = ref(false)
 const editFactions = ref(false)
 const expandedFactionIndex = ref<number | null>(null)
 const editRelations = ref(false)
+const ready = ref(false)
 const editTerritories = ref(false)
 const showCityMap = ref(false)
 let sectionJustSaved = false
@@ -989,6 +998,7 @@ onMounted(async () => {
     showCityMap.value = true
   }
   savedSnapshot = JSON.stringify(politics.value)
+  ready.value = true
 })
 
 const savePolitics = () => {
@@ -1311,6 +1321,18 @@ defineExpose({ count: computed(() => politics.value.factions.length) })
 </script>
 
 <style scoped>
+/* ── Loading spinner ── */
+.df-spinner {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+  border: 2px solid #7f1d1d;
+  border-top-color: #dc2626;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ═══ Cards ═══ */
 .df-card {
   position: relative;
