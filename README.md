@@ -2,10 +2,10 @@
 
 Sistema completo para gerenciar campanhas de **Vampire: The Masquerade V5** com Nuxt 4 + Vue 3 + TypeScript + Tailwind CSS + Supabase.
 
-##  STATUS: v4.0.0 - Ficha V5 Completa
+##  STATUS: v5.0.0 - Sistema de Jogo ao Vivo Completo
 
-> **Última Atualização:** Fevereiro 12, 2026
-> Ficha de personagem V5 totalmente funcional com design vampírico.
+> **Última Atualização:** Maio 5, 2026
+> Sistema completo de jogo ao vivo com mídia em tempo real, eventos persistentes e mapa político.
 
 ---
 
@@ -17,19 +17,33 @@ Sistema completo para gerenciar campanhas de **Vampire: The Masquerade V5** com 
 -  Layout oficial com habilidades, disciplinas, virtudes, potência de sangue
 -  Design vampírico com borda vermelha, ornamentos e avatar
 -  Salvamento automático com sincronização do dashboard
+-  **Modo Jogo ao Vivo**: visualização da cena atual com imagem e áudio sincronizados
+-  **Timeline da sessão**: eventos em tempo real durante o jogo
 
 ###  Para Mestres
--  Dashboard avançado com 5 abas (Jogadores, NPCs, Mídia, Notas, Configurações)
--  Gerenciamento completo de NPCs (criar, editar, visualizar)
--  Visualização de fichas dos jogadores (somente leitura)
+-  Dashboard avançado com **6 abas especializadas**:
+   - **Visão Geral**: resumo da campanha e informações principais
+   - **Jogadores**: gerenciar jogadores e visualizar fichas (somente leitura)
+   - **NPCs**: criar, editar e gerenciar NPCs (integrado com Supabase)
+   - **Eventos**: timeline persistente com filtros por tipo e personagem
+   - **Política**: mapa político completo (governo, facções, relações, territórios)
+   - **Mídia**: upload e gerenciamento de imagens, áudio e documentos
+-  **Sistema de Sessão ao Vivo** (`live.vue`):
+   - Controle de cena com imagem e áudio em tempo real
+   - Timeline de eventos da sessão
+   - Gerenciamento de NPCs ativos na cena
+   - Sincronização instantânea com jogadores via Supabase Realtime
 -  Sistema de convites por código único
--  Anotações privadas organizadas
+-  Event Sourcing para histórico completo da campanha
 
 ###  Sistema de Campanhas
 -  Criação de campanhas com código de convite automático
 -  Múltiplos papéis: mesmo usuário pode ser Mestre em uma e Jogador em outra
--  Dados persistentes no Supabase com RLS
+-  Dados persistentes no Supabase com Row Level Security (RLS)
 -  Constraint anti-duplicata (1 usuário = 1 participação por campanha)
+-  **Sistema de Eventos Persistentes**: histórico completo da crônica com filtros
+-  **Jogo ao Vivo**: sessões síncronas com mídia em tempo real
+-  **Real-time**: atualizações instantâneas via Supabase Realtime subscriptions
 
 ###  Ficha V5 (PlayerSheet)
 -  Atributos: Físicos/Sociais/Mentais com bolinhas interativas
@@ -63,20 +77,41 @@ Sistema completo para gerenciar campanhas de **Vampire: The Masquerade V5** com 
 ##  Estrutura do Projeto
 
 ```
-vampire-app/
- app/
-    components/
-       auth/              # Autenticação
-       campaign/          # Componentes da campanha
-          PlayerSheet.vue    #  Ficha V5 (~1206 linhas)
-          master/            # Dashboard do mestre
-       ui/                # Componentes reutilizáveis
-    composables/           # Lógica reutilizável
-    layouts/               # Layouts (auth, campaign)
-    middleware/             # Proteção de rotas
-    pages/                 # Páginas (file-based routing)
+vampire-app/         # Autenticação
+       campaign/                   # Componentes da campanha
+          PlayerSheet.vue          #  Ficha V5 (~1206 linhas)
+          Timeline.vue             #  Timeline de eventos
+          TimelineItem.vue         #  Item individual da timeline
+          MediaPlayer.vue          #  Player de mídia ao vivo
+          MapViewer.vue            #  Visualizador de mapas
+          master/                  # Dashboard do mestre
+             OverviewTab.vue       # Visão geral da campanha
+             PlayersTab.vue        # Gerenciar jogadores
+             NPCsTab.vue           # Gerenciar NPCs
+             EventsTab.vue         #  Eventos e timeline
+             PoliticsTab.vue       #  Mapa político
+             MediaTab.vue          # Upload e mídia
+             SettingsTab.vue       # Configurações
+             TerritoryMap.vue      # Mapa de territórios
+             EventCard.vue         # Card de evento reutilizável
+       ui/                         # Componentes reutilizáveis
+    composables/                   # Lógica reutilizável
+       useAuth.ts                  # Autenticação
+       useCampaign.ts              # Campanhas e NPCs
+       useEvents.ts                #  Event Sourcing
+       useLiveGame.ts              #  Jogo ao vivo
+       useChat.ts                  # Chat
+       useToast.ts                 # Notificações
+    layouts/                       # Layouts (auth, campaign)
+    middleware/                    # Proteção de rotas
+    pages/                         # Páginas (file-based routing)
        campaign/[id]/
-           player.vue     #  Dashboard do jogador
+           player.vue              #  Dashboard do jogador
+           master.vue              # Dashboard do mestre
+           live.vue                #  Sessão ao vivo (Mestre)
+           live-player.vue         #  Sessão ao vivo (Jogador)
+           index.vue               # Tela compartilhada
+    types/index.ts        vue     #  Dashboard do jogador
            master.vue     # Dashboard do mestre
            index.vue      # Tela compartilhada
     types/index.ts         # Tipos TypeScript
@@ -92,11 +127,47 @@ vampire-app/
 
 ### Desenvolvimento
 ```bash
-npm install
-npm run dev
-```
-Acesse: http://localhost:3000
+nopie `.env.example` para `.env` e preencha com suas credenciais:
 
+```bash
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-public-key-here
+
+# JWT Secret (opcional)
+JWT_SECRET=your-secret-key-change-in-production
+```
+
+**Obtenha suas credenciais em:** Supabase Dashboard → Settings → API
+
+---
+
+##  Banco de Dados
+
+### Setup Inicial
+
+1. Crie um projeto no [Supabase](https://supabase.com)
+2. Execute os scripts SQL na pasta `database/` na ordem:
+   ```sql
+   -- 1. Schema principal
+   database/supabase-schema.sql
+   
+   -- 2. Migrations de features
+   database/add-campaign-events.sql
+   database/add-invite-code.sql
+   database/add-live-media-columns.sql
+   database/add-npc-fields.sql
+   database/add-player-sheet-column.sql
+   database/add-campaign-media-storage.sql
+   ```
+
+3. Configure o Storage bucket `campaign-media` (público) no Supabase Dashboard
+
+### Scripts Úteis
+
+- `database/check-player-data.sql` - Queries de diagnóstico
+- `database/supabase-clean-and-fix.sql` - Correção de políticas RLS
+- `database/README.md` - Documentação completa dos scripts
 ### Build
 ```bash
 npm run build
@@ -106,16 +177,32 @@ npm run preview
 ### Limpar Cache
 ```bash
 rm -rf .nuxt
-npm run postinstall
-```
+npm O que funciona agora? ✅
 
----
+- ✅ Autenticação completa com Supabase Auth
+- ✅ Criação e gerenciamento de campanhas
+- ✅ Sistema de convites por código único
+- ✅ Ficha de personagem V5 completa e editável
+- ✅ Dashboard do jogador com sincronização
+- ✅ Dashboard do mestre com 6 abas especializadas
+- ✅ NPCs integrados com Supabase
+- ✅ Sistema de eventos persistentes (Event Sourcing)
+- ✅ Timeline de campanha com filtros
+- ✅ Mapa político completo (governo, facções, relações, territórios)
+- ✅ Upload de mídia (Supabase Storage)
+- ✅ Jogo ao vivo com sincronização em tempo real
+- ✅ Media Player sincronizado entre mestre e jogadores
+- ✅ Timeline de sessão ao vivo
+- ✅ Real-time updates via Supabase Realtime
 
-##  Variáveis de Ambiente
+##  Próximos Passos 🚀
 
-Criar arquivo `.env`:
-```bash
-SUPABASE_URL=https://xxx.supabase.co
+- [ ] Combat Tracker funcional
+- [ ] Chat em tempo real (base já implementada)
+- [ ] Atualizar NPCSheet para padrão V5 completo
+- [ ] Sistema de notificações push
+- [ ] Mapa interativo com marcadores
+- [ ] Deploy em produção=https://xxx.supabase.co
 SUPABASE_KEY=sua-key-aqui
 ```
 
