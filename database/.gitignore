@@ -1,0 +1,7 @@
+# Personal test scripts with hardcoded IDs
+*-local.sql
+*-test.sql
+
+# Temporary debug queries
+*-debug.sql
+*-temp.sql
