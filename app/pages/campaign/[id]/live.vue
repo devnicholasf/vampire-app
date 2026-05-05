@@ -770,7 +770,6 @@ const toast                = useToast()
 const {
   isGameLive,
   currentNpcs,
-  timelineEvents,
   activePlayers,
   currentSceneMedia,
   startLiveGame,
@@ -1404,10 +1403,6 @@ watch(inGameNPCs, (newInGameNpcs) => {
   if (selectedNPC.value && !newInGameNpcs.some((npc: any) => npc.id === selectedNPC.value.id)) {
     selectedNPC.value = null
   }
-}, { deep: true })
-
-watch(timelineEvents, (newEvents) => {
-  sessionTimeline.value = sanitizeTimeline(newEvents as any[])
 }, { deep: true })
 
 watch(sessionActive, async (isActive) => {

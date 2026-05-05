@@ -162,16 +162,13 @@
 				</div>
 
 				<!-- Event found -->
-				<div v-else-if="lastEvent" class="p-4 rounded-lg border border-df-border-silver/10" style="background:rgba(255,255,255,0.02)">
-					<div class="flex items-start justify-between gap-3 mb-2">
-						<p class="text-sm font-semibold text-white leading-snug">{{ lastEvent.title }}</p>
-						<span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider border border-df-red/30 bg-df-red/10 text-df-red font-semibold">
-							{{ eventTypeLabel(lastEvent.type) }}
-						</span>
-					</div>
-					<p v-if="lastEvent.description" class="text-xs text-df-silver leading-relaxed mb-3">{{ lastEvent.description }}</p>
-					<p class="text-[11px] text-df-muted">{{ formatEventDate(lastEvent.occurred_at) }}</p>
-				</div>
+				<EventCard
+					v-else-if="lastEvent"
+					:title="lastEvent.title"
+					:description="lastEvent.description"
+					:type="lastEvent.type"
+					:occurred-at="lastEvent.occurred_at"
+				/>
 
 				<!-- No events -->
 				<div v-else class="p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
@@ -200,6 +197,7 @@ import { useRuntimeConfig } from '#imports'
 import { createClient } from '@supabase/supabase-js'
 import { useToast } from '~/composables/useToast'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import EventCard from '~/components/campaign/master/EventCard.vue'
 
 const props = defineProps<{
 	campaignId: string
@@ -278,27 +276,6 @@ const addCustomTone = () => {
 // ── Last event from DB ──
 const lastEvent = ref<any>(null)
 const loadingLastEvent = ref(false)
-
-const eventTypeLabel = (type: string): string => {
-	const map: Record<string, string> = {
-		narrative: 'Narrativo', combat: 'Combate', social: 'Social',
-		discovery: 'Descoberta', political: 'Político', death: 'Morte',
-		embrace: 'Abraço', diablerie: 'Diablerie', feeding: 'Alimentação', other: 'Outro',
-	}
-	return map[type] ?? type
-}
-
-const formatEventDate = (iso: string): string => {
-	if (!iso) return ''
-	try {
-		return new Date(iso).toLocaleString('pt-BR', {
-			day: '2-digit', month: '2-digit', year: 'numeric',
-			hour: '2-digit', minute: '2-digit',
-		})
-	} catch {
-		return iso
-	}
-}
 
 const fetchLastEvent = async () => {
 	if (!props.campaignId) return

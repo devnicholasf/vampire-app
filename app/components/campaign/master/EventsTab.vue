@@ -127,8 +127,8 @@
         <!-- Card header + filter row -->
         <div class="flex flex-wrap items-center gap-3 mb-6 pb-4 border-b border-red-900/30">
           <div class="flex items-center gap-2 flex-1 min-w-0">
-            <svg class="w-5 h-5 text-df-gold shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            <svg class="w-5 h-5 text-df-gold shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
             </svg>
             <h4 class="text-lg font-bold text-df-gold uppercase tracking-wider">Linha do Tempo</h4>
           </div>
@@ -150,68 +150,58 @@
           </div>
         </div>
 
+        <!-- Skeleton loader -->
+        <div v-if="loading" class="space-y-4">
+          <div v-for="i in 3" :key="i" class="ml-9 space-y-2">
+            <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
+            <div class="h-14 rounded bg-white/5 animate-pulse"/>
+          </div>
+        </div>
+
         <!-- Empty -->
-        <div v-if="filteredTimeline.length === 0" class="py-8 text-center text-df-muted text-sm">
+        <div v-else-if="filteredTimeline.length === 0" class="py-8 text-center text-df-muted text-sm">
           Nenhum evento nesta categoria.
         </div>
 
         <!-- Timeline list -->
         <ol v-else class="relative border-l border-red-900/40 space-y-6 ml-3">
           <li
-            v-for="event in filteredTimeline"
+            v-for="(event, index) in filteredTimeline"
             :key="event.id"
             class="ml-6"
           >
-            <!-- Timeline dot -->
+            <!-- Timeline dot: index 0 = latest event (bigger + ripple) -->
             <span
-              class="absolute -left-3 flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-[#0a0a1a] timeline-dot"
-              :style="`--dot-color: ${eventColor(event.type)}; background: ${eventColor(event.type)}22; border: 1px solid ${eventColor(event.type)}66;`"
+              class="absolute flex items-center justify-center rounded-full ring-2 ring-[#0a0a1a]"
+              :class="index === 0 ? '-left-[14px] w-7 h-7' : '-left-[11px] w-[22px] h-[22px]'"
+              :style="`background: ${eventColor(event.type)}18; border: 1px solid ${eventColor(event.type)}50;`"
             >
-              <span class="w-2 h-2 rounded-full timeline-dot-inner" :style="`background: ${eventColor(event.type)}`"/>
+              <!-- Ripple ring — only latest event -->
+              <span
+                v-if="index === 0"
+                class="dot-ripple absolute inset-0 rounded-full"
+                :style="`background: ${eventColor(event.type)};`"
+              />
+              <!-- Core dot -->
+              <span
+                class="rounded-full relative z-10 dot-core"
+                :class="index === 0 ? 'w-[11px] h-[11px]' : 'w-2 h-2'"
+                :style="`background: ${eventColor(event.type)};`"
+              />
             </span>
 
             <!-- Content -->
-            <div class="ev-item" :class="event.isSecret ? 'ev-item--secret' : ''">
-              <div class="flex items-start justify-between gap-2 mb-1">
-                <p class="text-sm font-semibold text-white leading-tight">{{ event.title }}</p>
-                <span
-                  class="shrink-0 text-xs px-2 py-0.5 rounded-full border"
-                  :style="`color: ${eventColor(event.type)}; border-color: ${eventColor(event.type)}44; background: ${eventColor(event.type)}11`"
-                >{{ eventLabel(event.type) }}</span>
-              </div>
-              <p v-if="event.description" class="text-xs text-df-muted mb-1.5 leading-relaxed">{{ event.description }}</p>
-              <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-df-muted/60">
-                <span v-if="event.location" class="flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  {{ event.location }}
-                </span>
-                <span v-if="event.ingameDate" class="flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                  {{ event.ingameDate }}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  {{ formatDate(event.occurredAt) }}
-                </span>
-                <span v-if="event.isSecret" class="text-red-500 flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                  Secreto
-                </span>
-              </div>
-              <!-- Involved characters tags -->
-              <div v-if="event.playerNames.length > 0 || event.npcIds.length > 0" class="flex flex-wrap gap-1 mt-2">
-                <span
-                  v-for="name in event.playerNames"
-                  :key="name"
-                  class="text-xs px-2 py-0.5 rounded-full bg-blue-900/20 text-blue-400 border border-blue-900/30"
-                >{{ name }}</span>
-                <span
-                  v-for="id in event.npcIds"
-                  :key="id"
-                  class="text-xs px-2 py-0.5 rounded-full bg-purple-900/20 text-purple-400 border border-purple-900/30"
-                >NPC: {{ id.slice(0, 8) }}…</span>
-              </div>
-            </div>
+            <EventCard
+              :title="event.title"
+              :description="event.description"
+              :type="event.type"
+              :occurred-at="event.occurredAt"
+              :location="event.location"
+              :ingame-date="event.ingameDate"
+              :is-secret="event.isSecret"
+              :player-names="event.playerNames"
+              :npc-ids="event.npcIds"
+            />
           </li>
         </ol>
       </div>
@@ -249,27 +239,36 @@
 
           <!-- Events for selected character -->
           <div v-if="selectedCharacter">
-            <div v-if="eventsForCharacter.length === 0" class="py-6 text-center text-df-muted text-sm">
+            <!-- Skeleton loader -->
+            <div v-if="loading" class="space-y-4">
+              <div v-for="i in 2" :key="i" class="ml-9 space-y-2">
+                <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
+                <div class="h-14 rounded bg-white/5 animate-pulse"/>
+              </div>
+            </div>
+
+            <div v-else-if="eventsForCharacter.length === 0" class="py-6 text-center text-df-muted text-sm">
               Nenhum evento registrado para este personagem ainda.
             </div>
             <ol v-else class="relative border-l border-red-900/40 space-y-4 ml-3">
               <li v-for="event in eventsForCharacter" :key="event.id" class="ml-6">
                 <span
-                  class="absolute -left-3 flex items-center justify-center w-6 h-6 rounded-full ring-2 ring-[#0a0a1a]"
-                  :style="`background: ${eventColor(event.type)}22; border: 1px solid ${eventColor(event.type)}66;`"
+                  class="absolute -left-[11px] flex items-center justify-center w-[22px] h-[22px] rounded-full ring-2 ring-[#0a0a1a]"
+                  :style="`background: ${eventColor(event.type)}18; border: 1px solid ${eventColor(event.type)}50;`"
                 >
-                  <span class="w-2 h-2 rounded-full" :style="`background: ${eventColor(event.type)}`"/>
+                  <span class="w-2 h-2 rounded-full dot-core" :style="`background: ${eventColor(event.type)};`"/>
                 </span>
-                <div class="ev-item">
-                  <div class="flex items-start justify-between gap-2 mb-1">
-                    <p class="text-sm font-semibold text-white">{{ event.title }}</p>
-                    <span class="shrink-0 text-xs px-2 py-0.5 rounded-full border"
-                      :style="`color: ${eventColor(event.type)}; border-color: ${eventColor(event.type)}44; background: ${eventColor(event.type)}11`"
-                    >{{ eventLabel(event.type) }}</span>
-                  </div>
-                  <p v-if="event.description" class="text-xs text-df-muted mb-1 leading-relaxed">{{ event.description }}</p>
-                  <p class="text-xs text-df-muted/50">{{ formatDate(event.occurredAt) }}</p>
-                </div>
+                <EventCard
+                  :title="event.title"
+                  :description="event.description"
+                  :type="event.type"
+                  :occurred-at="event.occurredAt"
+                  :location="event.location"
+                  :ingame-date="event.ingameDate"
+                  :is-secret="event.isSecret"
+                  :player-names="event.playerNames"
+                  :npc-ids="event.npcIds"
+                />
               </li>
             </ol>
           </div>
@@ -290,6 +289,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useEvents, type EventType, EVENT_TYPE_CONFIG } from '~/composables/useEvents'
+import EventCard from '~/components/campaign/master/EventCard.vue'
 
 // ── Props ──────────────────────────────────────────────────
 const props = defineProps<{
@@ -457,38 +457,22 @@ onBeforeUnmount(() => {
   background: rgba(212,166,71,0.1);
 }
 
-/* ── Event item ── */
-.ev-item {
-  background: #0f0c22;
-  border: 1px solid rgba(127,29,29,0.35);
-  border-radius: 0.375rem;
-  padding: 0.75rem 1rem;
-  transition: border-color 0.2s, background 0.2s;
-}
-.ev-item:hover {
-  border-color: rgba(212,166,71,0.4);
-  background: #130f28;
-}
-.ev-item--secret {
-  border-color: rgba(220,38,38,0.4);
-  background: rgba(80,10,10,0.35);
-}
-
 /* ── Timeline dot animations ── */
-@keyframes timeline-ring-pulse {
-  0% { box-shadow: 0 0 0 0 var(--dot-color, #d4a647); }
-  65% { box-shadow: 0 0 0 8px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-@keyframes timeline-dot-breathe {
+@keyframes dot-core-breathe {
   0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.25); opacity: 0.8; }
+  50% { transform: scale(1.45); opacity: 0.75; }
 }
-.timeline-dot {
-  animation: timeline-ring-pulse 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+@keyframes dot-ripple-expand {
+  0%   { transform: scale(0.4); opacity: 0.55; }
+  70%  { opacity: 0.12; }
+  100% { transform: scale(2.6); opacity: 0; }
 }
-.timeline-dot-inner {
-  animation: timeline-dot-breathe 2.8s ease-in-out infinite;
+.dot-core {
+  animation: dot-core-breathe 3s ease-in-out infinite;
+}
+.dot-ripple {
+  opacity: 0;
+  animation: dot-ripple-expand 2.4s ease-out infinite;
 }
 
 /* ── Character tabs ── */
