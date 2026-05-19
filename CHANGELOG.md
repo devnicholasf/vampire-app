@@ -1,7 +1,24 @@
-﻿#  CHANGELOG - Vampire RPG
+﻿# 📝 Changelog
 
-##  Versão 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real
-**Data:** Abril/Maio 2026
+![Version](https://img.shields.io/badge/Latest-v5.0.0-blue?style=flat-square)
+![Updated](https://img.shields.io/badge/Updated-May_2026-green?style=flat-square)
+
+> Histórico completo de mudanças e atualizações do projeto
+
+---
+
+## 📋 Índice
+
+- [v5.0.0 - Sistema de Jogo ao Vivo](#-versão-500---sistema-de-jogo-ao-vivo)
+- [v4.0.0 - Ficha de Personagem V5](#-versão-400---ficha-de-personagem-v5)
+- [v3.0.0 - Sistema Multi-Usuário](#-versão-300---sistema-multi-usuário)
+- [v2.0.0 - Sistema de Campanhas](#-versão-200---sistema-de-campanhas)
+- [v1.0.0 - Base do Sistema](#-versão-100---base-do-sistema)
+
+---
+
+## 🎮 Versão 5.0.0 - Sistema de Jogo ao Vivo
+**Data:** Maio 19, 2026
 
 ###  **MÍDIAS NA ABA MÍDIA (MediaTab.vue)**
 - Player de áudio com cores douradas (`#d4a647`) e esquema escuro
@@ -44,7 +61,7 @@
 
 ---
 
-##  Versão 4.0.0 - Ficha de Personagem V5 Completa
+## 📝 Versão 4.0.0 - Ficha de Personagem V5
 **Data:** Fevereiro 12, 2026
 
 ###  **FICHA DE PERSONAGEM V5 (PlayerSheet.vue)**
@@ -104,7 +121,7 @@ Reformulação completa da ficha de personagem para seguir o padrão oficial do 
 
 ---
 
-##  Versão 3.0.0 - Sistema Completo Multi-Usuário
+## 👥 Versão 3.0.0 - Sistema Multi-Usuário
 **Data:** Janeiro 28, 2026
 
 ###  **Integração Supabase Completa**
@@ -133,7 +150,7 @@ Reformulação completa da ficha de personagem para seguir o padrão oficial do 
 
 ---
 
-##  Versão 2.0.0 - Sistema de Campanhas
+## 📋 Versão 2.0.0 - Sistema de Campanhas
 **Data:** Dezembro 2024
 
 ###  **Funcionalidades**
@@ -146,7 +163,7 @@ Reformulação completa da ficha de personagem para seguir o padrão oficial do 
 
 ---
 
-##  Versão 1.0.0 - Base do Sistema
+## 🎯 Versão 1.0.0 - Base do Sistema
 **Data:** Novembro 2024
 
 ###  **Base**

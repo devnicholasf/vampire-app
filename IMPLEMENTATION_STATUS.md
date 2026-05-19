@@ -1,11 +1,32 @@
-﻿#  STATUS DE IMPLEMENTAÇÃO - Vampire RPG
+﻿# 📊 Status de Implementação
 
-**Última Atualização:** Abril/Maio 2026
+![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Progress](https://img.shields.io/badge/Overall-85%25-yellow?style=flat-square)
+![Last_Updated](https://img.shields.io/badge/Updated-May_2026-green?style=flat-square)
+
+> Rastreamento detalhado do progresso de implementação de todas as funcionalidades
+
+**Última Atualização:** Maio 19, 2026  
 **Versão Atual:** 5.0.0
 
 ---
 
-##  RESUMO GERAL
+## 📋 Índice
+
+- [📈 Resumo Geral](#-resumo-geral)
+- [⚠️ Ação Pendente](#️-ação-pendente)
+- [🎮 Sistema de Jogo ao Vivo](#-sistema-de-jogo-ao-vivo)
+- [📁 Aba Mídia](#-aba-mídia)
+- [📝 Ficha de Personagem V5](#-ficha-de-personagem-v5)
+- [🎨 Componentes](#-componentes)
+- [📄 Páginas](#-páginas)
+- [⚙️ Composables](#️-composables)
+- [📐 Tipos TypeScript](#-tipos-typescript)
+- [🎯 Próximos Passos](#-próximos-passos)
+
+---
+
+## 📈 Resumo Geral
 
 | Área | Status | Progresso |
 |------|--------|-----------|
@@ -38,9 +59,9 @@ ALTER TABLE live_game_state
 
 ---
 
-##  SISTEMA DE JOGO AO VIVO (v5.0.0)
+## 🎮 Sistema de Jogo ao Vivo (v5.0.0)
 
-### Arquitetura de Mídia ao Vivo
+### 🏗️ Arquitetura de Mídia ao Vivo
 
 ```
 Mestre (live.vue)
@@ -93,9 +114,9 @@ toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
 
 ---
 
-##  ABA MÍDIA — MediaTab.vue
+## 📁 Aba Mídia — MediaTab.vue
 
-### Bucket Storage: `campaign-media`
+### 🗂️ Bucket Storage: `campaign-media`
 - Arquivos organizados em pastas: `{campaignId}/{filename}`
 - Nome do arquivo preservado (sem timestamp)
 - `upsert: true` permite re-upload do mesmo arquivo
@@ -171,9 +192,9 @@ toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
 
 ---
 
-##  COMPONENTES IMPLEMENTADOS
+## 🎨 Componentes
 
-### Campanha (`app/components/campaign/`)
+### 📁 Campanha (`app/components/campaign/`)
 | Componente | Status | Descrição |
 |-----------|--------|-----------|
 | PlayerSheet.vue |  | Ficha V5 completa (~1206 linhas) |
@@ -216,7 +237,7 @@ toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
 
 ---
 
-##  PÁGINAS IMPLEMENTADAS
+## 📄 Páginas
 
 | Página | Status | Descrição |
 |--------|--------|-----------|
@@ -236,7 +257,7 @@ toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
 
 ---
 
-##  COMPOSABLES
+## ⚙️ Composables
 
 | Composable | Status | Funções Principais |
 |-----------|--------|-------------------|
@@ -250,9 +271,9 @@ toggleMediaVisibility(item)  // Alterna olho + chama updateSceneMedia
 
 ---
 
-##  TIPOS TYPESCRIPT (`app/types/index.ts`)
+## 📐 Tipos TypeScript (`app/types/index.ts`)
 
-### Interface CharacterSheet (atualizada V5):
+### 📝 Interface CharacterSheet (atualizada V5):
 ```typescript
 export interface CharacterSheet {
   name: string
@@ -295,9 +316,9 @@ export interface CharacterSheet {
 
 ---
 
-##  PRÓXIMOS PASSOS
+## 🎯 Próximos Passos
 
-### Prioridade Alta
+### 🔴 Prioridade Alta
 - [ ] Integrar NPCs com Supabase (tabela `npcs`)
 - [ ] Sistema de timeline persistente (tabela `timeline_events`)
 - [ ] Upload real de mídia via Supabase Storage
