@@ -1,4 +1,4 @@
-﻿# 🧛 Vampire RPG - Sistema de Gerenciamento de Campanhas
+﻿# 🩸 VTM V5 - Sistema de Gerenciamento de Campanhas
 
 ![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82?style=for-the-badge&logo=nuxt.js&logoColor=white)
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
