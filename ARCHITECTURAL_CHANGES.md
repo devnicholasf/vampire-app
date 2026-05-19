@@ -1,11 +1,26 @@
-﻿#  RELATÓRIO DE MUDANÇAS ARQUITETURAIS
+﻿# 📐 Relatório de Mudanças Arquiteturais
 
-**Data:** Abril/Maio 2026
-**Versão:** 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real
+![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Live_Gaming-success?style=flat-square)
+
+> Histórico completo de mudanças arquiteturais e decisões técnicas do projeto
+
+**Versão Atual:** 5.0.0 - Sistema de Jogo ao Vivo com Mídia em Tempo Real  
+**Última Atualização:** Maio 19, 2026
 
 ---
 
-##  MUDANÇAS DA SESSÃO ATUAL (Abril/Maio 2026)
+## 📋 Índice
+
+- [🆕 Sessão Atual (Abril/Maio 2026)](#-sessão-atual-abrilmaio-2026)
+- [📝 Sessão Anterior (Fevereiro 2026)](#-sessão-anterior-fevereiro-2026)
+- [🔄 Sessão Anterior (Janeiro 2026)](#-sessão-anterior-janeiro-2026)
+- [🗄️ Banco de Dados](#️-banco-de-dados)
+- [✅ Estado Validado](#-estado-validado)
+
+---
+
+## 🆕 Sessão Atual (Abril/Maio 2026)
 
 ### 1. Extensão do Composable useLiveGame.ts
 
@@ -123,9 +138,9 @@ const name = parts[parts.length - 1] ?? ''
 
 ---
 
-##  MUDANÇAS DA SESSÃO ANTERIOR (Fevereiro 2026 — v4.0.0)
+## 📝 Sessão Anterior (Fevereiro 2026 — v4.0.0)
 
-### 1. Reformulação Completa da Ficha de Personagem V5
+### 🎭 1. Reformulação Completa da Ficha de Personagem V5
 
 #### Componente: `PlayerSheet.vue` (~1206 linhas)
 
@@ -222,9 +237,9 @@ text-xl sm:text-2xl md:text-4xl font-bold text-red-400 tracking-wider uppercase
 
 ---
 
-##  MUDANÇAS DA SESSÃO ANTERIOR (Janeiro 2026)
+## 🔄 Sessão Anterior (Janeiro 2026)
 
-### Integração Supabase
+### 🔗 Integração Supabase
 - Autenticação real com Supabase Auth
 - Tabelas campaigns + campaign_players
 - RLS policies implementadas
@@ -242,9 +257,9 @@ text-xl sm:text-2xl md:text-4xl font-bold text-red-400 tracking-wider uppercase
 
 ---
 
-##  BANCO DE DADOS
+## 🗄️ Banco de Dados
 
-### Tabelas Supabase:
+### 📊 Tabelas Supabase:
 
 ```sql
 campaigns (
@@ -268,9 +283,9 @@ campaign_players (
 
 ---
 
-##  ESTADO VALIDADO
+## ✅ Estado Validado
 
-- Build sem erros (exit code 0)
+- ✅ Build sem erros (exit code 0)
 - Nenhum campo antigo (trueAge, healthLevels etc.) restante nos arquivos
 - TypeScript sem erros de tipo
 - Ficha V5 funcional com salvamento e sync para dashboard

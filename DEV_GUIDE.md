@@ -1,10 +1,33 @@
-﻿#  VAMPIRE RPG - Guia de Desenvolvimento
+﻿# 📖 Guia de Desenvolvimento
 
-**Versão:** 4.0.0 | **Atualizado:** Fevereiro 12, 2026
+![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+
+> Guia completo para desenvolvedores trabalhando no sistema Vampire RPG
+
+**Versão Atual:** 5.0.0  
+**Última Atualização:** Maio 19, 2026
 
 ---
 
-##  Como Começar
+## 📋 Índice
+
+- [🚀 Como Começar](#-como-começar)
+- [🛠️ Stack Tecnológica](#️-stack-tecnológica)
+- [📁 Estrutura Principal](#-estrutura-principal)
+- [📝 Ficha de Personagem V5](#-ficha-de-personagem-v5)
+- [🎭 Dashboard do Jogador](#-dashboard-do-jogador)
+- [🗄️ Banco de Dados](#️-banco-de-dados)
+- [📋 Convenções e Padrões](#-convenções-e-padrões)
+- [🎨 Tema Vampire](#-tema-vampire)
+- [🔐 Autenticação e Permissões](#-autenticação-e-permissões)
+- [⚠️ Pontos de Atenção](#️-pontos-de-atenção)
+- [🎯 Próximos Passos](#-próximos-passos)
+
+---
+
+## 🚀 Como Começar
 
 ### 1. Instalar Dependências
 ```bash
@@ -31,7 +54,7 @@ npm run postinstall
 
 ---
 
-##  Stack Tecnológica
+## 🛠️ Stack Tecnológica
 
 | Tecnologia | Uso |
 |-----------|-----|
@@ -43,7 +66,7 @@ npm run postinstall
 
 ---
 
-##  Estrutura Principal
+## 📁 Estrutura Principal
 
 ```
 app/
@@ -57,9 +80,9 @@ app/
 
 ---
 
-##  Ficha de Personagem V5 (PlayerSheet.vue)
+## 📝 Ficha de Personagem V5 (PlayerSheet.vue)
 
-### Visão Geral
+### 📋 Visão Geral
 Componente modal que renderiza a ficha oficial do V5 com ~1206 linhas. Aberto a partir do dashboard do jogador (`player.vue`).
 
 ### Estrutura das Seções
@@ -130,9 +153,9 @@ const emit = defineEmits<{
 
 ---
 
-##  Dashboard do Jogador (player.vue)
+## 🎭 Dashboard do Jogador (player.vue)
 
-### Como funciona
+### ⚙️ Como funciona
 - Exibe "Estado Atual do Vampiro" (Fome, Humanidade, Vontade, Condições)
 - Botão "Editar Ficha" abre PlayerSheet.vue como modal
 - Após salvar, recarrega dados do banco e atualiza todas as barras
@@ -147,9 +170,9 @@ const conditions = computed(() => playerData.value?.sheet?.conditions ?? [])
 
 ---
 
-##  Banco de Dados (Supabase)
+## 🗄️ Banco de Dados (Supabase)
 
-### Tabelas
+### 📊 Tabelas
 ```sql
 campaigns (id, name, description, master_id, invite_code, is_active, timestamps)
 campaign_players (user_id, campaign_id, character_name, role, sheet JSONB, joined_at)
@@ -171,9 +194,9 @@ const savePlayerSheet = async (campaignId, playerId, sheetData) => {
 
 ---
 
-##  Convenções e Padrões
+## 📋 Convenções e Padrões
 
-### Imports
+### 📦 Imports
 ```vue
 <!-- SEMPRE usar imports explícitos -->
 <script setup lang="ts">
@@ -209,9 +232,9 @@ $router.push('/dashboard')
 
 ---
 
-##  Tema Vampire (Tailwind)
+## 🎨 Tema Vampire (Tailwind)
 
-### Cores principais
+### 🎨 Cores principais
 - **Vermelho**: `text-red-400`, `border-red-900`, `border-red-600`
 - **Superfícies**: `bg-surface-card`, `bg-surface-secondary`
 - **Texto**: `text-text-primary`, `text-text-secondary`
@@ -234,9 +257,9 @@ border-t-4 border-l-4 border-red-600 opacity-60
 
 ---
 
-##  Autenticação e Permissões
+## 🔐 Autenticação e Permissões
 
-### Middleware
+### 🛡️ Middleware
 - `auth.global.ts` - Protege rotas privadas
 - `is-master.ts` - Só mestres acessam /master
 - `is-player.ts` - Jogadores e mestres acessam campanha
@@ -253,7 +276,7 @@ const { permissions } = useCampaign(campaignId)
 
 ---
 
-##  Pontos de Atenção
+## ⚠️ Pontos de Atenção
 
 1. **NPCSheet.vue** ainda usa modelo antigo - pode precisar atualizar para V5
 2. **Auto-import do Nuxt 4** nem sempre funciona - sempre usar imports explícitos
@@ -264,9 +287,9 @@ const { permissions } = useCampaign(campaignId)
 
 ---
 
-##  Próximos Passos
+## 🎯 Próximos Passos
 
-### Concluído (v5.0.0)
+### ✅ Concluído (v5.0.0)
 - [x] Integrar NPCs com Supabase (live.vue)
 - [x] Timeline persistente no banco
 - [x] Upload real de mídia (Supabase Storage — MediaTab.vue)

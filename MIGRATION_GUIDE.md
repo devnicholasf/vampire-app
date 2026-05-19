@@ -1,11 +1,29 @@
-#  MIGRATION GUIDE - Vampire RPG
+# 🔄 Guia de Migração
 
-**Versão Atual:** 5.0.0
-**Última Atualização:** Maio 2026
+![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
+
+> Guia completo para migração entre versões e setup de novos ambientes
+
+**Versão Atual:** 5.0.0  
+**Última Atualização:** Maio 19, 2026
 
 ---
 
-## ⚠️ AÇÕES OBRIGATÓRIAS PARA NOVOS AMBIENTES
+## 📋 Índice
+
+- [⚠️ Ações Obrigatórias](#️-ações-obrigatórias)
+- [💥 Breaking Changes](#-breaking-changes)
+- [🏗️ Arquitetura de Mídia ao Vivo](#️-arquitetura-de-mídia-ao-vivo)
+- [🔧 Pontos de Atenção Técnicos](#-pontos-de-atenção-técnicos)
+- [📁 Estrutura de Arquivos Modificados](#-estrutura-de-arquivos-modificados)
+- [🔨 Comandos Úteis](#-comandos-úteis)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [🎯 Próximos Passos](#-próximos-passos)
+
+---
+
+## ⚠️ Ações Obrigatórias
 
 ### 1. SQL Migrations Pendentes
 
@@ -33,9 +51,9 @@ cp .env.example .env
 
 ---
 
-##  BREAKING CHANGES (v5.0.0)
+## 💥 Breaking Changes (v5.0.0)
 
-### Sistema de Jogo ao Vivo
+### 🎮 Sistema de Jogo ao Vivo
 
 **Antes (v4.0):**
 - Sem sistema de mídia em tempo real
@@ -53,9 +71,9 @@ cp .env.example .env
 
 ---
 
-##  ARQUITETURA DE MÍDIA AO VIVO
+## 🏗️ Arquitetura de Mídia ao Vivo
 
-### Fluxo de Transmissão
+### 📡 Fluxo de Transmissão
 
 ```
 Mestre (live.vue)
@@ -82,9 +100,9 @@ startLiveGame(campaignId)  // ✅ Usar função do composable
 
 ---
 
-##  PONTOS DE ATENÇÃO TÉCNICOS
+## 🔧 Pontos de Atenção Técnicos
 
-### 1. Refs Readonly
+### 🔒 1. Refs Readonly
 
 Os composables exportam refs como `readonly` para prevenir mutações diretas:
 
@@ -130,7 +148,7 @@ audio.play().catch(() => {
 
 ---
 
-##  ESTRUTURA DE ARQUIVOS MODIFICADOS (v5.0)
+## 📁 Estrutura de Arquivos Modificados (v5.0)
 
 ```
 app/
@@ -148,9 +166,9 @@ database/
 
 ---
 
-##  COMANDOS ÚTEIS
+## 🔨 Comandos Úteis
 
-### Desenvolvimento
+### ⚙️ Desenvolvimento
 ```bash
 npm run dev
 npm run build
@@ -172,9 +190,9 @@ npm run postinstall
 
 ---
 
-##  TROUBLESHOOTING
+## 🐛 Troubleshooting
 
-### Mídia não aparece para jogadores
+### 🖼️ Mídia não aparece para jogadores
 - ✅ Verificar se SQL migration foi executada
 - ✅ Verificar se bucket `campaign-media` é público
 - ✅ Verificar console do navegador (erros de CORS?)
@@ -192,7 +210,7 @@ npm run postinstall
 
 ---
 
-##  PRÓXIMOS PASSOS RECOMENDADOS
+## 🎯 Próximos Passos Recomendados
 
 - [ ] Combat Tracker funcional
 - [ ] Chat em tempo real (base 30% completa)

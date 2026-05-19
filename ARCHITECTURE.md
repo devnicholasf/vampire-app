@@ -1,6 +1,27 @@
-﻿#  VAMPIRE RPG - Arquitetura do Sistema
+﻿# 🏗️ Arquitetura do Sistema
 
-##  Visão Geral
+![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82?style=flat-square&logo=nuxt.js)
+![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat-square&logo=vue.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)
+![Supabase](https://img.shields.io/badge/Supabase-Backend-3ECF8E?style=flat-square&logo=supabase)
+
+> Documentação completa da arquitetura do sistema de gerenciamento de campanhas de **Vampire: The Masquerade V5**
+
+---
+
+## 📋 Índice
+
+- [🎯 Visão Geral](#-visão-geral)
+- [📁 Estrutura de Pastas](#-estrutura-de-pastas)
+- [🔄 Fluxo de Funcionalidades](#-fluxo-de-funcionalidades)
+- [🗄️ Banco de Dados](#️-banco-de-dados)
+- [🔐 Sistema de Permissões](#-sistema-de-permissões)
+- [🛠️ Stack Tecnológica](#️-stack-tecnológica)
+- [📝 Convenções de Código](#-convenções-de-código)
+
+---
+
+## 🎯 Visão Geral
 
 Sistema completo de gerenciamento de campanhas de **Vampire: The Masquerade V5** desenvolvido com **Vue 3 + Nuxt 4 + TypeScript + Tailwind CSS + Supabase**.
 
@@ -94,27 +115,27 @@ vampire-app/
 
 ---
 
-##  Fluxo de Funcionalidades
+## 🔄 Fluxo de Funcionalidades
 
-### 1 Autenticação
+### 🔐 1. Autenticação
 - Registro e login via Supabase Auth
 - Token salvo automaticamente
 - `auth.global.ts` protege rotas privadas
 - Rotas públicas: `/`, `/login`, `/register`, `/terms`, `/privacy`
 
-### 2 Campanhas
+### 👥 2. Campanhas
 - Mestre cria campanha  código de convite gerado automaticamente
 - Jogador usa `/join-campaign` com código  entra como jogador
 - Constraint UNIQUE (campaign_id, user_id) previne duplicatas
 - Middleware `is-master.ts` e `is-player.ts` controlam acesso
 
-### 3 Dashboard do Jogador (`/campaign/[id]/player`)
+### 🎭 3. Dashboard do Jogador (`/campaign/[id]/player`)
 - **Estado Atual do Vampiro**: Barras de Fome, Humanidade, Vontade, Condições Ativas
 - **Estatísticas-Chave**: XP, atributos principais
 - **Botão "Editar Ficha"**  abre PlayerSheet.vue como modal
 - Fluxo de salvamento: `saveCharacterSheet()`  `savePlayerSheet()`  banco  `loadCampaignData()`
 
-### 4 Ficha de Personagem V5 (PlayerSheet.vue)
+### 📝 4. Ficha de Personagem V5 (PlayerSheet.vue)
 Componente modal completo (~1206 linhas) seguindo a ficha oficial V5:
 
 **Cabeçalho:**
@@ -149,7 +170,7 @@ Componente modal completo (~1206 linhas) seguindo a ficha oficial V5:
 - Geração do Abraço (dropdown: Cria/Neófito/Ancião)
 - Aparência, Traços Distintivos, Condições Narrativas, História
 
-### 5 Dashboard do Mestre (`/campaign/[id]/master`)
+### 🎬 5. Dashboard do Mestre (`/campaign/[id]/master`)
 - **Abas**: Jogadores, NPCs, Mídia, Notas, Configurações
 - Sistema completo de NPCs (CRUD com modais)
 - Anotações privadas do mestre
@@ -157,9 +178,9 @@ Componente modal completo (~1206 linhas) seguindo a ficha oficial V5:
 
 ---
 
-##  Banco de Dados (Supabase)
+## 🗄️ Banco de Dados (Supabase)
 
-### Tabelas Implementadas
+### 📊 Tabelas Implementadas
 
 ```sql
 -- Campanhas
@@ -206,7 +227,7 @@ campaign_players (
 
 ---
 
-##  Sistema de Permissões
+## 🔐 Sistema de Permissões
 
 ```typescript
 const { permissions } = useCampaign(campaignId)
@@ -220,7 +241,7 @@ permissions.canEdit    // Pode editar?
 
 ---
 
-##  Stack Tecnológica
+## 🛠️ Stack Tecnológica
 
 - **Frontend**: Vue 3 + Nuxt 4 + TypeScript (Composition API)
 - **Estilização**: Tailwind CSS (tema vampire customizado)
@@ -231,7 +252,7 @@ permissions.canEdit    // Pode editar?
 
 ---
 
-##  Convenções de Código
+## 📝 Convenções de Código
 
 - **Componentes**: PascalCase (`PlayerSheet.vue`)
 - **Composables**: camelCase com `use` (`useAuth.ts`)
