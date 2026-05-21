@@ -677,20 +677,61 @@
           </div>
         </div>
 
+        <!-- Perdição do Clã -->
+        <div class="df-card">
+          <h3 class="df-section-title">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 00-8 8c0 3.5 2 6 4 7.5V20h8v-2.5c2-1.5 4-4 4-7.5a8 8 0 00-8-8z"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/><path d="M9 16h6"/><path d="M10 20v2"/><path d="M14 20v2"/></svg>
+            Perdição do Clã
+          </h3>
+          <div v-if="sheetData.clan && clanBanes[sheetData.clan]" class="p-4 rounded-lg border border-df-border-red/30 bg-df-deep/30">
+            <p class="text-df-silver text-sm leading-relaxed whitespace-pre-line">{{ clanBanes[sheetData.clan] }}</p>
+          </div>
+          <div v-else class="p-4 rounded-lg border border-df-border-silver/20 bg-df-deep/20">
+            <p class="text-df-muted text-sm italic">Selecione um clã para ver a Perdição correspondente.</p>
+          </div>
+        </div>
+
         <!-- Ressonância -->
         <div class="df-card">
           <h3 class="df-section-title">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             Ressonância
           </h3>
-          <input
-            v-model="sheetData.resonance"
-            type="text"
-            placeholder="Choleric, Melancholic, Phlegmatic, Sanguine..."
-            @input="hasUnsavedChanges = true"
-            :disabled="!canEdit"
-            class="df-input"
-          />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Tipo de Ressonância -->
+            <div>
+              <label class="text-xs text-df-muted mb-1.5 block">Tipo</label>
+              <select
+                v-model="sheetData.resonance"
+                @change="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="df-input"
+              >
+                <option value="">Selecione...</option>
+                <option value="Colérica">Colérica (Choleric)</option>
+                <option value="Melancólica">Melancólica (Melancholic)</option>
+                <option value="Flegmática">Flegmática (Phlegmatic)</option>
+                <option value="Sanguínea">Sanguínea (Sanguine)</option>
+                <option value="Animal">Animal</option>
+              </select>
+            </div>
+            <!-- Intensidade da Ressonância -->
+            <div>
+              <label class="text-xs text-df-muted mb-1.5 block">Intensidade</label>
+              <select
+                v-model="sheetData.resonanceIntensity"
+                @change="hasUnsavedChanges = true"
+                :disabled="!canEdit"
+                class="df-input"
+              >
+                <option value="">Nenhuma</option>
+                <option value="Fugaz">Fugaz (Fleeting)</option>
+                <option value="Intensa">Intensa (Intense)</option>
+                <option value="Aguda">Aguda (Acute)</option>
+                <option value="Discrasia">Discrasia (Dyscrasia)</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- Princípios da Crônica -->
@@ -719,22 +760,6 @@
             v-model="sheetData.touchstonesConvictions"
             rows="3"
             placeholder="Suas crenças fundamentais, pilares de humanidade e conexões mortais..."
-            @input="hasUnsavedChanges = true"
-            :disabled="!canEdit"
-            class="df-input"
-          ></textarea>
-        </div>
-
-        <!-- Perdição do Clã -->
-        <div class="df-card">
-          <h3 class="df-section-title">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a8 8 0 00-8 8c0 3.5 2 6 4 7.5V20h8v-2.5c2-1.5 4-4 4-7.5a8 8 0 00-8-8z"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/><path d="M9 16h6"/><path d="M10 20v2"/><path d="M14 20v2"/></svg>
-            Perdição do Clã
-          </h3>
-          <textarea
-            v-model="sheetData.clanBane"
-            rows="2"
-            placeholder="A maldição específica do seu clã vampírico..."
             @input="hasUnsavedChanges = true"
             :disabled="!canEdit"
             class="df-input"
@@ -914,7 +939,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 
@@ -949,12 +974,59 @@ const getInitials = (name: string) => {
   return words[0]?.[0]?.toUpperCase() || 'P'
 }
 
-// Vampiro clãs
+// Vampiro clãs V5
 const vampireClans = [
-  'Brujah', 'Gangrel', 'Malkavian', 'Nosferatu', 'Toreador', 
-  'Tremere', 'Ventrue', 'Assamita', 'Followers of Set', 'Giovanni',
-  'Lasombra', 'Tzimisce', 'Caitiff', 'Thin-Blood'
+  'Banu Haqim',
+  'Brujah', 
+  'Gangrel', 
+  'Hecata',
+  'Lasombra',
+  'Malkavian', 
+  'Nosferatu',
+  'O Ministério',
+  'Ravnos',
+  'Salubri',
+  'Toreador', 
+  'Tremere', 
+  'Tzimisce',
+  'Ventrue',
+  'Caitiff', 
+  'Sangue Fraco'
 ]
+
+// Perdições de Clã V5 (imutáveis por clã)
+const clanBanes: Record<string, string> = {
+  'Banu Haqim': 'Vício em Sangue. O sangue dos Banu Haqim anseia pela vitae de outros vampiros. Quando consomem sangue de outro Cainita, devem passar em um teste de Frenesi de Fome (Dificuldade 2 + Gravidade da Perdição) ou tentarão drenar o alvo até a morte. Além disso, seu sangue é tóxico para mortais, causando dano agravado caso tentem criar ghouls facilmente.',
+  
+  'Brujah': 'Temperamento Violento. O sangue dos Brujah ferve com uma fúria ancestral. O personagem sofre uma penalidade na parada de dados igual à sua Gravidade da Perdição em todos os testes feitos para resistir a um Frenesi de Fúria.',
+  
+  'Gangrel': 'Traços Bestiais. A Besta dos Gangrel molda sua carne. Sempre que o personagem entra em Frenesi, ele ganha uma ou mais características físicas animais. Esses traços duram por mais uma noite após o término do Frenesi e reduzem um Atributo (Social ou Mental) em 1 ponto por característica manifestada.',
+  
+  'Hecata': 'O Beijo Doloroso. Ao contrário dos outros vampiros, cujo Beijo traz êxtase, a mordida dos Hecata causa uma dor agonizante e excruciante. Suas vítimas mortais resistem violentamente. Cada vez que se alimentam, causam dano agravado à saúde da vítima igual à Gravidade da Perdição por nível de Fome saciado.',
+  
+  'Lasombra': 'Imagem Distorcida. A alma dos Lasombra está parcialmente submersa no Abismo. Seus reflexos e gravações eletrônicas distorcem, piscam ou ficam transparentes. Telas de toque falham frequentemente e o personagem sofre uma penalidade igual à Gravidade da Perdição em testes de tecnologia e para evitar sistemas de vigilância.',
+  
+  'Malkavian': 'Perturbação. A mente do Malkavian é permanentemente fragmentada por um transtorno psíquico. Sempre que o personagem sofre uma Falha Bestial ou ativa sua Compulsão de Clã, sua Perdição se manifesta: ele recebe uma penalidade igual à Gravidade da Perdição em uma categoria inteira de dados (Físicos, Sociais ou Mentais) até o fim da cena.',
+  
+  'O Ministério': 'Aversão à Luz. Como herdeiros de Set, os Ministros abominam a luz. Quando expostos a qualquer iluminação direta intensa (seja natural ou artificial, como holofotes e lâmpadas fortes de neon), sofrem uma penalidade igual à Gravidade da Perdição em todas as suas paradas de dados. Além disso, adicionam esse valor ao dano agravado recebido pela luz solar.',
+  
+  'Nosferatu': 'Hediondo. A maldição de Caine deforma os Nosferatu em monstros visuais. Eles falham automaticamente em qualquer teste de disfarce que tente passá-los por humanos normais (sem o uso de poderes como Ofuscação). Além disso, sofrem uma penalidade de dados igual à Gravidade da Perdição em testes sociais baseados na aparência física.',
+  
+  'Ravnos': 'Amaldiçoado. Os Ravnos são nômades eternos por punição divina. Se eles dormirem durante o dia no mesmo local (ou dentro de um raio de 1,6 km daquele local) mais de uma vez a cada sete noites, o sangue queima em suas veias. O jogador deve rolar dados equivalentes à sua Gravidade da Perdição; cada resultado "10" causa 1 ponto de Dano Agravado.',
+  
+  'Salubri': 'Caçado. Os Salubri possuem um terceiro olho no centro da testa que não pode ser ocultado por disciplinas. Sempre que ativam qualquer poder de Disciplina, o olho chora sangue (vitae). Além disso, o sangue dos Salubri é uma iguaria irresistível: qualquer vampiro que beba deles deve passar em um teste de Frenesi de Fome (Dificuldade 2 + Gravidade da Perdição) ou continuará bebendo até secá-los.',
+  
+  'Toreador': 'Obsessão Estética. Os Toreador são escravos da beleza. Quando o personagem se encontra em um ambiente que não seja esteticamente belo, deslumbrante ou artisticamente enriquecedor (como becos sujos, delegacias ou escritórios genéricos), ele sofre uma penalidade igual à sua Gravidade da Perdição em todas as paradas de dados para utilizar suas Disciplinas.',
+  
+  'Tremere': 'Laço Deficiente. Após a destruição da estrutura da Pirâmide, o sangue dos Tremere enfraqueceu no quesito submissão. Eles nunca podem criar Laços de Sangue com outros vampiros. Ao tentar laçar humanos ou ghouls, o processo exige que o alvo beba do sangue do Tremere um número de noites adicional igual à Gravidade da Perdição.',
+  
+  'Tzimisce': 'Solo Natal / Propriedade Territorial. Os Tzimisce são mestres possessivos ligados à sua terra. Ao entrar em repouso diurno, o personagem deve estar cercado por terra de um local de extrema importância para ele em sua vida mortal (sua terra natal, o local de seu abraço, etc.) ou de um território explicitamente reivindicado por ele. Caso não o faça, sofre penalidades pesadas em Força de Vontade e ações na noite seguinte.',
+  
+  'Ventrue': 'Paladar Rarefeito. Os Ventrue possuem um paladar aristocrático e extremamente restrito. Durante a criação da ficha, o jogador deve escolher uma classe estrita de presas (ex: apenas virgens, apenas criminosos, apenas pessoas de sangue nobre, etc.). Se o Ventrue consumir sangue que não seja de sua preferência, ele rejeita o alimento violentamente (vomita) e não reduz seus níveis de Fome.',
+  
+  'Caitiff': 'Sem clã, sem perdição de clã específica.',
+  'Sangue Fraco': 'Sem clã, sem perdição de clã específica.'
+}
 
 // Disciplinas V5
 const vampireDisciplines = [
@@ -1053,9 +1125,10 @@ const sheetData = ref({
   
   // Novos campos da ficha oficial V5
   resonance: props.player.sheet?.resonance || '',
+  resonanceIntensity: props.player.sheet?.resonanceIntensity || '',
   chronicleTenets: props.player.sheet?.chronicleTenets || '',
   touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
-  clanBane: props.player.sheet?.clanBane || '',
+  clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
   advantages: props.player.sheet?.advantages || [{ name: '', level: 0 }],
   bloodPotency: props.player.sheet?.bloodPotency || 0,
   bloodSurge: props.player.sheet?.bloodSurge || '+2',
@@ -1086,6 +1159,16 @@ const sheetData = ref({
   vitality: props.player.sheet?.vitality || 1,
   hunger: props.player.sheet?.hunger ?? 1,
   conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : ['']
+})
+
+// Watch clan changes to auto-update clan bane
+watch(() => sheetData.value.clan, (newClan) => {
+  if (newClan && clanBanes[newClan]) {
+    sheetData.value.clanBane = clanBanes[newClan]
+    hasUnsavedChanges.value = true
+  } else if (!newClan) {
+    sheetData.value.clanBane = ''
+  }
 })
 
 // Methods
