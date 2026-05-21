@@ -297,39 +297,102 @@ const fetchLastEvent = async () => {
 }
 
 // ── Persistence ──
-const loadOverview = () => {
+const loadOverview = async () => {
 	try {
-		const raw = localStorage.getItem(storageKey.value)
-		if (raw) {
-			const parsed = JSON.parse(raw)
+		if (!props.campaignId) return
+
+		// 1. Tentar carregar do Supabase primeiro
+		const { data, error } = await supabase
+			.from('campaigns')
+			.select('overview')
+			.eq('id', props.campaignId)
+			.single()
+
+		if (data?.overview && Object.keys(data.overview).length > 0) {
+			const parsed = data.overview
 			const validToneValues = toneOptions.map(t => t.value)
+			
 			// Migrate old single customTone to customTones array
 			let customTones: string[] = parsed.customTones || []
 			if (!customTones.length && parsed.customTone && parsed.customTone.trim()) {
 				customTones = [parsed.customTone.trim()]
 			}
+			
 			overview.value = {
-				name: parsed.name || '',
+				name: parsed.name || props.campaign?.name || '',
 				status: parsed.status || '',
 				principles: parsed.principles || '',
 				tones: (parsed.tones || []).filter((t: string) => validToneValues.includes(t)),
 				customTones
 			}
 		} else {
-			// Default from campaign data
-			overview.value.name = props.campaign?.name || ''
+			// 2. Se não tem no Supabase, verificar localStorage (migração)
+			const raw = localStorage.getItem(storageKey.value)
+			if (raw) {
+				const parsed = JSON.parse(raw)
+				const validToneValues = toneOptions.map(t => t.value)
+				
+				// Migrate old single customTone to customTones array
+				let customTones: string[] = parsed.customTones || []
+				if (!customTones.length && parsed.customTone && parsed.customTone.trim()) {
+					customTones = [parsed.customTone.trim()]
+				}
+				
+				overview.value = {
+					name: parsed.name || '',
+					status: parsed.status || '',
+					principles: parsed.principles || '',
+					tones: (parsed.tones || []).filter((t: string) => validToneValues.includes(t)),
+					customTones
+				}
+				
+				// Migrar automaticamente para o Supabase
+				await supabase
+					.from('campaigns')
+					.update({ overview: overview.value })
+					.eq('id', props.campaignId)
+				
+				// Limpar localStorage após migração
+				localStorage.removeItem(storageKey.value)
+				console.log('✅ Dados da Visão Geral migrados do localStorage para Supabase')
+			} else {
+				// Default from campaign data
+				overview.value.name = props.campaign?.name || ''
+			}
 		}
-	} catch {
+	} catch (err) {
+		console.error('Erro ao carregar overview:', err)
 		overview.value.name = props.campaign?.name || ''
 	}
 	savedSnapshot = JSON.stringify(overview.value)
 }
 
-const saveOverview = () => {
-	localStorage.setItem(storageKey.value, JSON.stringify(overview.value))
-	savedSnapshot = JSON.stringify(overview.value)
-	editMode.value = false
-	toast.success('Visão Geral salva!', 'As informações da crônica foram atualizadas.')
+const saveOverview = async () => {
+	try {
+		if (!props.campaignId) {
+			toast.error('Erro', 'ID da campanha não encontrado')
+			return
+		}
+
+		// Salvar no Supabase
+		const { error } = await supabase
+			.from('campaigns')
+			.update({ overview: overview.value })
+			.eq('id', props.campaignId)
+
+		if (error) {
+			console.error('Erro ao salvar overview:', error)
+			toast.error('Erro ao salvar', error.message)
+			return
+		}
+
+		savedSnapshot = JSON.stringify(overview.value)
+		editMode.value = false
+		toast.success('Visão Geral salva!', 'As informações da crônica foram atualizadas.')
+	} catch (err: any) {
+		console.error('Erro ao salvar overview:', err)
+		toast.error('Erro ao salvar', err.message || 'Erro desconhecido')
+	}
 }
 
 const cancelEdits = () => {
@@ -338,8 +401,8 @@ const cancelEdits = () => {
 }
 
 // ── Lifecycle ──
-onMounted(() => {
-	loadOverview()
+onMounted(async () => {
+	await loadOverview()
 	fetchLastEvent()
 })
 

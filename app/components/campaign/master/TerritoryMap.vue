@@ -94,8 +94,8 @@
             <g v-for="(zone, zi) in modelValue" :key="zi">
               <polygon
                 :points="zone.points.map(p => `${p[0]},${p[1]}`).join(' ')"
-                :fill="zone.color + '55'"
-                :stroke="selectedZone === zi ? '#d4a647' : zone.color"
+                :fill="getStatusConf(zone.status).color + '55'"
+                :stroke="selectedZone === zi ? '#d4a647' : getStatusConf(zone.status).color"
                 :stroke-width="selectedZone === zi ? 3 / zoom : 1.5 / zoom"
                 class="tm-zone-polygon"
                 :class="{ 'tm-zone-hover': !editing || drawingMode === null, 'tm-zone-war': zone.status === 'war' }"
@@ -168,12 +168,12 @@
           v-for="(zone, zi) in modelValue" :key="'zcard' + zi"
           class="tm-zone-card-view"
           :class="{ 'tm-zone-card-view-active': selectedZone === zi }"
-          :style="{ borderColor: selectedZone === zi ? zone.color : undefined }"
+          :style="{ borderColor: selectedZone === zi ? getStatusConf(zone.status).color : undefined }"
           @click="selectedZone = selectedZone === zi ? -1 : zi"
         >
           <!-- Row 1: color dot + name + status badge -->
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="w-3 h-3 rounded-sm flex-shrink-0" :style="{ background: zone.color }"></span>
+            <span class="w-3 h-3 rounded-sm flex-shrink-0" :style="{ background: getStatusConf(zone.status).color }"></span>
             <span class="text-df-gold font-bold text-xs uppercase tracking-wider">{{ zone.name || 'Território' }}</span>
             <span
               class="tm-status-badge-sm"
@@ -223,6 +223,11 @@
 
             <!-- Description preview -->
             <p v-if="zone.description" class="text-df-muted text-[10px] italic mt-3 line-clamp-2">{{ zone.description }}</p>
+
+            <!-- Status badge -->
+            <div class="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border" :style="{ borderColor: getStatusConf(zone.status).border, background: getStatusConf(zone.status).bg }">
+              <span class="text-[10px]" :style="{ color: getStatusConf(zone.status).color }">{{ getStatusConf(zone.status).emoji }} {{ getStatusConf(zone.status).label }}</span>
+            </div>
           </template>
 
           <!-- ══ Edit mode: editable fields (expanded when selected) ══ -->
@@ -230,7 +235,9 @@
             <div class="space-y-2">
               <div class="flex gap-2 items-center">
                 <input v-model="zone.name" class="df-input text-xs flex-1" placeholder="Nome do bairro / distrito..." @click.stop />
-                <input v-model="zone.color" type="color" class="w-8 h-8 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" @click.stop />
+                <div class="px-3 py-1.5 rounded border flex items-center gap-1.5" :style="{ borderColor: getStatusConf(zone.status).border, background: getStatusConf(zone.status).bg }">
+                  <span class="text-xs" :style="{ color: getStatusConf(zone.status).color }">{{ getStatusConf(zone.status).emoji }}</span>
+                </div>
               </div>
 
               <!-- Status selector -->
@@ -296,6 +303,59 @@
         </div>
       </div>
     </div>
+
+    <!-- ══ Delete Confirmation Modal ══ -->
+    <Teleport to="body">
+      <div v-if="showDeleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" @click.self="showDeleteModal = false">
+        <div class="df-card w-full max-w-md p-6">
+          <div class="df-card-corner df-card-corner-tl"></div>
+          <div class="df-card-corner df-card-corner-tr"></div>
+          <div class="df-card-corner df-card-corner-bl"></div>
+          <div class="df-card-corner df-card-corner-br"></div>
+          
+          <div class="relative z-10">
+            <!-- Header -->
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 rounded-full bg-df-red/20 border border-df-red/40 flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-df-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">Remover Território</h3>
+                <p class="text-sm text-df-muted">Esta ação não pode ser desfeita</p>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="mb-6 p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
+              <p class="text-df-silver text-sm leading-relaxed">
+                Deseja realmente remover o território <span class="font-bold text-df-gold">{{ zoneToDelete?.name || 'sem nome' }}</span>?
+              </p>
+              <p class="text-df-muted text-xs mt-2">
+                Todas as informações de facções e influências serão perdidas.
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3">
+              <button @click="showDeleteModal = false" class="px-4 py-2 rounded-lg border border-df-border-silver/40 text-df-silver hover:border-df-gold hover:text-df-gold transition-all text-sm font-medium">
+                Cancelar
+              </button>
+              <button @click="confirmDelete" class="px-6 py-2 bg-df-red hover:bg-red-500 text-white rounded-lg border border-red-500 transition-all font-medium text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -371,6 +431,8 @@ const mousePos = ref<number[] | null>(null)
 const selectedZone = ref(-1)
 const hoveredZone = ref(-1)
 const mapFocused = ref(false)
+const showDeleteModal = ref(false)
+const zoneToDelete = ref<TerritoryZone | null>(null)
 
 // Reset selection when entering/leaving edit mode
 watch(toRef(props, 'editing'), () => {
@@ -666,9 +728,28 @@ const createZone = (points: number[][]) => {
 }
 
 const removeZone = (zi: number) => {
-  const updated = props.modelValue.filter((_, i) => i !== zi)
-  emit('update:modelValue', updated)
-  selectedZone.value = -1
+  if (!props.editing) return
+  
+  // Store zone for confirmation modal
+  const zone = props.modelValue[zi]
+  if (zone) {
+    zoneToDelete.value = zone
+    showDeleteModal.value = true
+  }
+}
+
+const confirmDelete = () => {
+  if (zoneToDelete.value) {
+    const zi = props.modelValue.indexOf(zoneToDelete.value)
+    if (zi >= 0) {
+      const updated = props.modelValue.filter((_, i) => i !== zi)
+      emit('update:modelValue', updated)
+      selectedZone.value = -1
+      toast.success('Zona Removida', 'O território foi excluído com sucesso.')
+    }
+  }
+  showDeleteModal.value = false
+  zoneToDelete.value = null
 }
 
 const addInfluence = (zi: number) => {
@@ -713,8 +794,39 @@ const onDocumentClick = (e: MouseEvent) => {
     mapFocused.value = false
   }
 }
-onMounted(() => { document.addEventListener('click', onDocumentClick) })
-onBeforeUnmount(() => { document.removeEventListener('click', onDocumentClick) })
+
+// ── Keyboard handler for Delete key ──
+const onKeyDown = (e: KeyboardEvent) => {
+  // Only handle Delete key (NOT Backspace) when in edit mode and a zone is selected
+  if (!props.editing || selectedZone.value < 0) return
+  
+  // Ignore if user is typing in an input, textarea, or any editable element
+  const target = e.target as HTMLElement
+  if (
+    target.tagName === 'INPUT' || 
+    target.tagName === 'TEXTAREA' || 
+    target.isContentEditable ||
+    target.closest('input') ||
+    target.closest('textarea')
+  ) {
+    return
+  }
+  
+  // Only Delete key (not Backspace) triggers the deletion
+  if (e.key === 'Delete') {
+    e.preventDefault()
+    removeZone(selectedZone.value)
+  }
+}
+
+onMounted(() => { 
+  document.addEventListener('click', onDocumentClick)
+  document.addEventListener('keydown', onKeyDown)
+})
+onBeforeUnmount(() => { 
+  document.removeEventListener('click', onDocumentClick)
+  document.removeEventListener('keydown', onKeyDown)
+})
 </script>
 
 <style scoped>

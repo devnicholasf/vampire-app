@@ -812,6 +812,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRuntimeConfig } from '#imports'
+import { createClient } from '@supabase/supabase-js'
 import { useToast } from '~/composables/useToast'
 import { useCampaign } from '~/composables/useCampaign'
 import TerritoryMap from './TerritoryMap.vue'
@@ -819,6 +821,8 @@ import type { TerritoryZone } from './TerritoryMap.vue'
 
 interface Props { campaignId: string }
 const props = defineProps<Props>()
+const config = useRuntimeConfig()
+const supabase = createClient(config.public.supabaseUrl as string, config.public.supabaseKey as string)
 const toast = useToast()
 const { campaignNPCs, loadCampaignNPCs } = useCampaign()
 
@@ -937,17 +941,45 @@ const defaultPolitics = (): PoliticsData => ({
 const politics = ref<PoliticsData>(defaultPolitics())
 let savedSnapshot = ''
 
-// ── Persistence via localStorage ──
+// ── Persistence via Supabase (with localStorage fallback for migration) ──
 const storageKey = computed(() => `vamp-politics-${props.campaignId}`)
 
 onMounted(async () => {
   // Ensure NPCs are loaded (needed on page refresh)
   await loadCampaignNPCs(props.campaignId)
 
-  const stored = localStorage.getItem(storageKey.value)
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored)
+  try {
+    // 1. Tentar carregar do Supabase primeiro
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('politics')
+      .eq('id', props.campaignId)
+      .single()
+
+    let parsed: any = null
+
+    if (data?.politics && Object.keys(data.politics).length > 0) {
+      // Dados encontrados no Supabase
+      parsed = data.politics
+    } else {
+      // 2. Se não tem no Supabase, verificar localStorage (migração)
+      const stored = localStorage.getItem(storageKey.value)
+      if (stored) {
+        parsed = JSON.parse(stored)
+        
+        // Migrar automaticamente para o Supabase
+        await supabase
+          .from('campaigns')
+          .update({ politics: parsed })
+          .eq('id', props.campaignId)
+        
+        // Limpar localStorage após migração
+        localStorage.removeItem(storageKey.value)
+        console.log('✅ Dados da Política migrados do localStorage para Supabase')
+      }
+    }
+
+    if (parsed) {
       // Migrate old government format: { title, name, clan, note } → { title, npcId, note }
       if (parsed.government) {
         parsed.government = parsed.government.map((role: any) => ({
@@ -991,8 +1023,11 @@ onMounted(async () => {
         }))
       }
       politics.value = { ...defaultPolitics(), ...parsed }
-    } catch { /* ignore */ }
+    }
+  } catch (err) {
+    console.error('Erro ao carregar politics:', err)
   }
+  
   // Auto-expand city map if one is already loaded
   if (politics.value.territoryMapImage) {
     showCityMap.value = true
@@ -1001,42 +1036,76 @@ onMounted(async () => {
   ready.value = true
 })
 
-const savePolitics = () => {
-  // Cleanup empty entries before saving
-  politics.value.territories = politics.value.territories.filter(
-    t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
-  )
-  politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
-    ...z,
-    influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
-  }))
-  localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
-  savedSnapshot = JSON.stringify(politics.value)
-  sectionJustSaved = true
-  resetAllEdit()
-  nextTick(() => { sectionJustSaved = false })
-  toast.success('Mapa Político salvo!', 'Todas as alterações foram registradas.')
+const savePolitics = async () => {
+  try {
+    // Cleanup empty entries before saving
+    politics.value.territories = politics.value.territories.filter(
+      t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
+    )
+    politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
+      ...z,
+      influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
+    }))
+    
+    // Salvar no Supabase
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ politics: politics.value })
+      .eq('id', props.campaignId)
+
+    if (error) {
+      console.error('Erro ao salvar politics:', error)
+      toast.error('Erro ao salvar', error.message)
+      return
+    }
+
+    savedSnapshot = JSON.stringify(politics.value)
+    sectionJustSaved = true
+    resetAllEdit()
+    nextTick(() => { sectionJustSaved = false })
+    toast.success('Mapa Político salvo!', 'Todas as alterações foram registradas.')
+  } catch (err: any) {
+    console.error('Erro ao salvar politics:', err)
+    toast.error('Erro ao salvar', err.message || 'Erro desconhecido')
+  }
 }
 
-const saveSectionPolitics = (section: 'government' | 'factions' | 'relations' | 'territories') => {
-  // Cleanup empty entries before saving
-  politics.value.territories = politics.value.territories.filter(
-    t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
-  )
-  politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
-    ...z,
-    influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
-  }))
-  localStorage.setItem(storageKey.value, JSON.stringify(politics.value))
-  savedSnapshot = JSON.stringify(politics.value)
-  sectionJustSaved = true
-  if (section === 'government') editGovernment.value = false
-  else if (section === 'factions') editFactions.value = false
-  else if (section === 'relations') { editRelations.value = false; editingRelation.value = null }
-  else if (section === 'territories') editTerritories.value = false
-  nextTick(() => { sectionJustSaved = false })
-  const labels: Record<string, string> = { government: 'Governo', factions: 'Facções', relations: 'Relações', territories: 'Territórios' }
-  toast.success(`${labels[section]} salvo!`, 'Alterações registradas com sucesso.')
+const saveSectionPolitics = async (section: 'government' | 'factions' | 'relations' | 'territories') => {
+  try {
+    // Cleanup empty entries before saving
+    politics.value.territories = politics.value.territories.filter(
+      t => t.name.trim() || t.controlledBy.trim() || t.description.trim()
+    )
+    politics.value.territoryZones = (politics.value.territoryZones || []).map(z => ({
+      ...z,
+      influences: (z.influences || []).filter((inf: any) => inf.faction.trim())
+    }))
+    
+    // Salvar no Supabase
+    const { error } = await supabase
+      .from('campaigns')
+      .update({ politics: politics.value })
+      .eq('id', props.campaignId)
+
+    if (error) {
+      console.error('Erro ao salvar politics:', error)
+      toast.error('Erro ao salvar', error.message)
+      return
+    }
+
+    savedSnapshot = JSON.stringify(politics.value)
+    sectionJustSaved = true
+    if (section === 'government') editGovernment.value = false
+    else if (section === 'factions') editFactions.value = false
+    else if (section === 'relations') { editRelations.value = false; editingRelation.value = null }
+    else if (section === 'territories') editTerritories.value = false
+    nextTick(() => { sectionJustSaved = false })
+    const labels: Record<string, string> = { government: 'Governo', factions: 'Facções', relations: 'Relações', territories: 'Territórios' }
+    toast.success(`${labels[section]} salvo!`, 'Alterações registradas com sucesso.')
+  } catch (err: any) {
+    console.error('Erro ao salvar politics:', err)
+    toast.error('Erro ao salvar', err.message || 'Erro desconhecido')
+  }
 }
 
 const cancelEdits = () => {
