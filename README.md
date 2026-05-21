@@ -1,13 +1,17 @@
-﻿# 🧛 Vampire RPG - Sistema de Gerenciamento de Campanhas
+<div align="center">
+ 
+ # 🩸 VTM V5 - Sistema de Gerenciamento de Campanhas
 
 ![Nuxt](https://img.shields.io/badge/Nuxt-4.x-00DC82?style=for-the-badge&logo=nuxt.js&logoColor=white)
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4+-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Status](https://img.shields.io/badge/Status-v5.0.0_Completo-success?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge)
 
 > Sistema completo de gerenciamento de campanhas de **Vampire: The Masquerade V5** com jogo ao vivo em tempo real, eventos persistentes e integração total com Supabase.
+
+</div>
 
 ---
 
@@ -44,12 +48,12 @@ Proporcionar uma experiência digital completa para campanhas de V5, desde a cri
 | Área | Implementação |
 |------|--------------|
 | 🔐 Autenticação | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
-| 📝 Ficha V5 | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 👥 Sistema de Campanhas | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🎭 NPCs Integrados | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 📜 Eventos Persistentes | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🎮 Jogo ao Vivo | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
-| 🖼️ Upload de Mídia | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
+| 🖼️ Upload de Mídia | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) | 
+| 🗺️ Mapa interativo com Marcadores | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🗺️ Mapa Político | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | ⚡ Real-time Sync | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 
@@ -57,6 +61,7 @@ Proporcionar uma experiência digital completa para campanhas de V5, desde a cri
 
 | Área | Progresso |
 |------|-----------|
+| 📝 Ficha V5 | ![80%](https://img.shields.io/badge/80%25-yellow?style=flat-square) |
 | 💬 Chat em Tempo Real | ![30%](https://img.shields.io/badge/30%25-yellow?style=flat-square) |
 | ⚔️ Combat Tracker | ![10%](https://img.shields.io/badge/10%25-red?style=flat-square) |
 
@@ -348,23 +353,18 @@ database/add-campaign-media-storage.sql
 - [ ] Combat Tracker funcional
 - [ ] Chat em tempo real completo
 - [ ] Sistema de notificações push
-- [ ] Mapa interativo com marcadores
-- [ ] Deploy em produção (Vercel/Netlify)
+- [ ] Deploy em produção 
 - [ ] Atualizar NPCSheet para padrão V5 completo
 
 ---
+
+<div align="center">
 
 ## 👨‍💻 Desenvolvido por
 
 **Nicholas Freitas**
 
 [![GitHub](https://img.shields.io/badge/GitHub-devnicholasf-181717?style=for-the-badge&logo=github)](https://github.com/devnicholasf)
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT.
 
 ---
 
