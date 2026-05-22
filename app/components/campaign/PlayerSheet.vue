@@ -310,14 +310,17 @@
 
         <!-- Campos com Bolinhas: Grid 2 colunas -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:items-start">
-          <div class="space-y-3 flex flex-col">
+          <div class="space-y-3 flex flex-col items-start">
             <!-- Disciplinas -->
-            <div class="df-card">
+            <div class="df-card w-full">
               <h3 class="df-section-title">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
                 Disciplinas
               </h3>
-              <div class="space-y-2">
+              <div 
+                class="space-y-2 pr-2 scrollbar-thin scrollbar-thumb-df-border-red/50 scrollbar-track-transparent"
+                :class="sheetData.disciplines.length >= 4 ? 'max-h-[165px] overflow-y-auto' : ''"
+              >
                 <div v-for="(discipline, index) in sheetData.disciplines" :key="index" class="flex items-center space-x-2 sm:space-x-3">
                   <select
                     v-model="discipline.name"
@@ -356,101 +359,146 @@
                     </svg>
                   </button>
                 </div>
-                <BaseButton
-                  v-if="canEdit"
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  @click="addDiscipline"
-                  class="w-full"
-                >
-                  + Disciplina
-                </BaseButton>
               </div>
+              <BaseButton
+                v-if="canEdit"
+                variant="outline"
+                size="sm"
+                type="button"
+                @click="addDiscipline"
+                class="w-full mt-2"
+              >
+                + Disciplina
+              </BaseButton>
             </div>
 
             <!-- Vantagens & Defeitos -->
-            <div class="df-card">
+            <div class="df-card h-auto min-h-0 flex-shrink-0 w-full">
               <h3 class="df-section-title">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 Vantagens &amp; Defeitos
               </h3>
-              <div class="space-y-2">
-                <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="flex items-center gap-2">
-                  <input
-                    v-model="adv.name"
-                    type="text"
-                    placeholder="Nome da vantagem/defeito"
-                    @input="hasUnsavedChanges = true"
-                    :disabled="!canEdit"
-                    class="df-input flex-1"
-                  />
-                  <div class="flex gap-1">
+              <div 
+                v-if="sheetData.advantages.length > 0"
+                class="space-y-3 pr-2 max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-df-border-red/50 scrollbar-track-transparent"
+              >
+                <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="space-y-2 p-3 rounded-lg border border-df-border-silver/20 bg-df-deep/20">
+                  <!-- Linha 1: Categoria e Tipo -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <!-- Dropdown 1: Categoria -->
+                    <div>
+                      <label class="text-xs text-df-muted mb-1 block">Categoria</label>
+                      <select
+                        v-model="adv.category"
+                        @change="onCategoryChange(Number(idx))"
+                        :disabled="!canEdit"
+                        class="df-input w-full"
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="Antecedente">Antecedente</option>
+                        <option value="Mérito">Mérito</option>
+                        <option value="Defeito">Defeito</option>
+                        <option value="Folha de Lore">Folha de Lore</option>
+                      </select>
+                    </div>
+                    
+                    <!-- Dropdown 2: Tipo (condicional) -->
+                    <div v-if="shouldShowTypeDropdown(adv.category)">
+                      <label class="text-xs text-df-muted mb-1 block">Tipo</label>
+                      <select
+                        v-model="adv.type"
+                        @change="onTypeChange(Number(idx))"
+                        :disabled="!canEdit"
+                        class="df-input w-full"
+                      >
+                        <option value="">Selecione...</option>
+                        <option v-for="opt in getSubcategoryOptions(adv.category)" :key="opt" :value="opt">
+                          {{ opt }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <!-- Linha 2: Nome, Dots e Detalhes -->
+                  <div class="flex items-end gap-2">
+                    <!-- Dropdown 3: Nome -->
+                    <div class="flex-1">
+                      <label class="text-xs text-df-muted mb-1 block">Nome</label>
+                      <select
+                        v-model="adv.name"
+                        @change="onNameChange(Number(idx))"
+                        :disabled="!canEdit || !adv.category || (shouldShowTypeDropdown(adv.category) && !adv.type)"
+                        class="df-input w-full"
+                      >
+                        <option value="">Selecione...</option>
+                        <option v-for="opt in getNameOptions(adv)" :key="opt" :value="opt">
+                          {{ opt }}
+                        </option>
+                      </select>
+                    </div>
+                    
+                    <!-- Seletor de Pontuação (Dots) -->
+                    <div class="flex gap-1 pb-0.5">
+                      <button
+                        v-for="level in 5"
+                        :key="level"
+                        type="button"
+                        @click="setAdvantageLevel(Number(idx), level)"
+                        :disabled="!canEdit || adv.fixo"
+                        :class="[
+                          'df-dot df-dot-md',
+                          adv.level >= level
+                            ? 'df-dot-filled'
+                            : 'df-dot-empty',
+                          adv.fixo ? 'opacity-60 cursor-not-allowed' : ''
+                        ]"
+                        :title="adv.fixo ? 'Pontuação fixa (não editável)' : `Nível ${level}`"
+                      >
+                        <span class="sr-only">Nível {{ level }}</span>
+                      </button>
+                    </div>
+                    
+                    <!-- Botão Deletar -->
                     <button
-                      v-for="level in 5"
-                      :key="level"
+                      v-if="canEdit"
                       type="button"
-                      @click="setAdvantageLevel(Number(idx), level)"
-                      :disabled="!canEdit"
-                      :class="[
-                        'df-dot df-dot-md',
-                        adv.level >= level
-                          ? 'df-dot-filled'
-                          : 'df-dot-empty'
-                      ]"
+                      @click="removeAdvantage(Number(idx))"
+                      class="df-btn-remove pb-0.5"
+                      title="Remover"
                     >
-                      <span class="sr-only">Nível {{ level }}</span>
+                      <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
+                        <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
                     </button>
                   </div>
-                  <button
-                    v-if="canEdit && Number(idx) > 0"
-                    type="button"
-                    @click="removeAdvantage(Number(idx))"
-                    class="df-btn-remove"
-                  >
-                    <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
-                      <path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
-                  </button>
+                  
+                  <!-- Linha 3: Input de Detalhes -->
+                  <div>
+                    <label class="text-xs text-df-muted mb-1 block">Detalhes/Especificação</label>
+                    <input
+                      v-model="adv.details"
+                      type="text"
+                      placeholder="Ex: Nome do contato, descrição do refúgio, etc..."
+                      @input="hasUnsavedChanges = true"
+                      :disabled="!canEdit"
+                      class="df-input w-full"
+                    />
+                  </div>
                 </div>
-                <BaseButton
-                  v-if="canEdit && sheetData.advantages.length < 10"
-                  variant="ghost"
-                  @click="addAdvantage"
-                  class="w-full text-sm mt-2"
-                >
-                  + Adicionar Vantagem/Defeito
-                </BaseButton>
               </div>
-            </div>
-
-            <!-- Fome -->
-            <div class="df-card">
-              <h3 class="df-section-title">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6 2 10.5c0 2.5 1.5 4.5 3 5.5L7 22l2.5-5h5L17 22l2-6c1.5-1 3-3 3-5.5C22 6 17.5 2 12 2z"/><path d="M9 11v3.5"/><path d="M15 11v3.5"/></svg>
-                Fome
-              </h3>
-              <div class="flex gap-1">
-                <button
-                  v-for="level in 5"
-                  :key="level"
-                  type="button"
-                  @click="sheetData.hunger = level; hasUnsavedChanges = true"
-                  :disabled="!canEdit"
-                  :class="[
-                    'df-dot df-dot-md',
-                    (sheetData.hunger || 0) >= level
-                      ? 'df-dot-filled'
-                      : 'df-dot-empty'
-                  ]"
-                >
-                  <span class="sr-only">Fome {{ level }}</span>
-                </button>
-              </div>
+                
+              <BaseButton
+                v-if="canEdit && sheetData.advantages.length < 10"
+                variant="ghost"
+                @click="addAdvantage"
+                class="w-full text-sm mt-3"
+              >
+                + Adicionar Vantagem/Defeito
+              </BaseButton>
             </div>
           </div>
 
-          <div class="flex flex-col">
+          <div class="space-y-3 flex flex-col">
             <!-- Potência de Sangue -->
             <div class="df-card">
               <h3 class="df-section-title">
@@ -530,7 +578,7 @@
             </div>
 
             <!-- Experiência -->
-            <div class="df-card mt-3">
+            <div class="df-card">
               <h3 class="df-section-title">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M2 9h20"/><path d="M12 22L6 9"/><path d="M12 22l6-13"/></svg>
                 Experiência
@@ -568,6 +616,49 @@
                     disabled
                     class="df-input"
                   />
+                </div>
+              </div>
+            </div>
+
+            <!-- Fome -->
+            <div class="df-card">
+              <h3 class="df-section-title">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6 2 10.5c0 2.5 1.5 4.5 3 5.5L7 22l2.5-5h5L17 22l2-6c1.5-1 3-3 3-5.5C22 6 17.5 2 12 2z"/><path d="M9 11v3.5"/><path d="M15 11v3.5"/></svg>
+                Fome
+              </h3>
+              <div class="space-y-3">
+                <div>
+                  <label class="df-sub-label">Nível de Fome</label>
+                  <div class="flex gap-1 mt-2">
+                    <button
+                      v-for="level in 5"
+                      :key="level"
+                      type="button"
+                      @click="sheetData.hunger = level; hasUnsavedChanges = true"
+                      :disabled="!canEdit"
+                      :class="[
+                        'df-dot df-dot-md',
+                        (sheetData.hunger || 0) >= level
+                          ? 'df-dot-filled'
+                          : 'df-dot-empty'
+                      ]"
+                    >
+                      <span class="sr-only">Fome {{ level }}</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="df-sub-label">Estado</label>
+                  <div class="text-sm text-df-muted mt-1">
+                    {{ 
+                      (sheetData.hunger || 0) === 0 ? 'Saciado' :
+                      (sheetData.hunger || 0) === 1 ? 'Satisfeito' :
+                      (sheetData.hunger || 0) === 2 ? 'Faminto' :
+                      (sheetData.hunger || 0) === 3 ? 'Voraz' :
+                      (sheetData.hunger || 0) === 4 ? 'Famélico' :
+                      'Besta Descontrolada'
+                    }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -974,6 +1065,76 @@ const getInitials = (name: string) => {
   return words[0]?.[0]?.toUpperCase() || 'P'
 }
 
+// Dados de Vantagens & Defeitos V5
+const vantagensDados = {
+  antecedentes: ["Aliados", "Contatos", "Fama", "Influência", "Lacaios", "Mawla", "Rebanho", "Recursos", "Refúgio", "Status"],
+  meritos: {
+    fisicos: [
+      { nome: "Atraente", pontos: 2, fixo: true },
+      { nome: "Impressionante", pontos: 4, fixo: true },
+      { nome: "Estômago de Ferro", pontos: 2, fixo: true },
+      { nome: "Resistência a Toxinas", pontos: 1, fixo: true }
+    ],
+    mentais: [
+      { nome: "Linguista", pontos: 1, fixo: false },
+      { nome: "Mente Alerta", pontos: 2, fixo: true }
+    ],
+    sociais: [
+      { nome: "Aparência Bonita", pontos: 2, fixo: true },
+      { nome: "Enganador", pontos: 1, fixo: false },
+      { nome: "Ponto Fraco Ignorado", pontos: 2, fixo: true }
+    ],
+    sobrenaturais: [
+      { nome: "Médium", pontos: 2, fixo: true },
+      { nome: "Sentido do Perigo", pontos: 2, fixo: true },
+      { nome: "Sangue Frio", pontos: 2, fixo: true }
+    ],
+    sangue_ralo: [
+      { nome: "Alquimista de Sangue Ralo", pontos: 1, fixo: false },
+      { nome: "Caminhante do Dia", pontos: 1, fixo: false },
+      { nome: "Disciplina de Sangue Ralo", pontos: 1, fixo: false },
+      { nome: "Aparência Humana", pontos: 1, fixo: true },
+      { nome: "Sede Reduzida", pontos: 1, fixo: true }
+    ]
+  },
+  defeitos: {
+    fisicos: [
+      { nome: "Feio", pontos: 2, fixo: true },
+      { nome: "Repulsivo", pontos: 4, fixo: true },
+      { nome: "Exclusividade de Sangue", pontos: 2, fixo: true },
+      { nome: "Órgão-voro", pontos: 2, fixo: true },
+      { nome: "Veggie", pontos: 2, fixo: true },
+      { nome: "Carne Racha", pontos: 1, fixo: true },
+      { nome: "Bebedor Ineficiente", pontos: 2, fixo: true }
+    ],
+    mentais: [
+      { nome: "Vício", pontos: 1, fixo: true },
+      { nome: "Pesadelos", pontos: 1, fixo: true },
+      { nome: "Amnésia", pontos: 1, fixo: false }
+    ],
+    sociais: [
+      { nome: "Segredo Sombrio", pontos: 1, fixo: false },
+      { nome: "Desacreditado", pontos: 1, fixo: true },
+      { nome: "Identidade Trocada", pontos: 1, fixo: true }
+    ],
+    sobrenaturais: [
+      { nome: "Presença Repulsiva", pontos: 2, fixo: true },
+      { nome: "Assombrado", pontos: 1, fixo: false },
+      { nome: "Repulsa do Sangue", pontos: 2, fixo: true }
+    ],
+    sangue_ralo: [
+      { nome: "Bebedor de Fluidos", pontos: 1, fixo: true },
+      { nome: "Cicatrizes de Caine", pontos: 1, fixo: true },
+      { nome: "Fragilidade de Sangue Ralo", pontos: 1, fixo: true },
+      { nome: "Marca da Besta", pontos: 1, fixo: true },
+      { nome: "Mordida de Bebê", pontos: 1, fixo: true },
+      { nome: "Rejeitado pelos Anarquistas", pontos: 1, fixo: true },
+      { nome: "Caçado pela Camarilla", pontos: 1, fixo: true }
+    ]
+  },
+  loresheets: ["O Movimento Anarquista", "A Camarilla", "A Segunda Inquisição", "Primeira Luz", "A Semana dos Pesadelos", "Descendente de Hardestadt", "Descendente de Helena", "Descendente de Louhi", "Descendente de Villon", "Descendente de Xaviar", "O Ministério de Set", "A Rede Nosferatu", "A Pirâmide Tremere / Casa Carna", "A Pirâmide Tremere / Casa Goratrix", "Bahari", "Culto de Shalim", "A Cinza", "Golconda"]
+}
+
 // Vampiro clãs V5
 const vampireClans = [
   'Banu Haqim',
@@ -1129,7 +1290,11 @@ const sheetData = ref({
   chronicleTenets: props.player.sheet?.chronicleTenets || '',
   touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
-  advantages: props.player.sheet?.advantages || [{ name: '', level: 0 }],
+  advantages: props.player.sheet?.advantages || [
+    { category: '', type: '', name: '', level: 0, details: '', fixo: false },
+    { category: '', type: '', name: '', level: 0, details: '', fixo: false },
+    { category: '', type: '', name: '', level: 0, details: '', fixo: false }
+  ],
   bloodPotency: props.player.sheet?.bloodPotency || 0,
   bloodSurge: props.player.sheet?.bloodSurge || '+2',
   powerBonus: props.player.sheet?.powerBonus || '0',
@@ -1225,13 +1390,121 @@ const setAdvantageLevel = (index: number, level: number) => {
 const addAdvantage = () => {
   if (!props.canEdit) return
   if (sheetData.value.advantages.length >= 10) return
-  sheetData.value.advantages.push({ name: '', level: 0 })
+  sheetData.value.advantages.push({ category: '', type: '', name: '', level: 0, details: '', fixo: false })
   hasUnsavedChanges.value = true
 }
 
 const removeAdvantage = (index: number) => {
   if (!props.canEdit) return
   sheetData.value.advantages.splice(index, 1)
+  hasUnsavedChanges.value = true
+}
+
+// Métodos auxiliares para dropdowns de Vantagens
+const getSubcategoryOptions = (category: string) => {
+  if (category === 'Mérito' || category === 'Defeito') {
+    const options = ['Físico', 'Mental', 'Social', 'Sobrenatural']
+    // Só inclui Sangue Ralo se geração for 14, 15 ou 16
+    if (sheetData.value.generation >= 14 && sheetData.value.generation <= 16) {
+      options.push('Sangue Ralo')
+    }
+    return options
+  }
+  return []
+}
+
+// Mapeia o nome da categoria exibido para a chave do objeto de dados
+const normalizeCategoryKey = (category: string): string => {
+  const map: Record<string, string> = {
+    'Antecedente': 'antecedentes',
+    'Folha de Lore': 'loresheets',
+    'Mérito': 'meritos',
+    'Defeito': 'defeitos'
+  }
+  return map[category] || ''
+}
+
+// Mapeia o nome do tipo exibido para a chave do objeto de dados
+const normalizeTypeKey = (type: string): string => {
+  const map: Record<string, string> = {
+    'Físico': 'fisicos',
+    'Mental': 'mentais',
+    'Social': 'sociais',
+    'Sobrenatural': 'sobrenaturais',
+    'Sangue Ralo': 'sangue_ralo'
+  }
+  return map[type] || ''
+}
+
+const getNameOptions = (adv: any) => {
+  const category = adv.category
+  const type = adv.type
+  
+  if (!category) return []
+  
+  const categoryKey = normalizeCategoryKey(category)
+  
+  // Antecedentes e Loresheets são arrays diretos de strings
+  if (categoryKey === 'antecedentes') {
+    return vantagensDados.antecedentes
+  } else if (categoryKey === 'loresheets') {
+    return vantagensDados.loresheets
+  } 
+  // Méritos e Defeitos são arrays de objetos - retornar apenas os nomes
+  else if (categoryKey === 'meritos' && type) {
+    const typeKey = normalizeTypeKey(type) as keyof typeof vantagensDados.meritos
+    const items = vantagensDados.meritos[typeKey] || []
+    return items.map((item: any) => item.nome)
+  } else if (categoryKey === 'defeitos' && type) {
+    const typeKey = normalizeTypeKey(type) as keyof typeof vantagensDados.defeitos
+    const items = vantagensDados.defeitos[typeKey] || []
+    return items.map((item: any) => item.nome)
+  }
+  
+  return []
+}
+
+const shouldShowTypeDropdown = (category: string) => {
+  return category === 'Mérito' || category === 'Defeito'
+}
+
+const onCategoryChange = (index: number) => {
+  // Reset campos dependentes quando categoria muda
+  sheetData.value.advantages[index].type = ''
+  sheetData.value.advantages[index].name = ''
+  hasUnsavedChanges.value = true
+}
+
+const onTypeChange = (index: number) => {
+  // Reset nome quando tipo muda
+  sheetData.value.advantages[index].name = ''
+  hasUnsavedChanges.value = true
+}
+
+const onNameChange = (index: number) => {
+  const adv = sheetData.value.advantages[index]
+  const categoryKey = normalizeCategoryKey(adv.category)
+  
+  // Para Antecedentes e Loresheets: pontos livres (1-5), não fixo
+  if (categoryKey === 'antecedentes' || categoryKey === 'loresheets') {
+    adv.level = 1
+    adv.fixo = false
+  }
+  // Para Méritos e Defeitos: buscar pontos e fixo do objeto de dados
+  else if ((categoryKey === 'meritos' || categoryKey === 'defeitos') && adv.type && adv.name) {
+    const typeKey = normalizeTypeKey(adv.type)
+    const items = categoryKey === 'meritos' 
+      ? vantagensDados.meritos[typeKey as keyof typeof vantagensDados.meritos]
+      : vantagensDados.defeitos[typeKey as keyof typeof vantagensDados.defeitos]
+    
+    const selectedItem = (items || []).find((item: any) => item.nome === adv.name)
+    
+    if (selectedItem) {
+      adv.level = selectedItem.pontos
+      adv.fixo = selectedItem.fixo
+    }
+  }
+  
   hasUnsavedChanges.value = true
 }
 
