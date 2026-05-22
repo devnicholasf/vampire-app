@@ -52,6 +52,10 @@
 			</div>
 		</div>
 
+		<!-- ════ Layout: duas colunas assimétricas ════ -->
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+			<div class="lg:col-span-2 space-y-6">
+
 		<!-- ═══════════════════════════════════════════════ -->
 		<!-- CARD 2: Tom da Crônica                         -->
 		<!-- ═══════════════════════════════════════════════ -->
@@ -178,6 +182,88 @@
 			</div>
 		</div>
 
+			</div>
+			<!-- /Col esquerda -->
+
+			<!-- Col direita: widgets -->
+			<div class="space-y-6">
+
+				<!-- Widget: Líder do Domínio -->
+				<div class="df-card">
+					<div class="df-card-corner df-card-corner-tl"></div>
+					<div class="df-card-corner df-card-corner-tr"></div>
+					<div class="df-card-corner df-card-corner-bl"></div>
+					<div class="df-card-corner df-card-corner-br"></div>
+					<div class="relative z-10">
+						<div class="flex items-center gap-2 mb-4 pb-3 border-b border-df-border-red/30">
+							<svg class="w-4 h-4 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+							<h4 class="text-sm font-bold text-df-gold uppercase tracking-wider">Líder do Domínio</h4>
+						</div>
+						<div v-if="loadingPolitics" class="flex items-center gap-2 text-df-muted text-xs py-2">
+							<svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+							Carregando...
+						</div>
+						<div v-else-if="domainLeader" class="flex items-center gap-3">
+							<div class="w-12 h-12 rounded-full bg-df-deep border border-df-border-red/40 overflow-hidden flex-shrink-0 flex items-center justify-center">
+								<img v-if="domainLeader.photo" :src="domainLeader.photo" class="w-full h-full object-cover" />
+								<svg v-else class="w-6 h-6 text-df-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="5"/><path d="M3 21v-2a7 7 0 0114 0v2"/></svg>
+							</div>
+							<div class="min-w-0">
+								<p class="text-sm font-bold text-white truncate">{{ domainLeader.name }}</p>
+								<p v-if="domainLeader.clan" class="text-xs text-df-gold truncate">{{ domainLeader.clan }}</p>
+								<p v-if="domainLeaderRole" class="text-xs text-df-muted truncate">{{ domainLeaderRole }}</p>
+							</div>
+						</div>
+						<p v-else class="text-df-muted text-xs italic">Nenhum líder definido na aba Política.</p>
+					</div>
+				</div>
+
+				<!-- Widget: Status dos Territórios -->
+				<div class="df-card">
+					<div class="df-card-corner df-card-corner-tl"></div>
+					<div class="df-card-corner df-card-corner-tr"></div>
+					<div class="df-card-corner df-card-corner-bl"></div>
+					<div class="df-card-corner df-card-corner-br"></div>
+					<div class="relative z-10">
+						<div class="flex items-center gap-2 mb-4 pb-3 border-b border-df-border-red/30">
+							<svg class="w-4 h-4 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+							<h4 class="text-sm font-bold text-df-gold uppercase tracking-wider">Status dos Territórios</h4>
+						</div>
+						<div v-if="loadingPolitics" class="flex items-center gap-2 text-df-muted text-xs py-2">
+							<svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+							Carregando...
+						</div>
+						<div v-else-if="territoryZones.length > 0">
+							<ul class="space-y-1.5 mb-4">
+								<li v-for="zone in territoryZones" :key="zone.name" class="flex items-center gap-2 text-xs">
+									<span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: statusColor(zone.status) }"></span>
+									<span class="text-df-silver flex-1 truncate">{{ zone.name }}</span>
+									<span class="text-[10px]" :style="{ color: statusColor(zone.status) }">{{ statusLabel(zone.status) }}</span>
+								</li>
+							</ul>
+							<div class="flex rounded-full overflow-hidden h-2 mb-2">
+								<div v-if="territorySummary.stable > 0" :style="{ width: summaryPercent(territorySummary.stable) + '%', background: '#22c55e' }"></div>
+								<div v-if="territorySummary.contested > 0" :style="{ width: summaryPercent(territorySummary.contested) + '%', background: '#eab308' }"></div>
+								<div v-if="territorySummary.war > 0" :style="{ width: summaryPercent(territorySummary.war) + '%', background: '#ef4444' }"></div>
+								<div v-if="territorySummary.abandoned > 0" :style="{ width: summaryPercent(territorySummary.abandoned) + '%', background: '#6b7280' }"></div>
+							</div>
+							<div class="flex flex-wrap gap-x-3 gap-y-0.5">
+								<span v-if="territorySummary.stable > 0" class="text-[10px] text-green-400">{{ territorySummary.stable }} Estável</span>
+								<span v-if="territorySummary.contested > 0" class="text-[10px] text-yellow-400">{{ territorySummary.contested }} Contestado</span>
+								<span v-if="territorySummary.war > 0" class="text-[10px] text-red-400">{{ territorySummary.war }} Em Guerra</span>
+								<span v-if="territorySummary.abandoned > 0" class="text-[10px] text-gray-400">{{ territorySummary.abandoned }} Abandonado</span>
+							</div>
+						</div>
+						<p v-else class="text-df-muted text-xs italic">Nenhum território definido na aba Política.</p>
+					</div>
+				</div>
+
+			</div>
+			<!-- /Col direita -->
+
+		</div>
+		<!-- /Layout 2 colunas -->
+
 		<!-- ═══════════════════ -->
 		<!-- Save / Cancel bar  -->
 		<!-- ═══════════════════ -->
@@ -195,6 +281,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRuntimeConfig } from '#imports'
 import { createClient } from '@supabase/supabase-js'
+import type { NPC } from '~/types'
+import { useCampaign } from '~/composables/useCampaign'
 import { useToast } from '~/composables/useToast'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import EventCard from '~/components/campaign/master/EventCard.vue'
@@ -208,6 +296,23 @@ const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl as string, config.public.supabaseKey as string)
 const toast = useToast()
 const editMode = ref(false)
+
+// ── Politics data (para widgets) ──
+interface TerritoryZone {
+	name: string
+	status: 'stable' | 'contested' | 'war' | 'abandoned'
+}
+interface GovernmentRole {
+	title: string
+	npcId: string
+	note?: string
+}
+const { campaignNPCs, loadCampaignNPCs } = useCampaign()
+const loadingPolitics = ref(false)
+const politicsData = ref<{ government: GovernmentRole[]; territoryZones: TerritoryZone[] }>({
+	government: [],
+	territoryZones: []
+})
 
 // ── Tone presets ──
 const toneOptions = [
@@ -271,6 +376,73 @@ const addCustomTone = () => {
 		overview.value.customTones.push(val)
 	}
 	newCustomTone.value = ''
+}
+
+// ── Politics widget computeds ──
+const domainLeader = computed(() => {
+	const role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	if (!role?.npcId) return null
+	return campaignNPCs.value.find(n => n.id === role.npcId) ?? null
+})
+
+const domainLeaderRole = computed<string>(() => {
+	const role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	return role?.title ?? ''
+})
+
+const territoryZones = computed(() => politicsData.value.territoryZones || [])
+
+const territorySummary = computed(() => {
+	const s = { stable: 0, contested: 0, war: 0, abandoned: 0 }
+	for (const z of territoryZones.value) {
+		if (z.status in s) s[z.status as keyof typeof s]++
+	}
+	return s
+})
+
+const summaryPercent = (count: number) => {
+	const total = territoryZones.value.length
+	return total > 0 ? Math.round((count / total) * 100) : 0
+}
+
+const statusColor = (status: string) => {
+	const map: Record<string, string> = {
+		stable: '#22c55e', contested: '#eab308', war: '#ef4444', abandoned: '#6b7280'
+	}
+	return map[status] ?? '#6b7280'
+}
+
+const statusLabel = (status: string) => {
+	const map: Record<string, string> = {
+		stable: 'Estável', contested: 'Contestado', war: 'Em Guerra', abandoned: 'Abandonado'
+	}
+	return map[status] ?? status
+}
+
+// ── Load politics data (widgets) ──
+const loadPoliticsData = async () => {
+	if (!props.campaignId) return
+	loadingPolitics.value = true
+	try {
+		const [{ data: campaign }] = await Promise.all([
+			supabase
+				.from('campaigns')
+				.select('politics')
+				.eq('id', props.campaignId)
+				.single(),
+			loadCampaignNPCs(props.campaignId)
+		])
+		if (campaign?.politics) {
+			politicsData.value = {
+				government: campaign.politics.government || [],
+				territoryZones: campaign.politics.territoryZones || []
+			}
+		}
+	} catch (err) {
+		console.error('Erro ao carregar política (widgets):', err)
+	} finally {
+		loadingPolitics.value = false
+	}
 }
 
 // ── Last event from DB ──
@@ -404,6 +576,7 @@ const cancelEdits = () => {
 onMounted(async () => {
 	await loadOverview()
 	fetchLastEvent()
+	loadPoliticsData()
 })
 
 watch(() => props.campaign, (val) => {
