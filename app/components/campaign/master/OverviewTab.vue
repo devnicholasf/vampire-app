@@ -380,13 +380,27 @@ const addCustomTone = () => {
 
 // ── Politics widget computeds ──
 const domainLeader = computed(() => {
-	const role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	// Príncipe tem prioridade
+	let role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	
+	// Se não houver Príncipe, buscar Arcebispo (Sabbat)
+	if (!role || !role.npcId) {
+		role = politicsData.value.government.find(g => g.title === 'Arcebispo')
+	}
+	
 	if (!role?.npcId) return null
 	return campaignNPCs.value.find(n => n.id === role.npcId) ?? null
 })
 
 const domainLeaderRole = computed<string>(() => {
-	const role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	// Príncipe tem prioridade
+	let role = politicsData.value.government.find(g => g.title === 'Príncipe')
+	
+	// Se não houver Príncipe, buscar Arcebispo (Sabbat)
+	if (!role || !role.npcId) {
+		role = politicsData.value.government.find(g => g.title === 'Arcebispo')
+	}
+	
 	return role?.title ?? ''
 })
 

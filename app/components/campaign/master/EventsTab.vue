@@ -304,6 +304,10 @@ const props = defineProps<{
   players: { id: string; name: string; characterName?: string }[]
 }>()
 
+const emit = defineEmits<{
+  'update:count': [count: number]
+}>()
+
 // ── Events composable ──────────────────────────────────────
 const {
   visibleEvents,
@@ -318,6 +322,11 @@ const {
   unsubscribeFromEvents,
   EVENT_TYPE_CONFIG: typeCfg,
 } = useEvents(props.campaignId)
+
+// Watch events to update count
+watch(visibleEvents, (newEvents) => {
+  emit('update:count', newEvents.length)
+}, { immediate: true })
 
 // ── Local state ────────────────────────────────────────────
 const ready             = ref(false)

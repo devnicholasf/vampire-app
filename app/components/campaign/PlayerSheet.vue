@@ -92,28 +92,22 @@
               <input v-model.number="sheetData.generation" type="number" min="3" max="15" required :disabled="!canEdit" class="df-input">
             </div>
             <div>
-              <label class="df-label">Seita</label>
-              <select v-model="sheetData.sect" :disabled="!canEdit" class="df-input">
-                <option value="">Selecionar</option>
-                <option value="Camarilla">Camarilla</option>
-                <option value="Sabá">Sabá</option>
-                <option value="Anarquistas">Anarquistas</option>
-                <option value="Independente">Independente</option>
-              </select>
+              <label class="df-label">Predador</label>
+              <input v-model="sheetData.predator" placeholder="Ex: Sereia" :disabled="!canEdit" class="df-input">
             </div>
             <div>
-              <label class="df-label">Refúgio</label>
-              <input v-model="sheetData.haven" placeholder="Local do refúgio" :disabled="!canEdit" class="df-input">
+              <label class="df-label">Ambição</label>
+              <input v-model="sheetData.ambition" placeholder="Sua ambição" :disabled="!canEdit" class="df-input">
             </div>
           </div>
           <div class="grid grid-cols-3 gap-3 mt-3">
             <div>
-              <label class="df-label">Comportamento</label>
-              <input v-model="sheetData.demeanor" placeholder="Ex: Rebelde" :disabled="!canEdit" class="df-input">
+              <label class="df-label">Desejo</label>
+              <input v-model="sheetData.desire" placeholder="Seu desejo" :disabled="!canEdit" class="df-input">
             </div>
             <div>
-              <label class="df-label">Natureza</label>
-              <input v-model="sheetData.nature" placeholder="Ex: Sobrevivente" :disabled="!canEdit" class="df-input">
+              <label class="df-label">Senhor</label>
+              <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
             </div>
             <div>
               <label class="df-label">Jogador</label>
@@ -1221,13 +1215,13 @@ const physicalAttributes = [
 const socialAttributes = [
   { key: 'charisma', name: 'Carisma' },
   { key: 'manipulation', name: 'Manipulação' },
-  { key: 'appearance', name: 'Aparência' }
+  { key: 'composure', name: 'Autocontrole' }
 ]
 
 const mentalAttributes = [
-  { key: 'perception', name: 'Percepção' },
   { key: 'intelligence', name: 'Inteligência' },
-  { key: 'wits', name: 'Raciocínio' }
+  { key: 'wits', name: 'Raciocínio' },
+  { key: 'resolve', name: 'Determinação' }
 ]
 
 // Habilidades (ordem EXATA do print oficial V5)
@@ -1280,10 +1274,10 @@ const sheetData = ref({
   concept: props.player.sheet?.concept || '',
   clan: props.player.sheet?.clan || '',
   generation: props.player.sheet?.generation || 13,
-  sect: props.player.sheet?.sect || '',
-  haven: props.player.sheet?.haven || '',
-  demeanor: props.player.sheet?.demeanor || '',
-  nature: props.player.sheet?.nature || '',
+  predator: props.player.sheet?.predator || '',
+  ambition: props.player.sheet?.ambition || '',
+  desire: props.player.sheet?.desire || '',
+  sire: props.player.sheet?.sire || '',
   player: props.player.sheet?.player || '',
   avatar: props.player.sheet?.avatar || '', // Avatar do personagem
   
@@ -1312,8 +1306,8 @@ const sheetData = ref({
   
   attributes: props.player.sheet?.attributes || {
     physical: { strength: 1, dexterity: 1, stamina: 1 },
-    social: { charisma: 1, manipulation: 1, appearance: 1 },
-    mental: { perception: 1, intelligence: 1, wits: 1 }
+    social: { charisma: 1, manipulation: 1, composure: 1 },
+    mental: { intelligence: 1, wits: 1, resolve: 1 }
   },
   skills: props.player.sheet?.skills || {
     talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },

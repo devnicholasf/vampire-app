@@ -160,12 +160,14 @@
           :campaign-id="campaignId"
           ref="playersTabRef"
           @refresh="refreshCampaignData"
+          @update:count="updatePlayersCount"
         />
 
         <NPCsTab
           v-if="currentTab === 'npcs'"
           :campaign-id="campaignId"
           ref="npcsTabRef"
+          @update:count="updateNpcsCount"
         />
 
         <PoliticsTab
@@ -178,6 +180,7 @@
           v-if="currentTab === 'events'"
           :campaign-id="campaignId"
           :players="(campaign as any)?.players ?? []"
+          @update:count="updateEventsCount"
         />
 
         <SettingsTab
@@ -317,6 +320,11 @@ const playersTabRef = ref()
 const npcsTabRef = ref()
 const politicsTabRef = ref()
 
+// Persistent counts (não dependem de tabs renderizadas)
+const persistentPlayersCount = ref(0)
+const persistentNpcsCount = ref(0)
+const persistentEventsCount = ref(0)
+
 // Mock data for now
 const sessions = ref<any[]>([])
 const events = ref<any[]>([])
@@ -324,10 +332,10 @@ const events = ref<any[]>([])
 // ============================================
 // Computed
 // ============================================
-const playersCount = computed(() => playersTabRef.value?.count || 0)
+const playersCount = computed(() => persistentPlayersCount.value)
 const sessionCount = computed(() => sessions.value.length)
-const eventsCount = computed(() => events.value.length || politicsTabRef.value?.count || 0)
-const npcsCount = computed(() => npcsTabRef.value?.npcs?.length || 0)
+const eventsCount = computed(() => persistentEventsCount.value)
+const npcsCount = computed(() => persistentNpcsCount.value)
 
 // ============================================
 // Tabs configuration (SVG icon components)
@@ -345,6 +353,18 @@ const tabs = ref([
 // ============================================
 // Methods
 // ============================================
+const updatePlayersCount = (count: number) => {
+  persistentPlayersCount.value = count
+}
+
+const updateNpcsCount = (count: number) => {
+  persistentNpcsCount.value = count
+}
+
+const updateEventsCount = (count: number) => {
+  persistentEventsCount.value = count
+}
+
 const refreshCampaignData = async () => {
   console.log('MASTER.VUE: Recarregando dados da campanha...')
   try {

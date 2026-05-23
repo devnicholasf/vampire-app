@@ -206,9 +206,18 @@ import { useToast } from '~/composables/useToast'
 interface Props { campaignId: string }
 const props = defineProps<Props>()
 
+const emit = defineEmits<{
+  'update:count': [count: number]
+}>()
+
 const { campaignNPCs: npcs, loadCampaignNPCs, createNPC: createNPCInCampaign, updateNPC, deleteNPC, subscribeToNPCs, loading } = useCampaign()
 const { addNPCToGame, removeNPCFromGame, fetchLiveGameState, subscribeToLiveGame, currentNpcs } = useLiveGame()
 const toast = useToast()
+
+// Watch NPCs to update count
+watch(npcs, (newNpcs) => {
+  emit('update:count', newNpcs.length)
+}, { immediate: true })
 
 const sortedNPCs = computed(() => [...npcs.value].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR')))
 

@@ -201,6 +201,7 @@ const props = defineProps<Props>()
 // Emits
 const emit = defineEmits<{
   refresh: []
+  'update:count': [count: number]
 }>()
 
 // Use real players from campaign_players
@@ -210,6 +211,11 @@ const players = computed(() => {
   console.log('Campaign players:', raw?.campaign_players)
   return raw?.campaign_players || []
 })
+
+// Watch players to update count
+watch(players, (newPlayers) => {
+  emit('update:count', newPlayers.length)
+}, { immediate: true })
 
 const inviteEmail = ref('')
 const inviteLoading = ref(false)
