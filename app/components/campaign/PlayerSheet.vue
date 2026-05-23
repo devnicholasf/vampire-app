@@ -714,7 +714,7 @@
                     @click="sheetData.humanity = n; hasUnsavedChanges = true"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-sm',
+                      'df-dot df-dot-sm df-dot-gold',
                       n <= sheetData.humanity
                         ? 'df-dot-filled'
                         : 'df-dot-empty'
@@ -734,7 +734,7 @@
                     @click="sheetData.willpower = n; hasUnsavedChanges = true"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-sm df-dot-blue',
+                      'df-dot df-dot-sm df-dot-gold',
                       n <= sheetData.willpower
                         ? 'df-dot-filled'
                         : 'df-dot-empty'
@@ -754,7 +754,7 @@
                     @click="sheetData.vitality = n; hasUnsavedChanges = true"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-sm df-dot-green',
+                      'df-dot df-dot-sm df-dot-gold',
                       n <= sheetData.vitality
                         ? 'df-dot-filled'
                         : 'df-dot-empty'
@@ -1033,6 +1033,9 @@
 import { ref, watch } from 'vue'
 import type { Ref } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import { useToast } from '~/composables/useToast'
+
+const toast = useToast()
 
 // Props
 interface Props {
@@ -1530,19 +1533,32 @@ const setBloodPotency = (level: number) => {
 }
 
 const validateRequiredFields = (): boolean => {
+  const errors: string[] = []
+  
   if (!sheetData.value.name || !sheetData.value.name.trim()) {
-    // Validação falhou - usuário verá campo vazio
-    return false
+    errors.push('Nome do Personagem está vazio')
+    console.warn('❌ Validação: Nome vazio')
   }
   if (!sheetData.value.concept || !sheetData.value.concept.trim()) {
-    return false
+    errors.push('Conceito está vazio')
+    console.warn('❌ Validação: Conceito vazio')
   }
   if (!sheetData.value.clan || !sheetData.value.clan.trim()) {
-    return false
+    errors.push('Clã não foi selecionado')
+    console.warn('❌ Validação: Clã vazio')
   }
   if (!sheetData.value.generation || sheetData.value.generation < 3 || sheetData.value.generation > 15) {
+    errors.push(`Geração inválida (${sheetData.value.generation}). Deve ser entre 3 e 15`)
+    console.warn(`❌ Validação: Geração inválida (${sheetData.value.generation})`)
+  }
+  
+  if (errors.length > 0) {
+    console.error('❌ Validação falhou. Erros:', errors)
+    toast.error('Campos obrigatórios não preenchidos', errors.join('; '))
     return false
   }
+  
+  console.log('✅ Validação passou - todos os campos obrigatórios preenchidos')
   return true
 }
 
