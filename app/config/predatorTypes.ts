@@ -58,7 +58,8 @@ export const predatorTypes: Record<string, PredatorConfig> = {
     restrictedClans: ['Ventrue'],
     choices: {
       discipline: ['Animalismo', 'Proteanismo'],
-      specialty: ['Empatia com animais (Animal Específico)', 'Sobrevivência (Caça)']
+      specialty: ['Empatia com animais (Animal Específico)', 'Sobrevivência (Caça)'],
+      specialtyCustomInput: ['Empatia com animais (Animal Específico)']
     },
     fixedAdvantages: [
       { category: 'Defeito', type: 'Físico', name: 'Alimentação', level: 2, details: 'Fazendeiro', fixo: true }

@@ -1705,7 +1705,7 @@ const onNameChange = (index: number) => {
     adv.fixo = false
     adv.maxLevel = 5
   }
-  // Para Méritos e Defeitos: buscar pontos, fixo e max do objeto de dados
+  // Para Méritos e Defeitos: buscar pontos e max do objeto de dados
   else if ((categoryKey === 'meritos' || categoryKey === 'defeitos') && adv.type && adv.name) {
     const typeKey = normalizeTypeKey(adv.type)
     const items = categoryKey === 'meritos' 
@@ -1716,7 +1716,10 @@ const onNameChange = (index: number) => {
     
     if (selectedItem) {
       adv.level = selectedItem.pontos
-      adv.fixo = selectedItem.fixo
+      // IMPORTANTE: Não copiar 'fixo' da configuração!
+      // Vantagens criadas manualmente pelo usuário são sempre editáveis (fixo: false)
+      // Apenas vantagens adicionadas pelo sistema de predador têm fixo: true
+      adv.fixo = false
       adv.maxLevel = (selectedItem as any).max || 5
     }
   }

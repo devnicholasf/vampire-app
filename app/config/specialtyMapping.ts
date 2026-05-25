@@ -13,20 +13,20 @@ export const specialtyMapping: Record<string, SpecialtyMappingEntry> = {
   'Persuasão (Bolsas)': { category: 'skills', skill: 'persuasion' },
   
   // Fazendeiro
-  'Empatia com Animais (Animais Específicos)': { category: 'skills', skill: 'animalKen' },
-  'Persuasão (Agricultores)': { category: 'skills', skill: 'persuasion' },
+  'Empatia com animais (Animal Específico)': { category: 'skills', skill: 'animalKen' },
+  'Sobrevivência (Caça)': { category: 'talents', skill: 'survival' },
   
   // Osiris
   'Ocultismo (Tradição Específica)': { category: 'knowledges', skill: 'occult' },
   'Performance (Campo específico)': { category: 'skills', skill: 'performance' },
   
   // Sacoleiro
-  'Intimidação (Barganhar)': { category: 'skills', skill: 'intimidation' },
-  'Manha (Comércio Negro)': { category: 'skills', skill: 'streetwise' },
+  'Ladroagem (Abrir Fechaduras)': { category: 'talents', skill: 'larceny' },
+  'Manha (Mercado Negro)': { category: 'skills', skill: 'streetwise' },
   
   // Sandman
-  'Medicina (Anestesia)': { category: 'knowledges', skill: 'medicine' },
-  'Furtividade (Invasão de Propriedade)': { category: 'talents', skill: 'stealth' },
+  'Medicina (Anestésicos)': { category: 'knowledges', skill: 'medicine' },
+  'Furtividade (Invasão)': { category: 'talents', skill: 'stealth' },
   
   // Sanguessuga
   'Briga (Membros)': { category: 'talents', skill: 'brawl' },
@@ -46,6 +46,6 @@ export const specialtyMapping: Record<string, SpecialtyMappingEntry> = {
   'Subterfúgio (Encobrimento)': { category: 'skills', skill: 'subterfuge' },
   
   // Vira-Lata
-  'Sobrevivência (Nas Ruas)': { category: 'talents', skill: 'survival' },
-  'Manha (Ruas)': { category: 'skills', skill: 'streetwise' }
+  'Intimidação (Assalto à Mão Armada)': { category: 'skills', skill: 'intimidation' },
+  'Briga (Agarramento)': { category: 'talents', skill: 'brawl' }
 }

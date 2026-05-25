@@ -436,6 +436,9 @@ export function usePredatorSystem(
           sheetData.value.skillSpecialties[mapping.category] = {}
         }
         sheetData.value.skillSpecialties[mapping.category][mapping.skill] = specialtyText
+        console.log(`✅ Especialidade injetada: ${specialtyText} em ${mapping.category}.${mapping.skill}`)
+      } else {
+        console.warn(`⚠️ ATENÇÃO: Especialidade "${selectedChoices.value.specialty}" não encontrada no specialtyMapping!`)
       }
     }
 
