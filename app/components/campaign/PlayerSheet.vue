@@ -1081,10 +1081,10 @@
     class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fade-in"
     @click.self="cancelPredatorModal"
   >
-    <div class="bg-df-deep border border-df-gold/20 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden animate-scale-in">
+    <div class="bg-df-deep border border-df-gold/20 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] flex flex-col animate-scale-in">
       
       <!-- HEADER NARRATIVO -->
-      <div class="relative bg-gradient-to-b from-df-input to-df-deep border-b border-df-gold/20 p-8">
+      <div class="relative bg-gradient-to-b from-df-input to-df-deep border-b border-df-gold/20 p-8 flex-shrink-0">
         <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhNjQ3IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
         <div class="relative">
           <div class="flex items-start gap-4 mb-3">
@@ -1108,7 +1108,7 @@
       </div>
 
       <!-- BODY - Layout Grid Desktop / Stack Mobile -->
-      <div class="lg:grid lg:grid-cols-[1fr_300px] gap-6 p-6 max-h-[calc(95vh-250px)] overflow-y-auto">
+      <div class="lg:grid lg:grid-cols-[1fr_300px] gap-6 p-6 overflow-y-auto flex-1">
         
         <!-- CONTEÚDO PRINCIPAL - STEPS -->
         <div class="space-y-6">
@@ -1463,7 +1463,7 @@
       </div>
 
       <!-- FOOTER - BOTÕES DE AÇÃO -->
-      <div class="border-t border-df-border-silver/20 p-6 bg-df-deep">
+      <div class="border-t border-df-border-silver/20 p-6 bg-df-deep flex-shrink-0">
         <div class="flex gap-4">
           <button
             @click="cancelPredatorModal"
@@ -1496,7 +1496,6 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue'
-import type { Ref } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import { useToast } from '~/composables/useToast'
 import { clanBanes } from '~/config/clanBanes'
