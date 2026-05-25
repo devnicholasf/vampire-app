@@ -1075,185 +1075,421 @@
     </div>
   </div>
 
-  <!-- Modal de Escolhas do Predador -->
+  <!-- Modal de Escolhas do Predador - PREMIUM DESIGN -->
   <div
     v-if="showPredatorModal"
-    class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/80 p-4"
+    class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-fade-in"
     @click.self="cancelPredatorModal"
   >
-    <div class="bg-df-card border border-df-border-silver rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-      <h2 class="text-2xl font-bold text-df-text-gold mb-4">
-        {{ predatorModalData.title }}
-      </h2>
-      <p class="text-df-muted mb-6">
-        {{ predatorModalData.description }}
-      </p>
-
-      <!-- Lista de Escolhas -->
-      <div class="space-y-6">
-        <!-- Escolha de Disciplina -->
-        <div v-if="predatorModalData.choices.discipline" class="space-y-2">
-          <label class="df-label">Escolha uma Disciplina:</label>
-          <div class="flex flex-col gap-2">
-            <button
-              v-for="option in predatorModalData.choices.discipline.options"
-              :key="option"
-              @click="selectDiscipline(option)"
-              :disabled="isDisciplineRestricted(option)"
-              :title="isDisciplineRestricted(option) ? `Exclusivo para clã ${predatorModalData.choices.discipline.restriction?.[option]}` : ''"
-              :class="[
-                'p-3 rounded-lg border-2 text-left transition-all',
-                selectedChoices.discipline === option
-                  ? 'border-df-border-gold bg-df-border-gold/10'
-                  : isDisciplineRestricted(option)
-                  ? 'border-df-border-silver/10 bg-df-deep/40 opacity-50 cursor-not-allowed'
-                  : 'border-df-border-silver/30 hover:border-df-border-silver'
-              ]"
-            >
-              {{ option }}
-              <span v-if="isDisciplineRestricted(option)" class="text-xs text-df-muted ml-2">
-                (Exclusivo {{ predatorModalData.choices.discipline.restriction?.[option] }})
-              </span>
-            </button>
+    <div class="bg-df-deep border border-df-gold/20 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden animate-scale-in">
+      
+      <!-- HEADER NARRATIVO -->
+      <div class="relative bg-gradient-to-b from-df-input to-df-deep border-b border-df-gold/20 p-8">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhNjQ3IiBzdHJva2Utd2lkdGg9IjAuNSIgb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
+        <div class="relative">
+          <div class="flex items-start gap-4 mb-3">
+            <div class="w-12 h-12 rounded-full bg-df-border-red/20 border border-df-border-red/40 flex items-center justify-center flex-shrink-0 mt-1">
+              <svg class="w-6 h-6 text-df-red" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-4xl font-bold text-df-gold tracking-wide" style="text-shadow: 0 0 20px rgba(212, 166, 71, 0.3);">
+                {{ selectedPredatorType.toUpperCase() }}
+              </h2>
+              <p class="text-df-muted text-sm italic mt-1">Tipo de Predador</p>
+            </div>
           </div>
+          <div class="w-full h-px bg-gradient-to-r from-transparent via-df-gold/40 to-transparent my-4"></div>
+          <p class="text-df-silver text-base leading-relaxed max-w-3xl">
+            {{ predatorDescriptions[selectedPredatorType] || predatorModalData.description }}
+          </p>
         </div>
+      </div>
 
-        <!-- Escolha de Especialidade -->
-        <div v-if="predatorModalData.choices.specialty" class="space-y-2">
-          <label class="df-label">Escolha uma Especialidade:</label>
-          <div class="flex flex-col gap-2">
-            <button
-              v-for="option in predatorModalData.choices.specialty.options"
-              :key="option"
-              @click="selectedChoices.specialty = option"
-              :class="[
-                'p-3 rounded-lg border-2 text-left transition-all',
-                selectedChoices.specialty === option
-                  ? 'border-df-border-gold bg-df-border-gold/10'
-                  : 'border-df-border-silver/30 hover:border-df-border-silver'
-              ]"
-            >
-              {{ option }}
-            </button>
-          </div>
+      <!-- BODY - Layout Grid Desktop / Stack Mobile -->
+      <div class="lg:grid lg:grid-cols-[1fr_300px] gap-6 p-6 max-h-[calc(95vh-250px)] overflow-y-auto">
+        
+        <!-- CONTEÚDO PRINCIPAL - STEPS -->
+        <div class="space-y-6">
           
-          <!-- Input customizado para especialidades específicas -->
-          <div v-if="needsCustomSpecialtyInput(selectedChoices.specialty)" class="mt-3">
-            <label class="text-df-text text-sm mb-1 block">Especifique:</label>
-            <input
-              v-model="selectedChoices.specialtyCustom"
-              type="text"
-              :placeholder="getCustomSpecialtyPlaceholder(selectedChoices.specialty)"
-              class="df-input w-full"
-            />
+          <!-- STEP 1: Escolha de Disciplina -->
+          <div v-if="predatorModalData.choices.discipline" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-gold/20 border border-df-gold/40 text-df-gold font-bold text-sm">
+                1
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-gold">Escolha uma Disciplina</h3>
+                <p class="text-df-muted text-sm">Poder vampírico que define suas capacidades sobrenaturais</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                v-for="option in predatorModalData.choices.discipline.options"
+                :key="option"
+                @click="selectDiscipline(option)"
+                :disabled="isDisciplineRestricted(option)"
+                :class="[
+                  'group relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                  'hover:scale-[1.02] hover:shadow-lg',
+                  selectedChoices.discipline === option
+                    ? 'border-df-gold bg-df-gold/10 shadow-[0_0_20px_rgba(212,166,71,0.2)]'
+                    : isDisciplineRestricted(option)
+                    ? 'border-df-border-silver/20 bg-df-input opacity-40 cursor-not-allowed'
+                    : 'border-df-border-silver/30 bg-df-input hover:border-df-gold/50 hover:bg-df-card'
+                ]"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-df-deep/50 border border-df-gold/30 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5 text-df-gold" fill="currentColor" viewBox="0 0 24 24">
+                      <path :d="getDisciplineIconPath(option)"/>
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-df-silver text-base mb-1">{{ option }}</div>
+                    <div class="text-xs text-df-muted leading-relaxed">
+                      {{ disciplineDescriptions[option] || 'Poder vampírico ancestral' }}
+                    </div>
+                    <div v-if="isDisciplineRestricted(option)" class="text-xs text-df-red mt-2 italic">
+                      Exclusivo: {{ predatorModalData.choices.discipline.restriction?.[option] }}
+                    </div>
+                  </div>
+                </div>
+                <div v-if="selectedChoices.discipline === option" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-df-gold flex items-center justify-center">
+                  <svg class="w-4 h-4 text-df-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                  </svg>
+                </div>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Escolha de Mérito -->
-        <div v-if="predatorModalData.choices.merit" class="space-y-2">
-          <label class="df-label">Escolha um Mérito:</label>
-          <div class="flex flex-col gap-2">
-            <button
-              v-for="option in predatorModalData.choices.merit.options"
-              :key="option"
-              @click="selectedChoices.merit = option"
-              :class="[
-                'p-3 rounded-lg border-2 text-left transition-all',
-                selectedChoices.merit === option
-                  ? 'border-df-border-gold bg-df-border-gold/10'
-                  : 'border-df-border-silver/30 hover:border-df-border-silver'
-              ]"
-            >
-              {{ option }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Escolha de Defeito -->
-        <div v-if="predatorModalData.choices.flaw" class="space-y-2">
-          <label class="df-label">Escolha um Defeito:</label>
-          <div class="flex flex-col gap-2">
-            <button
-              v-for="option in predatorModalData.choices.flaw.options"
-              :key="option"
-              @click="selectedChoices.flaw = option"
-              :class="[
-                'p-3 rounded-lg border-2 text-left transition-all',
-                selectedChoices.flaw === option
-                  ? 'border-df-border-gold bg-df-border-gold/10'
-                  : 'border-df-border-silver/30 hover:border-df-border-silver'
-              ]"
-            >
-              {{ option }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Distribuição de Pontos de Antecedentes (Osiris) -->
-        <div v-if="predatorModalData.choices.pointDistribution" class="space-y-3">
-          <label class="df-label">
-            Distribua {{ predatorModalData.choices.pointDistribution.total }} pontos entre {{ predatorModalData.choices.pointDistribution.options.join(' e ') }}:
-          </label>
-          <div class="space-y-3">
-            <div v-for="option in predatorModalData.choices.pointDistribution.options" :key="option">
-              <label class="text-df-text text-sm">{{ option }}:</label>
+          <!-- STEP 2: Escolha de Especialidade -->
+          <div v-if="predatorModalData.choices.specialty" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-gold/20 border border-df-gold/40 text-df-gold font-bold text-sm">
+                2
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-gold">Escolha uma Especialidade</h3>
+                <p class="text-df-muted text-sm">Área de expertise que refina suas habilidades</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                v-for="option in predatorModalData.choices.specialty.options"
+                :key="option"
+                @click="selectedChoices.specialty = option"
+                :class="[
+                  'group relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                  'hover:scale-[1.02] hover:shadow-lg',
+                  selectedChoices.specialty === option
+                    ? 'border-df-gold bg-df-gold/10 shadow-[0_0_20px_rgba(212,166,71,0.2)]'
+                    : 'border-df-border-silver/30 bg-df-input hover:border-df-gold/50 hover:bg-df-card'
+                ]"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-medium text-df-silver">{{ option }}</span>
+                  <div v-if="selectedChoices.specialty === option" class="w-5 h-5 rounded-full bg-df-gold flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-df-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+            
+            <!-- Input customizado para especialidades específicas -->
+            <div v-if="needsCustomSpecialtyInput(selectedChoices.specialty)" class="mt-3 animate-fade-in">
+              <label class="text-df-silver text-sm mb-2 block font-medium">Especifique:</label>
               <input
-                v-model.number="selectedChoices.backgroundPoints![option]"
-                @input="validateBackgroundPoints(option)"
-                type="number"
-                min="0"
-                :max="getMaxBackgroundPoints(option)"
-                class="df-input mt-1"
+                v-model="selectedChoices.specialtyCustom"
+                type="text"
+                :placeholder="getCustomSpecialtyPlaceholder(selectedChoices.specialty)"
+                class="w-full px-4 py-3 bg-df-input border-2 border-df-border-silver/30 rounded-xl text-df-silver placeholder-df-muted focus:border-df-gold focus:outline-none transition-colors"
               />
             </div>
-            <p class="text-sm text-df-muted">
-              Pontos distribuídos: {{ getTotalBackgroundPoints() }} / {{ predatorModalData.choices.pointDistribution.total }}
-            </p>
+          </div>
+
+          <!-- STEP 3: Escolha de Mérito -->
+          <div v-if="predatorModalData.choices.merit" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-gold/20 border border-df-gold/40 text-df-gold font-bold text-sm">
+                3
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-gold">Escolha um Mérito</h3>
+                <p class="text-df-muted text-sm">Vantagem que beneficia seu personagem</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                v-for="option in predatorModalData.choices.merit.options"
+                :key="option"
+                @click="selectedChoices.merit = option"
+                :class="[
+                  'group relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                  'hover:scale-[1.02] hover:shadow-lg',
+                  selectedChoices.merit === option
+                    ? 'border-df-gold bg-df-gold/10 shadow-[0_0_20px_rgba(212,166,71,0.2)]'
+                    : 'border-df-border-silver/30 bg-df-input hover:border-df-gold/50 hover:bg-df-card'
+                ]"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-medium text-df-silver">{{ option }}</span>
+                  <div v-if="selectedChoices.merit === option" class="w-5 h-5 rounded-full bg-df-gold flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-df-deep" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 4: Escolha de Defeito -->
+          <div v-if="predatorModalData.choices.flaw" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-red/20 border border-df-border-red/40 text-df-red font-bold text-sm">
+                4
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-red">Escolha um Defeito</h3>
+                <p class="text-df-muted text-sm">Fraqueza que desafia seu personagem</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                v-for="option in predatorModalData.choices.flaw.options"
+                :key="option"
+                @click="selectedChoices.flaw = option"
+                :class="[
+                  'group relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                  'hover:scale-[1.02] hover:shadow-lg',
+                  selectedChoices.flaw === option
+                    ? 'border-df-red bg-df-red/10 shadow-[0_0_20px_rgba(220,38,38,0.2)]'
+                    : 'border-df-border-silver/30 bg-df-input hover:border-df-red/50 hover:bg-df-card'
+                ]"
+              >
+                <div class="flex items-center justify-between">
+                  <span class="font-medium text-df-silver">{{ option }}</span>
+                  <div v-if="selectedChoices.flaw === option" class="w-5 h-5 rounded-full bg-df-red flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 5: Distribuição de Pontos de Antecedentes (Osiris) -->
+          <div v-if="predatorModalData.choices.pointDistribution" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-gold/20 border border-df-gold/40 text-df-gold font-bold text-sm">
+                5
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-gold">Distribua Pontos de Antecedentes</h3>
+                <p class="text-df-muted text-sm">{{ predatorModalData.choices.pointDistribution.total }} pontos entre {{ predatorModalData.choices.pointDistribution.options.join(' e ') }}</p>
+              </div>
+            </div>
+            
+            <div class="bg-df-input border border-df-border-silver/30 rounded-xl p-5 space-y-4">
+              <div v-for="option in predatorModalData.choices.pointDistribution.options" :key="option" class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="text-df-silver font-medium">{{ option }}</label>
+                  <span class="text-df-gold font-bold text-lg">{{ selectedChoices.backgroundPoints?.[option] || 0 }}</span>
+                </div>
+                <input
+                  v-model.number="selectedChoices.backgroundPoints![option]"
+                  @input="validateBackgroundPoints(option)"
+                  type="range"
+                  min="0"
+                  :max="getMaxBackgroundPoints(option)"
+                  class="w-full h-2 bg-df-deep rounded-lg appearance-none cursor-pointer slider-gold"
+                />
+              </div>
+              <div class="pt-3 border-t border-df-border-silver/20">
+                <div class="flex justify-between text-sm">
+                  <span class="text-df-muted">Pontos distribuídos:</span>
+                  <span :class="[
+                    'font-bold',
+                    getTotalBackgroundPoints() === predatorModalData.choices.pointDistribution.total ? 'text-df-gold' : 'text-df-red'
+                  ]">
+                    {{ getTotalBackgroundPoints() }} / {{ predatorModalData.choices.pointDistribution.total }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 6: Distribuição de Pontos de Defeitos (Osiris) -->
+          <div v-if="predatorModalData.choices.flawDistribution" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-df-red/20 border border-df-border-red/40 text-df-red font-bold text-sm">
+                6
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-df-red">Distribua Pontos de Defeitos</h3>
+                <p class="text-df-muted text-sm">{{ predatorModalData.choices.flawDistribution.total }} pontos entre {{ predatorModalData.choices.flawDistribution.options.join(' e ') }}</p>
+              </div>
+            </div>
+            
+            <div class="bg-df-input border border-df-border-silver/30 rounded-xl p-5 space-y-4">
+              <div v-for="option in predatorModalData.choices.flawDistribution.options" :key="option" class="space-y-2">
+                <div class="flex justify-between items-center">
+                  <label class="text-df-silver font-medium">{{ option }}</label>
+                  <span class="text-df-red font-bold text-lg">{{ selectedChoices.flawPoints?.[option] || 0 }}</span>
+                </div>
+                <input
+                  v-model.number="selectedChoices.flawPoints![option]"
+                  @input="validateFlawPoints(option)"
+                  type="range"
+                  min="0"
+                  :max="getMaxFlawPoints(option)"
+                  class="w-full h-2 bg-df-deep rounded-lg appearance-none cursor-pointer slider-red"
+                />
+              </div>
+              <div class="pt-3 border-t border-df-border-silver/20">
+                <div class="flex justify-between text-sm">
+                  <span class="text-df-muted">Pontos distribuídos:</span>
+                  <span :class="[
+                    'font-bold',
+                    getTotalFlawPoints() === predatorModalData.choices.flawDistribution.total ? 'text-df-gold' : 'text-df-red'
+                  ]">
+                    {{ getTotalFlawPoints() }} / {{ predatorModalData.choices.flawDistribution.total }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Distribuição de Pontos de Defeitos (Osiris) -->
-        <div v-if="predatorModalData.choices.flawDistribution" class="space-y-3">
-          <label class="df-label">
-            Distribua {{ predatorModalData.choices.flawDistribution.total }} pontos entre {{ predatorModalData.choices.flawDistribution.options.join(' e ') }}:
-          </label>
-          <div class="space-y-3">
-            <div v-for="option in predatorModalData.choices.flawDistribution.options" :key="option">
-              <label class="text-df-text text-sm">{{ option }}:</label>
-              <input
-                v-model.number="selectedChoices.flawPoints![option]"
-                @input="validateFlawPoints(option)"
-                type="number"
-                min="0"
-                :max="getMaxFlawPoints(option)"
-                class="df-input mt-1"
-              />
+        <!-- SIDEBAR - RESUMO DAS ESCOLHAS -->
+        <div class="lg:sticky lg:top-0 lg:self-start">
+          <div class="bg-df-input border border-df-gold/20 rounded-xl p-5 space-y-4">
+            <div class="flex items-center gap-2 pb-3 border-b border-df-border-silver/20">
+              <svg class="w-5 h-5 text-df-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <h4 class="font-bold text-df-gold text-lg">Escolhas Atuais</h4>
             </div>
-            <p class="text-sm text-df-muted">
-              Pontos distribuídos: {{ getTotalFlawPoints() }} / {{ predatorModalData.choices.flawDistribution.total }}
-            </p>
+
+            <!-- Disciplina Escolhida -->
+            <div v-if="predatorModalData.choices.discipline">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Disciplina</div>
+              <div v-if="selectedChoices.discipline" class="flex items-center gap-2 px-3 py-2 bg-df-deep rounded-lg border border-df-gold/30">
+                <svg class="w-4 h-4 text-df-gold" fill="currentColor" viewBox="0 0 24 24">
+                  <path :d="getDisciplineIconPath(selectedChoices.discipline)"/>
+                </svg>
+                <span class="text-df-silver font-medium">{{ selectedChoices.discipline }}</span>
+              </div>
+              <div v-else class="text-df-muted text-sm italic">Nenhuma selecionada</div>
+            </div>
+
+            <!-- Especialidade Escolhida -->
+            <div v-if="predatorModalData.choices.specialty">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Especialidade</div>
+              <div v-if="selectedChoices.specialty" class="px-3 py-2 bg-df-deep rounded-lg border border-df-gold/30">
+                <div class="text-df-silver font-medium">{{ selectedChoices.specialty }}</div>
+                <div v-if="selectedChoices.specialtyCustom" class="text-df-gold text-sm mt-1">{{ selectedChoices.specialtyCustom }}</div>
+              </div>
+              <div v-else class="text-df-muted text-sm italic">Nenhuma selecionada</div>
+            </div>
+
+            <!-- Mérito Escolhido -->
+            <div v-if="predatorModalData.choices.merit">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Mérito</div>
+              <div v-if="selectedChoices.merit" class="px-3 py-2 bg-df-deep rounded-lg border border-df-gold/30 text-df-silver font-medium">
+                {{ selectedChoices.merit }}
+              </div>
+              <div v-else class="text-df-muted text-sm italic">Nenhum selecionado</div>
+            </div>
+
+            <!-- Defeito Escolhido -->
+            <div v-if="predatorModalData.choices.flaw">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Defeito</div>
+              <div v-if="selectedChoices.flaw" class="px-3 py-2 bg-df-deep rounded-lg border border-df-red/30 text-df-silver font-medium">
+                {{ selectedChoices.flaw }}
+              </div>
+              <div v-else class="text-df-muted text-sm italic">Nenhum selecionado</div>
+            </div>
+
+            <!-- Pontos de Antecedentes -->
+            <div v-if="predatorModalData.choices.pointDistribution && getTotalBackgroundPoints() > 0">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Antecedentes</div>
+              <div class="space-y-1">
+                <div v-for="(value, key) in selectedChoices.backgroundPoints" :key="key" v-show="value && value > 0" class="flex justify-between text-sm">
+                  <span class="text-df-silver">{{ key }}</span>
+                  <span class="text-df-gold font-bold">{{ value }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pontos de Defeitos -->
+            <div v-if="predatorModalData.choices.flawDistribution && getTotalFlawPoints() > 0">
+              <div class="text-xs text-df-muted uppercase tracking-wider mb-2">Defeitos</div>
+              <div class="space-y-1">
+                <div v-for="(value, key) in selectedChoices.flawPoints" :key="key" v-show="value && value > 0" class="flex justify-between text-sm">
+                  <span class="text-df-silver">{{ key }}</span>
+                  <span class="text-df-red font-bold">{{ value }}</span>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <!-- Status de Progresso -->
+          <div class="bg-df-input rounded-xl p-4 border border-df-border-silver/20 mt-4">
+            <div class="flex items-center gap-2 text-sm">
+              <div :class="[
+                'w-3 h-3 rounded-full',
+                canConfirmPredatorChoices
+                  ? 'bg-df-gold animate-pulse'
+                  : 'bg-df-muted'
+              ]"></div>
+              <span :class="canConfirmPredatorChoices ? 'text-df-gold' : 'text-df-muted'">
+                {{ canConfirmPredatorChoices ? 'Pronto para confirmar' : 'Escolhas incompletas' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER - BOTÕES DE AÇÃO -->
+      <div class="border-t border-df-border-silver/20 p-6 bg-df-deep">
+        <div class="flex gap-4">
+          <button
+            @click="cancelPredatorModal"
+            class="flex-1 px-6 py-3 rounded-xl border-2 border-df-border-silver/30 text-df-silver font-semibold hover:border-df-border-silver hover:bg-df-input transition-all duration-200"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="applyPredatorChoices"
+            :disabled="!canConfirmPredatorChoices"
+            :class="[
+              'flex-1 px-6 py-3 rounded-xl font-bold text-white transition-all duration-200',
+              'flex items-center justify-center gap-2',
+              canConfirmPredatorChoices
+                ? 'bg-gradient-to-r from-df-crimson to-df-red hover:from-df-red hover:to-df-crimson hover:scale-[1.02] shadow-lg shadow-df-red/30'
+                : 'bg-df-muted/30 cursor-not-allowed opacity-50'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Confirmar Escolhas
+          </button>
         </div>
       </div>
 
-      <!-- Botões -->
-      <div class="flex gap-3 mt-6">
-        <BaseButton
-          variant="ghost"
-          @click="cancelPredatorModal"
-          class="flex-1"
-        >
-          Cancelar
-        </BaseButton>
-        <BaseButton
-          variant="primary"
-          @click="applyPredatorChoices"
-          :disabled="!canConfirmPredatorChoices"
-          class="flex-1"
-        >
-          Confirmar
-        </BaseButton>
-      </div>
     </div>
   </div>
 </template>
@@ -1314,6 +1550,76 @@ const getCustomSpecialtyPlaceholder = (specialty?: string): string => {
   if (specialty.includes('Animal Específico')) return 'Ex: Lobos, Gatos, Ratos...'
   if (specialty.includes('Ocultismo')) return 'Ex: Hermetismo, Kabbalah, Vodu...'
   return 'Especifique...'
+}
+
+// Descrições narrativas dos Predadores
+const predatorDescriptions: Record<string, string> = {
+  'Consensualista': 'Você se alimenta apenas de voluntários que oferecem seu sangue conscientemente, cultivando relacionamentos íntimos baseados em confiança mútua e consentimento.',
+  'Fazendeiro': 'Você prefere se alimentar de animais ao invés de humanos, cultivando uma conexão especial com criaturas e evitando ferir mortais.',
+  'Osiris': 'Você cultiva um culto de mortais devotos que o veneram como uma divindade, oferecendo seu sangue em rituais de adoração e submissão.',
+  'Sacoleiro': 'Você rouba sangue de bancos de sangue, hospitais e fontes médicas, evitando contato direto com vítimas vivas.',
+  'Sandman': 'Você se alimenta de vítimas adormecidas, invadindo lares e infiltrando-se sorrateiramente para sugar sangue sem ser notado.',
+  'Sanguessuga': 'Você se alimenta de outros vampiros, drenando vitae de seus companheiros Cainitas em atos de diablerie parcial ou roubo vampírico.',
+  'Scene Queen': 'Você domina clubes noturnos, festas e cenas sociais, manipulando e seduzindo vítimas em ambientes de êxtase e caos.',
+  'Sereia': 'Você seduz e atrai vítimas através de charme sobrenatural, criando relacionamentos íntimos que mascaram sua natureza predatória.',
+  'Trinchador': 'Você caça violentamente nas ruas, atacando vítimas aleatórias com ferocidade brutal e selvagem.',
+  'Vira-Lata': 'Você se alimenta dos marginalizados da sociedade – sem-teto, viciados e esquecidos – caçando nas sombras da miséria urbana.'
+}
+
+// Descrições narrativas das Disciplinas
+const disciplineDescriptions: Record<string, string> = {
+  'Animalismo': 'Comunhão sobrenatural com animais, controlando bestas e convocando criaturas.',
+  'Auspícios': 'Percepção sobre-humana que revela verdades ocultas e premonições do futuro.',
+  'Celeridade': 'Velocidade e reflexos vampíricos que transcendem os limites mortais.',
+  'Dominação': 'Controle mental absoluto, quebrando vontades e reescrevendo memórias.',
+  'Feitiçaria de Sangue': 'Magia ritual alimentada por vitae, manipulando a própria essência vampírica.',
+  'Fortitude': 'Resistência sobrenatural, até o ponto de resistir ao fogo e à luz solar.',
+  'Metamorfose': 'Transformação corporal em formas bestiais e névoa.',
+  'Ofuscação': 'Capacidade de permanecer obscuro e invisivel, mesmo em meio a multidões',
+  'Potência': 'Força monstruosa capaz de esmagar ossos e rasgar aço.',
+  'Presença': 'Magnetismo sobrenatural que inspira terror, adoração ou desejo.',
+  'Tenebrosidade': 'Controle sobre trevas vivas que devoram luz e carne.',
+  'Serpentis': 'Poderes ofídicos ancestrais dos seguidores de Set.',
+  'Quietus': 'Assassinato silencioso através de venenos de sangue mortais.',
+  'Quimerismo': 'Ilusões sensoriais que enganam mente e corpo.',
+  'Vicissitude': 'Manipulação grotesca de carne e osso, moldando corpos como argila.'
+}
+
+// Ícones SVG para cada Disciplina
+const getDisciplineIconPath = (discipline: string): string => {
+  const icons: Record<string, string> = {
+    // Animalismo - pata de animal
+    'Animalismo': 'M8 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm8 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zM8 8c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm8 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-4 4c2.2 0 4 1.8 4 4v4H8v-4c0-2.2 1.8-4 4-4z',
+    // Auspícios - olho místico
+    'Auspícios': 'M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z',
+    // Celeridade - raio/velocidade
+    'Celeridade': 'M13 10V3L4 14h7v7l9-11h-7z',
+    // Dominação - cérebro
+    'Dominação': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z',
+    // Feitiçaria de Sangue - pentagrama
+    'Feitiçaria de Sangue': 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+    // Fortitude - escudo
+    'Fortitude': 'M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm6 9.09c0 4-2.55 7.7-6 8.83-3.45-1.13-6-4.82-6-8.83V6.31l6-2.12 6 2.12v4.78z',
+    // Metamorfose - transformação/círculos
+    'Metamorfose': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z',
+    // Ofuscação - olho fechado/invisibilidade
+    'Ofuscação': 'M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z',
+    // Potência - punho
+    'Potência': 'M7 24h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm-8-4h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm-4-8H9v6h2v-2h2v-2h-2V12zm-2-2h2V8h2V6h-2V4h-2v2H9v2h2v2zm10 10h2v-2h-2v2z',
+    // Presença - pessoas/grupo
+    'Presença': 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+    // Tenebrosidade - lua/trevas
+    'Tenebrosidade': 'M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54 0 4.48-2.94 8.27-7 9.54.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z',
+    // Serpentis - ondas serpentinas
+    'Serpentis': 'M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 1.89.52 3.65 1.42 5.17C5.16 20.26 8.35 22 12 22s6.84-1.74 8.58-4.83c.9-1.52 1.42-3.28 1.42-5.17zM12 20c-2.76 0-5.24-1.4-6.71-3.53.76-.77 1.64-1.41 2.61-1.88.19-.09.38-.17.57-.24C9.45 13.63 10.67 13 12 13c1.33 0 2.55.63 3.53 1.35.19.07.38.15.57.24.97.47 1.85 1.11 2.61 1.88C17.24 18.6 14.76 20 12 20zm0-9c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z',
+    // Quietus - adaga
+    'Quietus': 'M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.47-.47-1.12-.29-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83zM3 17.25L13.06 7.18l3.75 3.75L6.75 21H3v-3.75z',
+    // Quimerismo - máscara teatral
+    'Quimerismo': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8.5 8c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zm7 0c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5S14 10.33 14 9.5 14.67 8 15.5 8zM12 17.5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z',
+    // Vicissitude - DNA/espiral
+    'Vicissitude': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'
+  }
+  return icons[discipline] || 'M13 10V3L4 14h7v7l9-11h-7z' // raio como padrão
 }
 
 // ===== FIM DO SISTEMA DE PREDADORES =====
@@ -2236,5 +2542,77 @@ const cancelClose = () => {
 .df-btn-remove:hover {
   color: #fca5a5;
   transform: scale(1.1);
+}
+
+/* ─── Animações do Modal Premium ─── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+/* ─── Sliders Customizados ─── */
+.slider-gold::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4a647, #b8923d);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(212, 166, 71, 0.5);
+  border: 2px solid #0a0a1a;
+}
+
+.slider-gold::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4a647, #b8923d);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(212, 166, 71, 0.5);
+  border: 2px solid #0a0a1a;
+}
+
+.slider-red::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+  border: 2px solid #0a0a1a;
+}
+
+.slider-red::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+  border: 2px solid #0a0a1a;
 }
 </style>
