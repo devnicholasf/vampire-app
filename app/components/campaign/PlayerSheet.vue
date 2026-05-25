@@ -93,7 +93,23 @@
             </div>
             <div>
               <label class="df-label">Predador</label>
-              <input v-model="sheetData.predator" placeholder="Ex: Sereia" :disabled="!canEdit" class="df-input">
+              <select v-model="sheetData.predator" :disabled="!canEdit" class="df-input">
+                <option value="">Selecionar</option>
+                <option value="Consensualista">Consensualista</option>
+                <option value="Fazendeiro" :disabled="sheetData.clan === 'Ventrue'">
+                  Fazendeiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
+                </option>
+                <option value="Osiris">Osiris</option>
+                <option value="Sacoleiro" :disabled="sheetData.clan === 'Ventrue'">
+                  Sacoleiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
+                </option>
+                <option value="Sandman">Sandman</option>
+                <option value="Sanguessuga">Sanguessuga</option>
+                <option value="Scene Queen">Scene Queen</option>
+                <option value="Sereia">Sereia</option>
+                <option value="Trinchador">Trinchador</option>
+                <option value="Vira-Lata">Vira-Lata</option>
+              </select>
             </div>
             <div>
               <label class="df-label">Ambição</label>
@@ -221,23 +237,33 @@
               Talentos
             </h3>
             <div class="space-y-3">
-              <div v-for="skill in talents" :key="skill.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ skill.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
-                  <button
-                    v-for="n in 5"
-                    :key="n"
-                    type="button"
-                    @click="setSkillValue('talents', skill.key, n)"
-                    :class="[
-                      'df-dot df-dot-sm',
-                      n <= (sheetData.skills.talents as any)[skill.key]
-                        ? 'df-dot-filled'
-                        : 'df-dot-empty'
-                    ]"
-                  >
-                    <span class="sr-only">{{ n }}</span>
-                  </button>
+              <div v-for="skill in talents" :key="skill.key" class="flex flex-col">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-1.5">
+                    <label class="df-attr-label">{{ skill.name }}</label>
+                    <span 
+                      v-if="sheetData.skillSpecialties?.talents?.[skill.key]" 
+                      class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
+                    >
+                      {{ sheetData.skillSpecialties.talents[skill.key] }}
+                    </span>
+                  </div>
+                  <div class="flex space-x-0.5 sm:space-x-1">
+                    <button
+                      v-for="n in 5"
+                      :key="n"
+                      type="button"
+                      @click="setSkillValue('talents', skill.key, n)"
+                      :class="[
+                        'df-dot df-dot-sm',
+                        n <= (sheetData.skills.talents as any)[skill.key]
+                          ? 'df-dot-filled'
+                          : 'df-dot-empty'
+                      ]"
+                    >
+                      <span class="sr-only">{{ n }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -250,23 +276,33 @@
               Perícias
             </h3>
             <div class="space-y-3">
-              <div v-for="skill in skills" :key="skill.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ skill.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
-                  <button
-                    v-for="n in 5"
-                    :key="n"
-                    type="button"
-                    @click="setSkillValue('skills', skill.key, n)"
-                    :class="[
-                      'df-dot df-dot-sm',
-                      n <= (sheetData.skills.skills as any)[skill.key]
-                        ? 'df-dot-filled'
-                        : 'df-dot-empty'
-                    ]"
-                  >
-                    <span class="sr-only">{{ n }}</span>
-                  </button>
+              <div v-for="skill in skills" :key="skill.key" class="flex flex-col">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-1.5">
+                    <label class="df-attr-label">{{ skill.name }}</label>
+                    <span 
+                      v-if="sheetData.skillSpecialties?.skills?.[skill.key]" 
+                      class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
+                    >
+                      {{ sheetData.skillSpecialties.skills[skill.key] }}
+                    </span>
+                  </div>
+                  <div class="flex space-x-0.5 sm:space-x-1">
+                    <button
+                      v-for="n in 5"
+                      :key="n"
+                      type="button"
+                      @click="setSkillValue('skills', skill.key, n)"
+                      :class="[
+                        'df-dot df-dot-sm',
+                        n <= (sheetData.skills.skills as any)[skill.key]
+                          ? 'df-dot-filled'
+                          : 'df-dot-empty'
+                      ]"
+                    >
+                      <span class="sr-only">{{ n }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -279,23 +315,33 @@
               Conhecimentos
             </h3>
             <div class="space-y-3">
-              <div v-for="skill in knowledges" :key="skill.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ skill.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
-                  <button
-                    v-for="n in 5"
-                    :key="n"
-                    type="button"
-                    @click="setSkillValue('knowledges', skill.key, n)"
-                    :class="[
-                      'df-dot df-dot-sm',
-                      n <= (sheetData.skills.knowledges as any)[skill.key]
-                        ? 'df-dot-filled'
-                        : 'df-dot-empty'
-                    ]"
-                  >
-                    <span class="sr-only">{{ n }}</span>
-                  </button>
+              <div v-for="skill in knowledges" :key="skill.key" class="flex flex-col">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-1.5">
+                    <label class="df-attr-label">{{ skill.name }}</label>
+                    <span 
+                      v-if="sheetData.skillSpecialties?.knowledges?.[skill.key]" 
+                      class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
+                    >
+                      {{ sheetData.skillSpecialties.knowledges[skill.key] }}
+                    </span>
+                  </div>
+                  <div class="flex space-x-0.5 sm:space-x-1">
+                    <button
+                      v-for="n in 5"
+                      :key="n"
+                      type="button"
+                      @click="setSkillValue('knowledges', skill.key, n)"
+                      :class="[
+                        'df-dot df-dot-sm',
+                        n <= (sheetData.skills.knowledges as any)[skill.key]
+                          ? 'df-dot-filled'
+                          : 'df-dot-empty'
+                      ]"
+                    >
+                      <span class="sr-only">{{ n }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -376,7 +422,11 @@
                 v-if="sheetData.advantages.length > 0"
                 class="space-y-3 pr-2 max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-df-border-red/50 scrollbar-track-transparent"
               >
-                <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="space-y-2 p-3 rounded-lg border border-df-border-silver/20 bg-df-deep/20">
+                <template v-for="(adv, idx) in sheetData.advantages" :key="idx">
+                  <div 
+                    v-if="isValidAdvantage(adv)"
+                    class="space-y-2 p-3 rounded-lg border border-df-border-silver/20 bg-df-deep/20"
+                  >
                   <!-- Linha 1: Categoria e Tipo -->
                   <div class="grid grid-cols-2 gap-2">
                     <!-- Dropdown 1: Categoria -->
@@ -385,7 +435,7 @@
                       <select
                         v-model="adv.category"
                         @change="onCategoryChange(Number(idx))"
-                        :disabled="!canEdit"
+                        :disabled="!canEdit || adv.fixo"
                         class="df-input w-full"
                       >
                         <option value="">Selecione...</option>
@@ -402,7 +452,7 @@
                       <select
                         v-model="adv.type"
                         @change="onTypeChange(Number(idx))"
-                        :disabled="!canEdit"
+                        :disabled="!canEdit || adv.fixo"
                         class="df-input w-full"
                       >
                         <option value="">Selecione...</option>
@@ -421,7 +471,7 @@
                       <select
                         v-model="adv.name"
                         @change="onNameChange(Number(idx))"
-                        :disabled="!canEdit || !adv.category || (shouldShowTypeDropdown(adv.category) && !adv.type)"
+                        :disabled="!canEdit || adv.fixo || !adv.category || (shouldShowTypeDropdown(adv.category) && !adv.type)"
                         class="df-input w-full"
                       >
                         <option value="">Selecione...</option>
@@ -434,7 +484,7 @@
                     <!-- Seletor de Pontuação (Dots) -->
                     <div class="flex gap-1 pb-0.5">
                       <button
-                        v-for="level in 5"
+                        v-for="level in (adv.maxLevel || 5)"
                         :key="level"
                         type="button"
                         @click="setAdvantageLevel(Number(idx), level)"
@@ -454,7 +504,7 @@
                     
                     <!-- Botão Deletar -->
                     <button
-                      v-if="canEdit"
+                      v-if="canEdit && !adv.fixo"
                       type="button"
                       @click="removeAdvantage(Number(idx))"
                       class="df-btn-remove pb-0.5"
@@ -479,18 +529,21 @@
                     />
                   </div>
                 </div>
-              </div>
-                
-              <BaseButton
-                v-if="canEdit && sheetData.advantages.length < 10"
-                variant="ghost"
-                @click="addAdvantage"
-                class="w-full text-sm mt-3"
-              >
-                + Adicionar Vantagem/Defeito
-              </BaseButton>
+              </template>
             </div>
+                
+            <BaseButton
+              v-if="props.canEdit"
+              variant="ghost"
+              @click="addAdvantage"
+              :disabled="sheetData.advantages.length >= 10"
+              class="w-full text-sm mt-3"
+              :class="{ 'opacity-50 cursor-not-allowed': sheetData.advantages.length >= 10 }"
+            >
+              + Adicionar Vantagem/Defeito ({{ sheetData.advantages.length }}/10)
+            </BaseButton>
           </div>
+        </div>
 
           <div class="space-y-3 flex flex-col">
             <!-- Potência de Sangue -->
@@ -1021,10 +1074,192 @@
     </div>
     </div>
   </div>
+
+  <!-- Modal de Escolhas do Predador -->
+  <div
+    v-if="showPredatorModal"
+    class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/80 p-4"
+    @click.self="closePredatorModal"
+  >
+    <div class="bg-df-card border border-df-border-silver rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+      <h2 class="text-2xl font-bold text-df-text-gold mb-4">
+        {{ predatorModalData.title }}
+      </h2>
+      <p class="text-df-muted mb-6">
+        {{ predatorModalData.description }}
+      </p>
+
+      <!-- Lista de Escolhas -->
+      <div class="space-y-6">
+        <!-- Escolha de Disciplina -->
+        <div v-if="predatorModalData.choices.discipline" class="space-y-2">
+          <label class="df-label">Escolha uma Disciplina:</label>
+          <div class="flex flex-col gap-2">
+            <button
+              v-for="option in predatorModalData.choices.discipline.options"
+              :key="option"
+              @click="selectDiscipline(option)"
+              :disabled="isDisciplineRestricted(option)"
+              :title="isDisciplineRestricted(option) ? `Exclusivo para clã ${predatorModalData.choices.discipline.restriction?.[option]}` : ''"
+              :class="[
+                'p-3 rounded-lg border-2 text-left transition-all',
+                selectedChoices.discipline === option
+                  ? 'border-df-border-gold bg-df-border-gold/10'
+                  : isDisciplineRestricted(option)
+                  ? 'border-df-border-silver/10 bg-df-deep/40 opacity-50 cursor-not-allowed'
+                  : 'border-df-border-silver/30 hover:border-df-border-silver'
+              ]"
+            >
+              {{ option }}
+              <span v-if="isDisciplineRestricted(option)" class="text-xs text-df-muted ml-2">
+                (Exclusivo {{ predatorModalData.choices.discipline.restriction?.[option] }})
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Escolha de Especialidade -->
+        <div v-if="predatorModalData.choices.specialty" class="space-y-2">
+          <label class="df-label">Escolha uma Especialidade:</label>
+          <div class="flex flex-col gap-2">
+            <button
+              v-for="option in predatorModalData.choices.specialty.options"
+              :key="option"
+              @click="selectedChoices.specialty = option"
+              :class="[
+                'p-3 rounded-lg border-2 text-left transition-all',
+                selectedChoices.specialty === option
+                  ? 'border-df-border-gold bg-df-border-gold/10'
+                  : 'border-df-border-silver/30 hover:border-df-border-silver'
+              ]"
+            >
+              {{ option }}
+            </button>
+          </div>
+          
+          <!-- Input customizado para especialidades específicas -->
+          <div v-if="needsCustomSpecialtyInput(selectedChoices.specialty)" class="mt-3">
+            <label class="text-df-text text-sm mb-1 block">Especifique:</label>
+            <input
+              v-model="selectedChoices.specialtyCustom"
+              type="text"
+              :placeholder="getCustomSpecialtyPlaceholder(selectedChoices.specialty)"
+              class="df-input w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Escolha de Mérito -->
+        <div v-if="predatorModalData.choices.merit" class="space-y-2">
+          <label class="df-label">Escolha um Mérito:</label>
+          <div class="flex flex-col gap-2">
+            <button
+              v-for="option in predatorModalData.choices.merit.options"
+              :key="option"
+              @click="selectedChoices.merit = option"
+              :class="[
+                'p-3 rounded-lg border-2 text-left transition-all',
+                selectedChoices.merit === option
+                  ? 'border-df-border-gold bg-df-border-gold/10'
+                  : 'border-df-border-silver/30 hover:border-df-border-silver'
+              ]"
+            >
+              {{ option }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Escolha de Defeito -->
+        <div v-if="predatorModalData.choices.flaw" class="space-y-2">
+          <label class="df-label">Escolha um Defeito:</label>
+          <div class="flex flex-col gap-2">
+            <button
+              v-for="option in predatorModalData.choices.flaw.options"
+              :key="option"
+              @click="selectedChoices.flaw = option"
+              :class="[
+                'p-3 rounded-lg border-2 text-left transition-all',
+                selectedChoices.flaw === option
+                  ? 'border-df-border-gold bg-df-border-gold/10'
+                  : 'border-df-border-silver/30 hover:border-df-border-silver'
+              ]"
+            >
+              {{ option }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Distribuição de Pontos de Antecedentes (Osiris) -->
+        <div v-if="predatorModalData.choices.pointDistribution" class="space-y-3">
+          <label class="df-label">
+            Distribua {{ predatorModalData.choices.pointDistribution.total }} pontos entre {{ predatorModalData.choices.pointDistribution.options.join(' e ') }}:
+          </label>
+          <div class="space-y-3">
+            <div v-for="option in predatorModalData.choices.pointDistribution.options" :key="option">
+              <label class="text-df-text text-sm">{{ option }}:</label>
+              <input
+                v-model.number="selectedChoices.backgroundPoints![option]"
+                @input="validateBackgroundPoints(option)"
+                type="number"
+                min="0"
+                :max="getMaxBackgroundPoints(option)"
+                class="df-input mt-1"
+              />
+            </div>
+            <p class="text-sm text-df-muted">
+              Pontos distribuídos: {{ getTotalBackgroundPoints() }} / {{ predatorModalData.choices.pointDistribution.total }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Distribuição de Pontos de Defeitos (Osiris) -->
+        <div v-if="predatorModalData.choices.flawDistribution" class="space-y-3">
+          <label class="df-label">
+            Distribua {{ predatorModalData.choices.flawDistribution.total }} pontos entre {{ predatorModalData.choices.flawDistribution.options.join(' e ') }}:
+          </label>
+          <div class="space-y-3">
+            <div v-for="option in predatorModalData.choices.flawDistribution.options" :key="option">
+              <label class="text-df-text text-sm">{{ option }}:</label>
+              <input
+                v-model.number="selectedChoices.flawPoints![option]"
+                @input="validateFlawPoints(option)"
+                type="number"
+                min="0"
+                :max="getMaxFlawPoints(option)"
+                class="df-input mt-1"
+              />
+            </div>
+            <p class="text-sm text-df-muted">
+              Pontos distribuídos: {{ getTotalFlawPoints() }} / {{ predatorModalData.choices.flawDistribution.total }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botões -->
+      <div class="flex gap-3 mt-6">
+        <BaseButton
+          variant="ghost"
+          @click="closePredatorModal"
+          class="flex-1"
+        >
+          Cancelar
+        </BaseButton>
+        <BaseButton
+          variant="primary"
+          @click="applyPredatorChoices"
+          :disabled="!canConfirmPredatorChoices"
+          class="flex-1"
+        >
+          Confirmar
+        </BaseButton>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import { useToast } from '~/composables/useToast'
@@ -1052,6 +1287,804 @@ const hasUnsavedChanges = ref(false)
 const showConfirmModal = ref(false)
 const showSaveConfirmModal = ref(false)
 
+// ===== SISTEMA DE PREDADORES V5 =====
+const showPredatorModal = ref(false)
+const selectedPredatorType = ref('')
+const previousPredatorType = ref('')
+
+// Rastrear valores ORIGINAIS antes de qualquer predador (para restaurar ao trocar)
+interface OriginalPredatorValues {
+  humanity: number
+  bloodPotency: number
+  disciplinesSnapshot: Array<{ name: string, level: number }>
+}
+
+const originalPredatorValues = ref<OriginalPredatorValues | null>(null)
+
+// Flag para evitar múltiplas execuções do onMounted
+const snapshotInitialized = ref(false)
+
+// Rastrear modificações aplicadas pelo predador para permitir limpeza ao trocar
+interface AppliedPredatorData {
+  predatorName: string
+  humanityChange: number
+  bloodPotencyChange?: number
+  disciplineAdded?: string
+  advantageIndices: number[] // Índices das vantagens adicionadas
+}
+
+const appliedPredatorData = ref<AppliedPredatorData | null>(null)
+
+// Metadata do predador salvo no banco (para restaurar estado correto ao reabrir ficha)
+interface PredatorMetadata {
+  predatorName: string
+  humanityChange: number
+  bloodPotencyChange: number
+  disciplineAdded?: string // Nome da disciplina adicionada
+  fixedAdvantagesCount: number // Quantas vantagens fixas foram adicionadas
+}
+
+interface PredatorChoice {
+  discipline?: string
+  specialty?: string
+  specialtyCustom?: string
+  merit?: string
+  flaw?: string
+  backgroundPoints?: Record<string, number>
+  flawPoints?: Record<string, number>
+}
+
+const selectedChoices = ref<PredatorChoice>({})
+
+interface PredatorModalData {
+  title: string
+  description: string
+  choices: {
+    discipline?: { options: string[]; restriction?: Record<string, string> }
+    specialty?: { options: string[]; customInput?: string[] }
+    merit?: { options: string[] }
+    flaw?: { options: string[] }
+    pointDistribution?: {
+      type: 'backgrounds' | 'flaws'
+      total: number
+      options: string[]
+    }
+    flawDistribution?: {
+      type: 'backgrounds' | 'flaws'
+      total: number
+      options: string[]
+    }
+  }
+}
+
+const predatorModalData = ref<PredatorModalData>({
+  title: '',
+  description: '',
+  choices: {}
+})
+
+interface PredatorConfig {
+  humanityChange: number
+  bloodPotencyChange?: number
+  restrictedClans?: string[]
+  choices: {
+    discipline?: string[]
+    disciplineRestriction?: Record<string, string>
+    specialty?: string[]
+    specialtyCustomInput?: string[]
+    merit?: string[]
+    flaw?: string[]
+    pointDistribution?: {
+      type: 'backgrounds' | 'flaws'
+      total: number
+      options: string[]
+    }
+    flawDistribution?: {
+      type: 'backgrounds' | 'flaws'
+      total: number
+      options: string[]
+    }
+  }
+  fixedAdvantages: Array<{
+    category: string
+    type: string
+    name: string
+    level: number
+    details: string
+    fixo: boolean
+  }>
+}
+
+// Configuração completa dos Tipos de Predador V5
+const predatorTypes: Record<string, PredatorConfig> = {
+  'Consensualista': {
+    humanityChange: 1,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Auspícios', 'Fortitude'],
+      specialty: ['Medicina (Flebotomia)', 'Persuasão (Bolsas)']
+    },
+    fixedAdvantages: [
+      { category: 'Defeito', type: 'Social', name: 'Segredo Sombrio', level: 1, details: 'Quebrador da Máscara', fixo: true },
+      { category: 'Defeito', type: 'Físico', name: 'Alimentação', level: 1, details: 'Exclusão de presa (sem consentimento)', fixo: true }
+    ]
+  },
+  'Fazendeiro': {
+    humanityChange: 1,
+    bloodPotencyChange: 0,
+    restrictedClans: ['Ventrue'],
+    choices: {
+      discipline: ['Animalismo', 'Proteanismo'],
+      specialty: ['Empatia com animais (Animal Específico)', 'Sobrevivência (Caça)']
+    },
+    fixedAdvantages: [
+      { category: 'Defeito', type: 'Físico', name: 'Alimentação', level: 2, details: 'Fazendeiro', fixo: true }
+    ]
+  },
+  'Osiris': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Feitiçaria de Sangue', 'Presença'],
+      disciplineRestriction: { 'Feitiçaria de Sangue': 'Tremere' },
+      specialty: ['Ocultismo (Tradição Específica)', 'Performance (Campo específico)'],
+      specialtyCustomInput: ['Ocultismo (Tradição Específica)', 'Performance (Campo específico)'],
+      pointDistribution: {
+        type: 'backgrounds',
+        total: 3,
+        options: ['Fama', 'Rebanho']
+      },
+      flawDistribution: {
+        type: 'flaws',
+        total: 2,
+        options: ['Inimigo', 'Inimigo Mítico']
+      }
+    },
+    fixedAdvantages: []
+  },
+  'Sacoleiro': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: ['Ventrue'],
+    choices: {
+      discipline: ['Feitiçaria de Sangue', 'Ofuscação'],
+      disciplineRestriction: { 'Feitiçaria de Sangue': 'Tremere' },
+      specialty: ['Ladroagem (Abrir Fechaduras)', 'Manha (Mercado Negro)']
+    },
+    fixedAdvantages: [
+      { category: 'Mérito', type: 'Físico', name: 'Alimentação', level: 3, details: 'Esôfago de Ferro', fixo: true },
+      { category: 'Defeito', type: 'Social', name: 'Inimigo', level: 2, details: 'Alguém acredita que você lhe deve ou há outro motivo para ficar fora das ruas', fixo: true }
+    ]
+  },
+  'Sandman': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Auspícios', 'Ofuscação'],
+      specialty: ['Medicina (Anestésicos)', 'Furtividade (Invasão)']
+    },
+    fixedAdvantages: [
+      { category: 'Antecedente', type: '', name: 'Recursos', level: 1, details: '', fixo: true }
+    ]
+  },
+  'Sanguessuga': {
+    humanityChange: -1,
+    bloodPotencyChange: 1,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Celeridade', 'Proteanismo'],
+      specialty: ['Briga (Membros)', 'Furtividade (Contra Membros)'],
+      flaw: ['Segredo Sombrio (Diablerista)', 'Segregado']
+    },
+    fixedAdvantages: [
+      { category: 'Defeito', type: 'Físico', name: 'Alimentação', level: 2, details: 'Exclusão de Presa (mortais)', fixo: true }
+    ]
+  },
+  'Scene Queen': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Dominação', 'Potência'],
+      specialty: ['Etiqueta (Cena Específica)', 'Liderança (Cena Específica)', 'Manha (Cena Específica)'],
+      specialtyCustomInput: ['Etiqueta (Cena Específica)', 'Liderança (Cena Específica)', 'Manha (Cena Específica)'],
+      flaw: ['Influência (Rejeitado)', 'Alimentação (Exclusão de Presa)']
+    },
+    fixedAdvantages: [
+      { category: 'Antecedente', type: '', name: 'Fama', level: 1, details: '', fixo: true },
+      { category: 'Antecedente', type: '', name: 'Contatos', level: 1, details: '', fixo: true }
+    ]
+  },
+  'Sereia': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Fortitude', 'Presença'],
+      specialty: ['Persuasão (Sedução)', 'Subterfúgio (Sedução)']
+    },
+    fixedAdvantages: [
+      { category: 'Mérito', type: 'Físico', name: 'Visual', level: 2, details: 'Belo', fixo: true },
+      { category: 'Defeito', type: 'Social', name: 'Inimigo', level: 1, details: 'Um amante desprezado ou parceiro ciumento', fixo: true }
+    ]
+  },
+  'Trinchador': {
+    humanityChange: 0,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Dominação', 'Animalismo'],
+      specialty: ['Persuasão (Gaslighting)', 'Subterfúgio (Encobrimento)']
+    },
+    fixedAdvantages: [
+      { category: 'Defeito', type: 'Social', name: 'Segredo Sombrio', level: 1, details: 'Trinchador', fixo: true },
+      { category: 'Antecedente', type: '', name: 'Rebanho', level: 2, details: '', fixo: true }
+    ]
+  },
+  'Vira-Lata': {
+    humanityChange: -1,
+    bloodPotencyChange: 0,
+    restrictedClans: [],
+    choices: {
+      discipline: ['Celeridade', 'Potência'],
+      specialty: ['Intimidação (Assalto à Mão Armada)', 'Briga (Agarramento)']
+    },
+    fixedAdvantages: [
+      { category: 'Antecedente', type: '', name: 'Contatos', level: 3, details: 'Contatos Criminosos', fixo: true }
+    ]
+  }
+}
+
+// Mapeamento de especialidades para habilidades específicas
+const specialtyMapping: Record<string, { category: 'talents' | 'skills' | 'knowledges', skill: string }> = {
+  // Consensualista
+  'Medicina (Flebotomia)': { category: 'knowledges', skill: 'medicine' },
+  'Persuasão (Bolsas)': { category: 'skills', skill: 'persuasion' },
+  // Fazendeiro
+  'Empatia com animais (Animal Específico)': { category: 'skills', skill: 'animalKen' },
+  'Sobrevivência (Caça)': { category: 'talents', skill: 'survival' },
+  // Osiris
+  'Ocultismo (Tradição Específica)': { category: 'knowledges', skill: 'occult' },
+  'Performance (Campo específico)': { category: 'skills', skill: 'performance' },
+  // Sacoleiro
+  'Ladroagem (Abrir Fechaduras)': { category: 'talents', skill: 'larceny' },
+  'Manha (Mercado Negro)': { category: 'skills', skill: 'streetwise' },
+  // Sandman
+  'Medicina (Anestésicos)': { category: 'knowledges', skill: 'medicine' },
+  'Furtividade (Invasão)': { category: 'talents', skill: 'stealth' },
+  // Sanguessuga
+  'Briga (Membros)': { category: 'talents', skill: 'brawl' },
+  'Furtividade (Contra Membros)': { category: 'talents', skill: 'stealth' },
+  // Scene Queen
+  'Etiqueta (Cena Específica)': { category: 'skills', skill: 'etiquette' },
+  'Liderança (Cena Específica)': { category: 'skills', skill: 'leadership' },
+  'Manha (Cena Específica)': { category: 'skills', skill: 'streetwise' },
+  // Sereia
+  'Persuasão (Sedução)': { category: 'skills', skill: 'persuasion' },
+  'Subterfúgio (Sedução)': { category: 'skills', skill: 'subterfuge' },
+  // Trinchador
+  'Persuasão (Gaslighting)': { category: 'skills', skill: 'persuasion' },
+  'Subterfúgio (Encobrimento)': { category: 'skills', skill: 'subterfuge' },
+  // Vira-Lata
+  'Intimidação (Assalto à Mão Armada)': { category: 'skills', skill: 'intimidation' },
+  'Briga (Agarramento)': { category: 'talents', skill: 'brawl' }
+}
+
+// Verificar se uma vantagem é válida para exibição
+const isValidAdvantage = (adv: any): boolean => {
+  // Vantagens editáveis (não fixas) sempre aparecem, mesmo vazias (para permitir edição)
+  if (!adv.fixo) return true
+  
+  // Para vantagens fixas (do predador), validar se tem nome
+  if (!adv.name || adv.name.trim() === '') return false
+  
+  // Remover entradas que são especialidades antigas (formato "Habilidade (Especialidade)")
+  if (adv.name === 'Especialidade' && adv.details && adv.details.includes('(') && adv.details.includes(')')) {
+    return false
+  }
+  
+  return true
+}
+
+// Validação para habilitar o botão de confirmar
+const canConfirmPredatorChoices = computed(() => {
+  const config = predatorTypes[selectedPredatorType.value as keyof typeof predatorTypes]
+  if (!config) return false
+
+  const choices = config.choices
+
+  // Verificar escolha de disciplina
+  if (choices.discipline && !selectedChoices.value.discipline) return false
+
+  // Verificar escolha de especialidade
+  if (choices.specialty && !selectedChoices.value.specialty) return false
+  
+  // Verificar input customizado de especialidade (se necessário)
+  if (needsCustomSpecialtyInput(selectedChoices.value.specialty) && !selectedChoices.value.specialtyCustom) return false
+
+  // Verificar escolha de mérito
+  if (choices.merit && !selectedChoices.value.merit) return false
+
+  // Verificar escolha de defeito
+  if (choices.flaw && !selectedChoices.value.flaw) return false
+
+  // Verificar distribuição de pontos de antecedentes
+  if (choices.pointDistribution) {
+    const total = getTotalBackgroundPoints()
+    if (total !== choices.pointDistribution.total) return false
+  }
+
+  // Verificar distribuição de pontos de defeitos
+  if (choices.flawDistribution) {
+    const total = getTotalFlawPoints()
+    if (total !== choices.flawDistribution.total) return false
+  }
+
+  return true
+})
+
+// Abrir modal de escolhas do predador
+const openPredatorModal = (predatorType: string) => {
+  const config = predatorTypes[predatorType as keyof typeof predatorTypes]
+  if (!config) return
+
+  // Verificar restrições de clã
+  if (config.restrictedClans && config.restrictedClans.includes(sheetData.value.clan)) {
+    toast.error(`O clã ${sheetData.value.clan} não pode escolher o tipo de predador ${predatorType}`)
+    sheetData.value.predator = previousPredatorType.value
+    return
+  }
+
+  selectedPredatorType.value = predatorType
+  selectedChoices.value = {}
+
+  // Preparar dados do modal
+  predatorModalData.value = {
+    title: `Tipo de Predador: ${predatorType}`,
+    description: 'Faça suas escolhas para completar a configuração do seu predador:',
+    choices: {}
+  }
+
+  if (config.choices.discipline) {
+    predatorModalData.value.choices.discipline = {
+      options: config.choices.discipline,
+      restriction: config.choices.disciplineRestriction
+    }
+  }
+
+  if (config.choices.specialty) {
+    predatorModalData.value.choices.specialty = {
+      options: config.choices.specialty,
+      customInput: config.choices.specialtyCustomInput
+    }
+  }
+
+  if (config.choices.merit) {
+    predatorModalData.value.choices.merit = {
+      options: config.choices.merit
+    }
+  }
+
+  if (config.choices.flaw) {
+    predatorModalData.value.choices.flaw = {
+      options: config.choices.flaw
+    }
+  }
+
+  if (config.choices.pointDistribution) {
+    predatorModalData.value.choices.pointDistribution = config.choices.pointDistribution
+    selectedChoices.value.backgroundPoints = {}
+    // Inicializar cada opção com 0
+    config.choices.pointDistribution.options.forEach(option => {
+      selectedChoices.value.backgroundPoints![option] = 0
+    })
+  }
+
+  if (config.choices.flawDistribution) {
+    predatorModalData.value.choices.flawDistribution = config.choices.flawDistribution
+    selectedChoices.value.flawPoints = {}
+    // Inicializar cada opção com 0
+    config.choices.flawDistribution.options.forEach(option => {
+      selectedChoices.value.flawPoints![option] = 0
+    })
+  }
+
+  showPredatorModal.value = true
+}
+
+// Fechar modal
+const closePredatorModal = () => {
+  showPredatorModal.value = false
+  // Reverter seleção se cancelou
+  sheetData.value.predator = previousPredatorType.value
+}
+
+// Verificar se disciplina está restrita (apenas para clãs específicos)
+const isDisciplineRestricted = (discipline: string): boolean => {
+  const restriction = predatorModalData.value.choices.discipline?.restriction
+  if (!restriction || !restriction[discipline]) return false
+  return sheetData.value.clan !== restriction[discipline]
+}
+
+// Selecionar disciplina (se não estiver restrita)
+const selectDiscipline = (discipline: string) => {
+  if (!isDisciplineRestricted(discipline)) {
+    selectedChoices.value.discipline = discipline
+  }
+}
+
+// Verificar se especialidade precisa de input customizado
+const needsCustomSpecialtyInput = (specialty?: string): boolean => {
+  if (!specialty) return false
+  const customInputOptions = predatorModalData.value.choices.specialty?.customInput || []
+  return customInputOptions.includes(specialty)
+}
+
+// Placeholder para input customizado de especialidade
+const getCustomSpecialtyPlaceholder = (specialty?: string): string => {
+  if (!specialty) return ''
+  if (specialty.includes('Performance')) return 'Ex: Música, Dança, Teatro...'
+  if (specialty.includes('Cena Específica')) return 'Ex: Góticos, Clubbers, Cosplayers...'
+  if (specialty.includes('Animal Específico')) return 'Ex: Lobos, Gatos, Ratos...'
+  if (specialty.includes('Ocultismo')) return 'Ex: Hermetismo, Kabbalah, Vodu...'
+  return 'Especifique...'
+}
+
+// Calcular total de pontos de antecedentes distribuídos
+const getTotalBackgroundPoints = (): number => {
+  if (!selectedChoices.value.backgroundPoints) return 0
+  return Object.values(selectedChoices.value.backgroundPoints).reduce((sum, val) => sum + (val || 0), 0)
+}
+
+// Calcular total de pontos de defeitos distribuídos
+const getTotalFlawPoints = (): number => {
+  if (!selectedChoices.value.flawPoints) return 0
+  return Object.values(selectedChoices.value.flawPoints).reduce((sum, val) => sum + (val || 0), 0)
+}
+
+// Calcular máximo permitido para um antecedente específico
+const getMaxBackgroundPoints = (option: string): number => {
+  if (!predatorModalData.value.choices.pointDistribution) return 0
+  const total = predatorModalData.value.choices.pointDistribution.total
+  const currentTotal = getTotalBackgroundPoints()
+  const currentValue = selectedChoices.value.backgroundPoints?.[option] || 0
+  return total - (currentTotal - currentValue)
+}
+
+// Calcular máximo permitido para um defeito específico
+const getMaxFlawPoints = (option: string): number => {
+  if (!predatorModalData.value.choices.flawDistribution) return 0
+  const total = predatorModalData.value.choices.flawDistribution.total
+  const currentTotal = getTotalFlawPoints()
+  const currentValue = selectedChoices.value.flawPoints?.[option] || 0
+  return total - (currentTotal - currentValue)
+}
+
+// Validar pontos de antecedentes para não ultrapassar o total
+const validateBackgroundPoints = (option: string) => {
+  if (!predatorModalData.value.choices.pointDistribution) return
+  if (!selectedChoices.value.backgroundPoints) {
+    selectedChoices.value.backgroundPoints = {}
+  }
+  
+  const total = predatorModalData.value.choices.pointDistribution.total
+  const max = getMaxBackgroundPoints(option)
+  const currentValue = selectedChoices.value.backgroundPoints[option] || 0
+  
+  // Garantir que não seja negativo
+  if (currentValue < 0) {
+    selectedChoices.value.backgroundPoints[option] = 0
+  }
+  
+  // Garantir que não ultrapasse o máximo permitido
+  if (currentValue > max) {
+    selectedChoices.value.backgroundPoints[option] = max
+  }
+}
+
+// Validar pontos de defeitos para não ultrapassar o total
+const validateFlawPoints = (option: string) => {
+  if (!predatorModalData.value.choices.flawDistribution) return
+  if (!selectedChoices.value.flawPoints) {
+    selectedChoices.value.flawPoints = {}
+  }
+  
+  const total = predatorModalData.value.choices.flawDistribution.total
+  const max = getMaxFlawPoints(option)
+  const currentValue = selectedChoices.value.flawPoints[option] || 0
+  
+  // Garantir que não seja negativo
+  if (currentValue < 0) {
+    selectedChoices.value.flawPoints[option] = 0
+  }
+  
+  // Garantir que não ultrapasse o máximo permitido
+  if (currentValue > max) {
+    selectedChoices.value.flawPoints[option] = max
+  }
+}
+
+// Limpar dados do predador anterior antes de aplicar novo
+const clearPreviousPredatorData = () => {
+  console.log('🧹 clearPreviousPredatorData: Iniciando limpeza')
+  
+  // SEMPRE limpar especialidades, independente de ter appliedPredatorData
+  // Limpar mantendo a reatividade do Vue (não substituir o objeto, apenas limpar as chaves)
+  Object.keys(sheetData.value.skillSpecialties.talents).forEach(key => {
+    delete sheetData.value.skillSpecialties.talents[key]
+  })
+  Object.keys(sheetData.value.skillSpecialties.skills).forEach(key => {
+    delete sheetData.value.skillSpecialties.skills[key]
+  })
+  Object.keys(sheetData.value.skillSpecialties.knowledges).forEach(key => {
+    delete sheetData.value.skillSpecialties.knowledges[key]
+  })
+  console.log('   ✅ Especialidades limpas')
+
+  // Remover TODAS as vantagens/defeitos fixos (do predador)
+  const advantagesBefore = sheetData.value.advantages.length
+  sheetData.value.advantages = sheetData.value.advantages.filter((adv: any) => !adv.fixo)
+  const advantagesAfter = sheetData.value.advantages.length
+  console.log(`   ✅ Vantagens fixas removidas (${advantagesBefore} → ${advantagesAfter})`)
+
+  // Se temos valores originais salvos, RESTAURAR para eles (não reverter incrementalmente)
+  if (originalPredatorValues.value) {
+    console.log('🔄 Restaurando valores originais do snapshot:', JSON.stringify(originalPredatorValues.value))
+    
+    // 1. Restaurar Humanidade original
+    const oldHumanity = sheetData.value.humanity
+    sheetData.value.humanity = originalPredatorValues.value.humanity
+    console.log(`   ✅ Humanidade: ${oldHumanity} → ${sheetData.value.humanity}`)
+
+    // 2. Restaurar Potência de Sangue original
+    const oldBloodPotency = sheetData.value.bloodPotency
+    sheetData.value.bloodPotency = originalPredatorValues.value.bloodPotency
+    console.log(`   ✅ Potência Sangue: ${oldBloodPotency} → ${sheetData.value.bloodPotency}`)
+
+    // 3. Restaurar Disciplinas originais (snapshot completo)
+    const oldDisciplines = JSON.stringify(sheetData.value.disciplines)
+    
+    // Criar novo array com cópia dos valores do snapshot (evitar referências)
+    sheetData.value.disciplines = originalPredatorValues.value.disciplinesSnapshot.map(d => ({
+      name: d.name,
+      level: Math.max(1, d.level) // Garantir que nunca seja 0 ou negativo
+    }))
+    
+    const newDisciplines = JSON.stringify(sheetData.value.disciplines)
+    console.log(`   ✅ Disciplinas restauradas:`)
+    console.log(`      Antes: ${oldDisciplines}`)
+    console.log(`      Depois: ${newDisciplines}`)
+    console.log(`      Snapshot: ${JSON.stringify(originalPredatorValues.value.disciplinesSnapshot)}`)
+  } else {
+    console.log('⚠️ Nenhum snapshot original encontrado! Não foi possível restaurar valores.')
+  }
+
+  // Limpar rastreamento
+  appliedPredatorData.value = null
+  
+  // Limpar metadata do predador (será recriado ao aplicar novo predador)
+  delete (sheetData.value as any)._predatorMetadata
+  console.log('🧹 clearPreviousPredatorData: Limpeza concluída')
+}
+
+// Aplicar escolhas do predador
+const applyPredatorChoices = () => {
+  const config = predatorTypes[selectedPredatorType.value as keyof typeof predatorTypes]
+  if (!config) return
+
+  console.log('🎯 Aplicando predador:', selectedPredatorType.value)
+  console.log('📊 Estado ANTES de aplicar:')
+  console.log('   - Humanidade:', sheetData.value.humanity)
+  console.log('   - Potência Sangue:', sheetData.value.bloodPotency)
+  console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines))
+  console.log('   - Snapshot original existe?', !!originalPredatorValues.value)
+  
+  if (originalPredatorValues.value) {
+    console.log('   - Snapshot BASE:', JSON.stringify(originalPredatorValues.value))
+  }
+
+  // PASSO -1: Salvar valores originais ANTES de qualquer modificação (apenas se não tiver snapshot)
+  // Isso só acontece quando aplica predador pela PRIMEIRA VEZ em uma ficha nova
+  if (!originalPredatorValues.value) {
+    console.log('⚠️ Snapshot original não existe! Salvando agora (ficha nova sem predador)')
+    originalPredatorValues.value = {
+      humanity: sheetData.value.humanity,
+      bloodPotency: sheetData.value.bloodPotency,
+      disciplinesSnapshot: sheetData.value.disciplines.map((d: any) => ({
+        name: d.name,
+        level: d.level
+      }))
+    }
+    console.log('📸 Snapshot BASE salvo:', JSON.stringify(originalPredatorValues.value))
+  }
+
+  // PASSO 0: Limpar dados do predador anterior (restaura valores originais)
+  console.log('🧹 Limpando predador anterior antes de aplicar novo')
+  clearPreviousPredatorData()
+  
+  console.log('📊 Estado DEPOIS de limpar:')
+  console.log('   - Humanidade:', sheetData.value.humanity)
+  console.log('   - Potência Sangue:', sheetData.value.bloodPotency)
+  console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines))
+
+  // Inicializar rastreamento das modificações
+  const trackingData: AppliedPredatorData = {
+    predatorName: selectedPredatorType.value,
+    humanityChange: config.humanityChange,
+    advantageIndices: []
+  }
+
+  // 1. Aplicar mudança de Humanidade
+  if (config.humanityChange !== 0) {
+    const newHumanity = sheetData.value.humanity + config.humanityChange
+    sheetData.value.humanity = Math.max(0, Math.min(10, newHumanity))
+  }
+
+  // 2. Aplicar mudança de Potência de Sangue (Sanguessuga +1)
+  if (config.bloodPotencyChange && config.bloodPotencyChange !== 0) {
+    const newBloodPotency = sheetData.value.bloodPotency + config.bloodPotencyChange
+    sheetData.value.bloodPotency = Math.max(0, Math.min(10, newBloodPotency))
+  }
+
+  // 3. Adicionar disciplina escolhida
+  if (selectedChoices.value.discipline) {
+    trackingData.disciplineAdded = selectedChoices.value.discipline
+    
+    const existingDiscipline = sheetData.value.disciplines.find(
+      (d: any) => d.name === selectedChoices.value.discipline
+    )
+    if (existingDiscipline) {
+      existingDiscipline.level += 1
+    } else {
+      sheetData.value.disciplines.push({
+        name: selectedChoices.value.discipline,
+        level: 1
+      })
+    }
+  }
+
+  // 4. Injetar especialidade escolhida diretamente na habilidade
+  if (selectedChoices.value.specialty) {
+    const mapping = specialtyMapping[selectedChoices.value.specialty]
+    if (mapping) {
+      // Se tiver texto customizado, usar ele. Senão, extrair o texto da especialidade padrão
+      let specialtyText = ''
+      if (selectedChoices.value.specialtyCustom) {
+        specialtyText = selectedChoices.value.specialtyCustom
+      } else {
+        specialtyText = selectedChoices.value.specialty.match(/\(([^)]+)\)/)?.[1] || selectedChoices.value.specialty
+      }
+      
+      // Injetar na habilidade correta
+      if (!sheetData.value.skillSpecialties[mapping.category]) {
+        sheetData.value.skillSpecialties[mapping.category] = {}
+      }
+      sheetData.value.skillSpecialties[mapping.category][mapping.skill] = specialtyText
+    }
+  }
+
+  // 5. Adicionar vantagens e defeitos fixos
+  config.fixedAdvantages.forEach(adv => {
+    const currentLength = sheetData.value.advantages.length
+    sheetData.value.advantages.push({ ...adv })
+    trackingData.advantageIndices.push(currentLength)
+  })
+
+  // 6. Tratamento de distribuição de pontos de antecedentes (Osiris)
+  if (config.choices.pointDistribution && selectedChoices.value.backgroundPoints) {
+    Object.entries(selectedChoices.value.backgroundPoints).forEach(([name, points]) => {
+      if (points && points > 0) {
+        const currentLength = sheetData.value.advantages.length
+        sheetData.value.advantages.push({
+          category: 'Antecedente',
+          type: '',
+          name: name,
+          level: points,
+          details: '',
+          fixo: true
+        })
+        trackingData.advantageIndices.push(currentLength)
+      }
+    })
+  }
+
+  // 7. Tratamento de distribuição de pontos de defeitos (Osiris)
+  if (config.choices.flawDistribution && selectedChoices.value.flawPoints) {
+    Object.entries(selectedChoices.value.flawPoints).forEach(([name, points]) => {
+      if (points && points > 0) {
+        const currentLength = sheetData.value.advantages.length
+        sheetData.value.advantages.push({
+          category: 'Defeito',
+          type: 'Social',
+          name: name,
+          level: points,
+          details: '',
+          fixo: true
+        })
+        trackingData.advantageIndices.push(currentLength)
+      }
+    })
+  }
+
+  // 8. Tratamento de escolha de defeito (Sanguessuga, Scene Queen)
+  if (selectedChoices.value.flaw && !config.choices.flawDistribution) {
+    const currentLength = sheetData.value.advantages.length
+    
+    // Parse do defeito selecionado para extrair nome e nível
+    let flawName = selectedChoices.value.flaw
+    let flawLevel = 1
+    let flawDetails = ''
+    
+    // Extrair informações do formato "Nome (Detalhes)"
+    if (flawName === 'Segredo Sombrio (Diablerista)') {
+      flawName = 'Segredo Sombrio'
+      flawLevel = 2
+      flawDetails = 'Diablerista'
+    } else if (flawName === 'Segregado') {
+      flawName = 'Segregado'
+      flawLevel = 2
+    } else if (flawName === 'Influência (Rejeitado)') {
+      flawName = 'Influência'
+      flawLevel = 1
+      flawDetails = 'Rejeitado (fora de sua subcultura)'
+    } else if (flawName === 'Alimentação (Exclusão de Presa)') {
+      flawName = 'Alimentação'
+      flawLevel = 1
+      flawDetails = 'Exclusão de Presa (Uma subcultura diferente da sua)'
+    }
+    
+    // Determinar o tipo correto baseado no defeito
+    let flawType = 'Social' // Padrão para a maioria
+    if (flawName === 'Alimentação') {
+      flawType = 'Físico' // Alimentação é defeito físico
+    }
+    
+    sheetData.value.advantages.push({
+      category: 'Defeito',
+      type: flawType,
+      name: flawName,
+      level: flawLevel,
+      details: flawDetails,
+      fixo: true
+    })
+    trackingData.advantageIndices.push(currentLength)
+  }
+
+  // Salvar rastreamento das modificações
+  appliedPredatorData.value = trackingData
+
+  // Criar metadata para salvar no banco (permite restaurar estado correto ao reabrir ficha)
+  const metadata: PredatorMetadata = {
+    predatorName: selectedPredatorType.value,
+    humanityChange: config.humanityChange,
+    bloodPotencyChange: config.bloodPotencyChange || 0,
+    disciplineAdded: trackingData.disciplineAdded,
+    fixedAdvantagesCount: config.fixedAdvantages?.length || 0
+  }
+  
+  // Adicionar metadata ao sheetData (será salvo no banco)
+  ;(sheetData.value as any)._predatorMetadata = metadata
+  
+  console.log('💾 Metadata do predador criado:', JSON.stringify(metadata))
+  console.log('📊 Estado FINAL após aplicar predador:')
+  console.log('   - Predador:', sheetData.value.predator)
+  console.log('   - Humanidade:', sheetData.value.humanity)
+  console.log('   - Potência Sangue:', sheetData.value.bloodPotency)
+  console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines))
+  console.log('   - Snapshot BASE (não modificado):', JSON.stringify(originalPredatorValues.value))
+
+  hasUnsavedChanges.value = true
+  previousPredatorType.value = selectedPredatorType.value
+  showPredatorModal.value = false
+
+  toast.success(`Tipo de Predador "${selectedPredatorType.value}" aplicado com sucesso!`)
+  console.log('✅ Predador aplicado com sucesso!')
+}
+// ===== FIM DO SISTEMA DE PREDADORES =====
+
 // Helper para iniciais do avatar
 const getInitials = (name: string) => {
   if (!name) return 'P'
@@ -1070,21 +2103,22 @@ const vantagensDados = {
       { nome: "Atraente", pontos: 2, fixo: true },
       { nome: "Impressionante", pontos: 4, fixo: true },
       { nome: "Estômago de Ferro", pontos: 2, fixo: true },
-      { nome: "Resistência a Toxinas", pontos: 1, fixo: true }
+      { nome: "Resistência a Toxinas", pontos: 1, fixo: true },
+      { nome: "Visual", pontos: 2, fixo: true },
+      { nome: "Alimentação", pontos: 3, fixo: true }
     ],
     mentais: [
       { nome: "Linguista", pontos: 1, fixo: false },
       { nome: "Mente Alerta", pontos: 2, fixo: true }
     ],
     sociais: [
-      { nome: "Aparência Bonita", pontos: 2, fixo: true },
-      { nome: "Enganador", pontos: 1, fixo: false },
-      { nome: "Ponto Fraco Ignorado", pontos: 2, fixo: true }
+      { nome: "Identidade Falsa", pontos: 3, fixo: false, max: 3 },
+      { nome: "Língua Afiada", pontos: 2, fixo: true }
     ],
     sobrenaturais: [
       { nome: "Médium", pontos: 2, fixo: true },
       { nome: "Sentido do Perigo", pontos: 2, fixo: true },
-      { nome: "Sangue Frio", pontos: 2, fixo: true }
+      { nome: "Vontade de Ferro", pontos: 2, fixo: true }
     ],
     sangue_ralo: [
       { nome: "Alquimista de Sangue Ralo", pontos: 1, fixo: false },
@@ -1098,25 +2132,31 @@ const vantagensDados = {
     fisicos: [
       { nome: "Feio", pontos: 2, fixo: true },
       { nome: "Repulsivo", pontos: 4, fixo: true },
-      { nome: "Exclusividade de Sangue", pontos: 2, fixo: true },
-      { nome: "Órgão-voro", pontos: 2, fixo: true },
-      { nome: "Veggie", pontos: 2, fixo: true },
       { nome: "Carne Racha", pontos: 1, fixo: true },
-      { nome: "Bebedor Ineficiente", pontos: 2, fixo: true }
+      { nome: "Bebedor Ineficiente", pontos: 2, fixo: true },
+      { nome: "Restrição Alimentar", pontos: 1, fixo: false, max: 3 },
+      { nome: "Sede Metódica", pontos: 1, fixo: true },
+      { nome: "Alimentação", pontos: 1, fixo: false, max: 2 }
     ],
     mentais: [
+      { nome: "Amnésia", pontos: 1, fixo: false, max: 2 },
       { nome: "Vício", pontos: 1, fixo: true },
-      { nome: "Pesadelos", pontos: 1, fixo: true },
-      { nome: "Amnésia", pontos: 1, fixo: false }
+      { nome: "Pesadelos", pontos: 1, fixo: true }
     ],
     sociais: [
-      { nome: "Segredo Sombrio", pontos: 1, fixo: false },
+      { nome: "Segredo Sombrio", pontos: 1, fixo: false, max: 2 },
       { nome: "Desacreditado", pontos: 1, fixo: true },
-      { nome: "Identidade Trocada", pontos: 1, fixo: true }
+      { nome: "Identidade Trocada", pontos: 1, fixo: true },
+      { nome: "Submisso", pontos: 1, fixo: true },
+      { nome: "Criminoso", pontos: 1, fixo: true },
+      { nome: "Inimigo", pontos: 1, fixo: false },
+      { nome: "Segregado", pontos: 2, fixo: true },
+      { nome: "Influência", pontos: 1, fixo: false },
+      { nome: "Inimigo Mítico", pontos: 1, fixo: false }
     ],
     sobrenaturais: [
+      { nome: "Assombrado", pontos: 1, fixo: false, max: 2 },
       { nome: "Presença Repulsiva", pontos: 2, fixo: true },
-      { nome: "Assombrado", pontos: 1, fixo: false },
       { nome: "Repulsa do Sangue", pontos: 2, fixo: true }
     ],
     sangue_ralo: [
@@ -1287,11 +2327,7 @@ const sheetData = ref({
   chronicleTenets: props.player.sheet?.chronicleTenets || '',
   touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
-  advantages: props.player.sheet?.advantages || [
-    { category: '', type: '', name: '', level: 0, details: '', fixo: false },
-    { category: '', type: '', name: '', level: 0, details: '', fixo: false },
-    { category: '', type: '', name: '', level: 0, details: '', fixo: false }
-  ],
+  advantages: props.player.sheet?.advantages || [],
   bloodPotency: props.player.sheet?.bloodPotency || 0,
   bloodSurge: props.player.sheet?.bloodSurge || '+2',
   powerBonus: props.player.sheet?.powerBonus || '0',
@@ -1314,13 +2350,33 @@ const sheetData = ref({
     skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
     knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
   },
-  disciplines: props.player.sheet?.disciplines || [{ name: '', level: 0 }],
+  skillSpecialties: props.player.sheet?.skillSpecialties || {
+    talents: {},
+    skills: {},
+    knowledges: {}
+  },
+  disciplines: props.player.sheet?.disciplines || [],
   virtues: props.player.sheet?.virtues || { conscience: 1, selfControl: 1, courage: 1 },
   humanity: props.player.sheet?.humanity || 1,
   willpower: props.player.sheet?.willpower || 1,
   vitality: props.player.sheet?.vitality || 1,
   hunger: props.player.sheet?.hunger ?? 1,
   conditions: props.player.sheet?.conditions?.length > 0 ? props.player.sheet.conditions : ['']
+})
+
+// Inicializar previousPredatorType com o valor atual (evita abrir modal na carga)
+previousPredatorType.value = props.player.sheet?.predator || ''
+
+// Watch para detectar mudanças no tipo de predador
+watch(() => sheetData.value.predator, (newPredator, oldPredator) => {
+  // Só abre o modal se:
+  // 1. Novo valor existe e não é vazio
+  // 2. É diferente do valor anterior
+  // 3. Não é o mesmo que já foi processado (previousPredatorType)
+  // 4. Usuário tem permissão de edição
+  if (newPredator && newPredator !== '' && newPredator !== previousPredatorType.value && props.canEdit) {
+    openPredatorModal(newPredator)
+  }
 })
 
 // Watch clan changes to auto-update clan bane
@@ -1331,6 +2387,104 @@ watch(() => sheetData.value.clan, (newClan) => {
   } else if (!newClan) {
     sheetData.value.clanBane = ''
   }
+})
+
+// Salvar snapshot inicial ao carregar a ficha (para restaurar ao trocar de predador)
+onMounted(() => {
+  // Evitar múltiplas execuções
+  if (snapshotInitialized.value) {
+    console.log('⚠️ onMounted: Snapshot já foi inicializado, ignorando execução duplicada')
+    return
+  }
+  
+  console.log('🔵 onMounted: Iniciando carregamento da ficha')
+  console.log('📋 Dados da ficha carregados do banco:')
+  console.log('   - Predador:', sheetData.value.predator)
+  console.log('   - Humanidade:', sheetData.value.humanity)
+  console.log('   - Potência Sangue:', sheetData.value.bloodPotency)
+  console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines))
+  
+  // Se a ficha tem metadata de predador salvo, precisamos calcular o estado BASE
+  const metadata = props.player.sheet?._predatorMetadata as PredatorMetadata | undefined
+  console.log('📦 Metadata encontrado?', !!metadata)
+  
+  if (metadata && sheetData.value.predator) {
+    console.log('📦 Metadata de predador encontrado no banco:', JSON.stringify(metadata))
+    console.log('🔄 Calculando estado BASE (sem predador) para snapshot...')
+    
+    // Calcular valores BASE (NÃO modificar o sheetData, apenas calcular para o snapshot!)
+    const baseHumanity = sheetData.value.humanity - metadata.humanityChange
+    console.log(`   - Humanidade BASE: ${sheetData.value.humanity} - ${metadata.humanityChange} = ${baseHumanity}`)
+    
+    const baseBloodPotency = sheetData.value.bloodPotency - metadata.bloodPotencyChange
+    console.log(`   - Potência BASE: ${sheetData.value.bloodPotency} - ${metadata.bloodPotencyChange} = ${baseBloodPotency}`)
+    
+    // Calcular disciplinas BASE
+    let baseDisciplines = sheetData.value.disciplines.map((d: any) => ({ name: d.name, level: d.level }))
+    console.log(`   - Disciplinas ATUAIS (com predador): ${JSON.stringify(baseDisciplines)}`)
+    
+    if (metadata.disciplineAdded) {
+      console.log(`   - Predador adicionou disciplina: "${metadata.disciplineAdded}"`)
+      const disciplineIndex = baseDisciplines.findIndex((d: any) => d.name === metadata.disciplineAdded)
+      console.log(`   - Índice da disciplina: ${disciplineIndex}`)
+      
+      if (disciplineIndex !== -1) {
+        const originalLevel = baseDisciplines[disciplineIndex].level
+        const newLevel = originalLevel - 1
+        console.log(`   - Calculando nível BASE: ${originalLevel} - 1 = ${newLevel}`)
+        
+        if (newLevel <= 0) {
+          // Se ficou 0 ou negativo, remover do snapshot BASE
+          baseDisciplines.splice(disciplineIndex, 1)
+          console.log(`   - Disciplina removida do BASE (nível chegaria a ${newLevel})`)
+        } else {
+          baseDisciplines[disciplineIndex].level = newLevel
+          console.log(`   - Disciplina mantida no BASE com nível ${newLevel}`)
+        }
+      } else {
+        console.log(`   ⚠️ Disciplina "${metadata.disciplineAdded}" não encontrada! Ela foi criada pelo predador.`)
+        // Disciplina não existe no array = foi criada pelo predador, então não incluir no BASE
+      }
+    } else {
+      console.log('   - Nenhuma disciplina foi adicionada pelo predador')
+    }
+    
+    console.log(`   - Disciplinas BASE calculadas: ${JSON.stringify(baseDisciplines)}`)
+    
+    // Salvar snapshot do estado BASE (sem predador)
+    // IMPORTANTE: Apenas salvar no snapshot, NÃO modificar sheetData!
+    originalPredatorValues.value = {
+      humanity: Math.max(0, Math.min(10, baseHumanity)),
+      bloodPotency: Math.max(0, Math.min(10, baseBloodPotency)),
+      disciplinesSnapshot: baseDisciplines
+    }
+    
+    console.log('📸 Snapshot BASE salvo (valores SEM predador):', JSON.stringify(originalPredatorValues.value))
+    console.log('📍 sheetData permanece INALTERADO (COM predador aplicado):')
+    console.log('   - Humanidade:', sheetData.value.humanity, '(não modificado)')
+    console.log('   - Potência:', sheetData.value.bloodPotency, '(não modificado)')
+    console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines), '(não modificado)')
+    console.log('   ✅ Snapshot BASE salvo! Será usado ao trocar de predador.')
+  } else {
+    console.log('ℹ️ Ficha não tem predador aplicado (ou sem metadata)')
+    
+    // Não tem predador aplicado ainda, salvar estado atual como base
+    if (!originalPredatorValues.value) {
+      originalPredatorValues.value = {
+        humanity: sheetData.value.humanity,
+        bloodPotency: sheetData.value.bloodPotency,
+        disciplinesSnapshot: sheetData.value.disciplines.map((d: any) => ({
+          name: d.name,
+          level: d.level
+        }))
+      }
+      console.log('📸 Snapshot inicial salvo (sem predador aplicado):', JSON.stringify(originalPredatorValues.value))
+    }
+  }
+  
+  // Marcar como inicializado
+  snapshotInitialized.value = true
+  console.log('🔵 onMounted: Finalizado')
 })
 
 // Methods
@@ -1386,13 +2540,26 @@ const setAdvantageLevel = (index: number, level: number) => {
 
 const addAdvantage = () => {
   if (!props.canEdit) return
-  if (sheetData.value.advantages.length >= 10) return
-  sheetData.value.advantages.push({ category: '', type: '', name: '', level: 0, details: '', fixo: false })
+  
+  // Limite máximo de 10 vantagens/defeitos
+  if (sheetData.value.advantages.length >= 10) {
+    toast.warning('Limite máximo de 10 vantagens/defeitos atingido')
+    return
+  }
+  
+  sheetData.value.advantages.push({ category: '', type: '', name: '', level: 0, details: '', fixo: false, maxLevel: 5 })
   hasUnsavedChanges.value = true
 }
 
 const removeAdvantage = (index: number) => {
   if (!props.canEdit) return
+  
+  // Não permitir remover vantagens fixas (do tipo de predador)
+  if (sheetData.value.advantages[index]?.fixo) {
+    toast.warning('Vantagens do tipo de predador não podem ser removidas')
+    return
+  }
+  
   sheetData.value.advantages.splice(index, 1)
   hasUnsavedChanges.value = true
 }
@@ -1486,8 +2653,9 @@ const onNameChange = (index: number) => {
   if (categoryKey === 'antecedentes' || categoryKey === 'loresheets') {
     adv.level = 1
     adv.fixo = false
+    adv.maxLevel = 5
   }
-  // Para Méritos e Defeitos: buscar pontos e fixo do objeto de dados
+  // Para Méritos e Defeitos: buscar pontos, fixo e max do objeto de dados
   else if ((categoryKey === 'meritos' || categoryKey === 'defeitos') && adv.type && adv.name) {
     const typeKey = normalizeTypeKey(adv.type)
     const items = categoryKey === 'meritos' 
@@ -1499,6 +2667,7 @@ const onNameChange = (index: number) => {
     if (selectedItem) {
       adv.level = selectedItem.pontos
       adv.fixo = selectedItem.fixo
+      adv.maxLevel = (selectedItem as any).max || 5
     }
   }
   
@@ -1573,21 +2742,33 @@ const confirmSave = () => {
   showSaveConfirmModal.value = false
   
   try {
-    console.log('✅ PlayerSheet: Emitindo evento SAVE')
+    console.log('💾 Preparando para salvar ficha...')
+    console.log('   - Predador:', sheetData.value.predator)
+    console.log('   - Humanidade:', sheetData.value.humanity)
+    console.log('   - Potência Sangue:', sheetData.value.bloodPotency)
+    console.log('   - Disciplinas:', JSON.stringify(sheetData.value.disciplines))
+    console.log('   - Metadata:', JSON.stringify((sheetData.value as any)._predatorMetadata))
+    console.log('   - Snapshot BASE (não salvo no banco):', JSON.stringify(originalPredatorValues.value))
     
     // Filtrar condições vazias antes de salvar
     const cleanedConditions = sheetData.value.conditions.filter((c: string) => c && c.trim())
     
-    emit('save', {
+    const dataToSave = {
       ...props.player,
       characterName: sheetData.value.name,
       sheet: {
         ...sheetData.value,
         conditions: cleanedConditions
       }
-    })
+    }
+    
+    console.log('📤 Emitindo evento SAVE com metadata:', JSON.stringify(dataToSave.sheet._predatorMetadata))
+    
+    emit('save', dataToSave)
     
     hasUnsavedChanges.value = false
+    
+    console.log('💾 Ficha salva! Metadata foi incluído no objeto salvo.')
     
     // NÃO mostrar toast aqui - o componente pai (player.vue) vai mostrar
     // para que o toast permaneça visível mesmo após o modal fechar
