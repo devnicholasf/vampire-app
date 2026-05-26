@@ -1826,13 +1826,53 @@ watch(() => sheetData.value.predator, (newPredator, oldPredator) => {
   }
 })
 
-// Watch clan changes to auto-update clan bane
-watch(() => sheetData.value.clan, (newClan) => {
+// Watch clan changes to auto-update clan bane and Nosferatu flaw
+watch(() => sheetData.value.clan, (newClan, oldClan) => {
+  // Atualizar Bane do Clã
   if (newClan && clanBanes[newClan]) {
     sheetData.value.clanBane = clanBanes[newClan]
     hasUnsavedChanges.value = true
   } else if (!newClan) {
     sheetData.value.clanBane = ''
+  }
+
+  // Sistema especial: Nosferatu - Defeito Repulsivo (••)
+  const nosferatuFlawName = 'Repulsivo'
+  
+  // Se está mudando PARA Nosferatu, adicionar o defeito
+  if (newClan === 'Nosferatu' && oldClan !== 'Nosferatu') {
+    // Verificar se já existe o defeito Repulsivo
+    const hasNosferatuFlaw = sheetData.value.advantages.some(
+      (adv: any) => adv.name === nosferatuFlawName && adv.fixo === true
+    )
+    
+    if (!hasNosferatuFlaw) {
+      console.log('🦇 NOSFERATU: Adicionando defeito Repulsivo (••) - fixo')
+      sheetData.value.advantages.push({
+        category: 'Defeito',
+        type: 'Físico',
+        name: nosferatuFlawName,
+        level: 2,
+        fixo: true,
+        maxLevel: 5
+      })
+      hasUnsavedChanges.value = true
+      toast.info('Defeito Nosferatu', 'Defeito "Repulsivo" (••) adicionado automaticamente')
+    }
+  }
+  
+  // Se está mudando DE Nosferatu para outro clã, remover o defeito
+  if (oldClan === 'Nosferatu' && newClan !== 'Nosferatu') {
+    const flawIndex = sheetData.value.advantages.findIndex(
+      (adv: any) => adv.name === nosferatuFlawName && adv.fixo === true
+    )
+    
+    if (flawIndex !== -1) {
+      console.log('🦇 NOSFERATU: Removendo defeito Repulsivo - clã alterado')
+      sheetData.value.advantages.splice(flawIndex, 1)
+      hasUnsavedChanges.value = true
+      toast.info('Defeito Removido', 'Defeito "Repulsivo" removido ao trocar de clã')
+    }
   }
 })
 
@@ -1840,6 +1880,26 @@ watch(() => sheetData.value.clan, (newClan) => {
 onMounted(() => {
   // Usar função do composable para inicializar snapshot
   initializeSnapshot(props.player.sheet)
+  
+  // Verificar se é Nosferatu e adicionar defeito se necessário
+  if (sheetData.value.clan === 'Nosferatu') {
+    const nosferatuFlawName = 'Repulsivo'
+    const hasNosferatuFlaw = sheetData.value.advantages.some(
+      (adv: any) => adv.name === nosferatuFlawName && adv.fixo === true
+    )
+    
+    if (!hasNosferatuFlaw) {
+      console.log('🦇 NOSFERATU: Adicionando defeito Repulsivo (••) na carga inicial')
+      sheetData.value.advantages.push({
+        category: 'Defeito',
+        type: 'Físico',
+        name: nosferatuFlawName,
+        level: 2,
+        fixo: true,
+        maxLevel: 5
+      })
+    }
+  }
 })
 
 // Methods
@@ -2342,7 +2402,7 @@ const cancelClose = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--df-accent-red);
+  color: var(--df-text-gold);
   font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2358,7 +2418,7 @@ const cancelClose = () => {
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, var(--df-accent-red), var(--df-border-silver) 50%, transparent);
+  background: linear-gradient(90deg, var(--df-text-gold), var(--df-border-silver) 50%, transparent);
 }
 @media (min-width: 640px)  { .df-section-title { font-size: 1rem; } }
 @media (min-width: 768px)  { .df-section-title { font-size: 1.125rem; } }

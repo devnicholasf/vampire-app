@@ -807,16 +807,16 @@ useSeoMeta({
 .df-brand-title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--df-accent-red);
-  text-shadow: 0 0 20px var(--df-glow-red);
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
   letter-spacing: 0.04em;
 }
 
 /* ─── Section Title ─── */
 .df-section-title {
-  color: var(--df-accent-red);
+  color: var(--df-text-gold);
   font-weight: 800;
-  text-shadow: 0 0 16px var(--df-glow-red);
+  text-shadow: 0 0 16px rgba(212, 166, 71, 0.3);
 }
 
 /* ─── Buttons ─── */

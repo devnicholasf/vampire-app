@@ -217,6 +217,7 @@ import { useRoute, useRouter, definePageMeta } from '#imports'
 // ============================================
 import { useToast } from '~/composables/useToast'
 import { useCampaign } from '~/composables/useCampaign'
+import { useEvents } from '~/composables/useEvents'
 
 // ============================================
 // Type imports
@@ -287,7 +288,7 @@ const IconEvents: FunctionalComponent = () =>
 // Composables
 // ============================================
 const { success: toastSuccess, error: toastError } = useToast()
-const { getCampaignById, loading, error: campaignError } = useCampaign()
+const { getCampaignById, loadCampaignNPCs, loading, error: campaignError } = useCampaign()
 
 // ============================================
 // Page meta
@@ -363,6 +364,31 @@ const updateNpcsCount = (count: number) => {
 
 const updateEventsCount = (count: number) => {
   persistentEventsCount.value = count
+}
+
+const initializeCounts = async () => {
+  console.log('MASTER.VUE: Inicializando contadores...')
+  
+  try {
+    // Carregar NPCs
+    const npcsResult = await loadCampaignNPCs(campaignId)
+    if (npcsResult && Array.isArray(npcsResult)) {
+      persistentNpcsCount.value = npcsResult.length
+      console.log('MASTER.VUE: Contador de NPCs inicializado:', persistentNpcsCount.value)
+    }
+  } catch (err) {
+    console.error('MASTER.VUE: Erro ao carregar NPCs:', err)
+  }
+
+  try {
+    // Carregar Eventos usando o composable
+    const { events, fetchEvents } = useEvents(campaignId)
+    await fetchEvents()
+    persistentEventsCount.value = events.value.length
+    console.log('MASTER.VUE: Contador de eventos inicializado:', persistentEventsCount.value)
+  } catch (err) {
+    console.error('MASTER.VUE: Erro ao carregar eventos:', err)
+  }
 }
 
 const refreshCampaignData = async () => {
@@ -453,7 +479,14 @@ onMounted(async () => {
       } as any
 
       ;(campaign.value as any).campaign_players = campaignData.campaign_players || []
+      
+      // Inicializar contador de jogadores
+      persistentPlayersCount.value = (campaignData.campaign_players || []).length
+      console.log('MASTER.VUE: Contador de jogadores inicializado:', persistentPlayersCount.value)
     }
+
+    // Inicializar contadores de NPCs e Eventos
+    await initializeCounts()
 
     sessions.value = [
       {
@@ -508,8 +541,8 @@ onMounted(async () => {
 .df-brand-title {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--df-accent-red);
-  text-shadow: 0 0 20px var(--df-glow-red);
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
   letter-spacing: 0.04em;
 }
 
