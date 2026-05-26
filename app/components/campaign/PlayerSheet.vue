@@ -922,14 +922,65 @@
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-1.5.9-3.5.9-6 0z"/><path d="m2 16 3-8 3 8c-1.5.9-3.5.9-6 0z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
             Pilares &amp; Convicções
           </h3>
-          <textarea
-            v-model="sheetData.touchstonesConvictions"
-            rows="3"
-            placeholder="Suas crenças fundamentais, pilares de humanidade e conexões mortais..."
-            @input="hasUnsavedChanges = true"
-            :disabled="!canEdit"
-            class="df-input"
-          ></textarea>
+          
+          <div v-if="sheetData.touchstonesConvictions.length > 0" class="space-y-3">
+            <div v-for="(item, idx) in sheetData.touchstonesConvictions" :key="idx" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-df-muted mb-1.5 block uppercase tracking-wide">
+                  Convicção <span class="text-df-gold/60 normal-case">(Crença Fundamental)</span>
+                </label>
+                <input
+                  v-model="item.conviction"
+                  type="text"
+                  placeholder="Ex: A família está acima de tudo"
+                  @input="hasUnsavedChanges = true"
+                  :disabled="!canEdit"
+                  class="df-input w-full"
+                />
+              </div>
+              <div class="flex items-end gap-2">
+                <div class="flex-1">
+                  <label class="text-xs text-df-muted mb-1.5 block uppercase tracking-wide">
+                    Pilar <span class="text-df-gold/60 normal-case">(Conexão Mortal)</span>
+                  </label>
+                  <input
+                    v-model="item.pillar"
+                    type="text"
+                    placeholder="Ex: Minha irmã Sofia"
+                    @input="hasUnsavedChanges = true"
+                    :disabled="!canEdit"
+                    class="df-input w-full"
+                  />
+                </div>
+                <button
+                  v-if="canEdit"
+                  type="button"
+                  @click="removeConviction(Number(idx))"
+                  class="df-btn-remove pb-0.5"
+                  :disabled="!canEdit"
+                >
+                  <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none">
+                    <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center py-6 text-df-muted text-sm italic">
+            Nenhuma convicção ou pilar adicionado ainda.
+          </div>
+          
+          <BaseButton
+            v-if="canEdit"
+            variant="ghost"
+            @click="addConviction"
+            :disabled="sheetData.touchstonesConvictions.length >= 10"
+            class="w-full text-sm mt-3"
+            :class="{ 'opacity-50 cursor-not-allowed': sheetData.touchstonesConvictions.length >= 10 }"
+          >
+            + Adicionar Convicção &amp; Pilar ({{ sheetData.touchstonesConvictions.length }}/10)
+          </BaseButton>
         </div>
 
         <!-- Geração do Abraço -->
@@ -1090,13 +1141,13 @@
           >
             Continuar Editando
           </BaseButton>
-          <BaseButton 
-            variant="primary" 
+          <button
+            type="button"
             @click="confirmSave"
-            class="bg-green-600 hover:bg-green-500 text-white"
+            class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-900/50"
           >
             Sim, Salvar
-          </BaseButton>
+          </button>
         </div>
       </div>
     </div>
@@ -1773,7 +1824,9 @@ const sheetData = ref({
   resonance: props.player.sheet?.resonance || '',
   resonanceIntensity: props.player.sheet?.resonanceIntensity || '',
   resonanceDetails: props.player.sheet?.resonanceDetails || '',
-  touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
+  touchstonesConvictions: Array.isArray(props.player.sheet?.touchstonesConvictions) 
+    ? props.player.sheet.touchstonesConvictions 
+    : (props.player.sheet?.touchstonesConvictions ? [{ conviction: props.player.sheet.touchstonesConvictions, pillar: '' }] : []),
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
   advantages: props.player.sheet?.advantages || [],
   bloodPotency: props.player.sheet?.bloodPotency || 0,
@@ -2214,6 +2267,23 @@ const addCondition = () => {
 const removeCondition = (index: number) => {
   if (!props.canEdit) return
   sheetData.value.conditions.splice(index, 1)
+  hasUnsavedChanges.value = true
+}
+
+// Métodos para Pilares & Convicções
+const addConviction = () => {
+  if (!props.canEdit) return
+  if (sheetData.value.touchstonesConvictions.length >= 10) {
+    toast.warning('Limite máximo de 10 convicções atingido')
+    return
+  }
+  sheetData.value.touchstonesConvictions.push({ conviction: '', pillar: '' })
+  hasUnsavedChanges.value = true
+}
+
+const removeConviction = (index: number) => {
+  if (!props.canEdit) return
+  sheetData.value.touchstonesConvictions.splice(index, 1)
   hasUnsavedChanges.value = true
 }
 

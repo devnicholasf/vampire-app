@@ -189,7 +189,7 @@ export interface CharacterSheet {
   // Campos da ficha oficial V5
   resonance?: string // Ressonância
   chronicleTenets?: string // Princípios da Crônica
-  touchstonesConvictions?: string // Pilares & Convicções  
+  touchstonesConvictions?: Array<{ conviction: string; pillar: string }> // Pilares & Convicções V5
   clanBane?: string // Perdição do Clã
   advantages?: Array<{ name: string; level: number }> // Vantagens & Defeitos
   bloodPotency?: number // Potência de Sangue (0-10)
