@@ -448,9 +448,9 @@ const getInitials = (name: string) => {
 }
 
 const vampireClans = [
-  'Brujah', 'Gangrel', 'Malkavian', 'Nosferatu', 'Toreador',
-  'Tremere', 'Ventrue', 'Assamita', 'Followers of Set', 'Giovanni',
-  'Lasombra', 'Tzimisce', 'Caitiff', 'Thin-Blood'
+  'Banu Haqim', 'Brujah', 'Gangrel', 'Hecata', 'Lasombra',
+  'Malkavian', 'Nosferatu', 'O Ministério', 'Ravnos', 'Salubri',
+  'Toreador', 'Tremere', 'Tzimisce', 'Ventrue', 'Caitiff', 'Sangue Fraco'
 ]
 
 const vampireDisciplines = [
