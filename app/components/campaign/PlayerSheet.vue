@@ -905,14 +905,14 @@
           <h3 class="df-section-title">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10l4-4V5a2 2 0 00-2-2z"/><path d="M17 21v-4h4"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
             Princípios da Crônica
+            <span class="text-[10px] text-df-gold/60 font-normal ml-2">(Definido pelo Mestre)</span>
           </h3>
           <textarea
-            v-model="sheetData.chronicleTenets"
+            :value="campaignChronicTenets"
             rows="3"
-            placeholder="As regras e princípios da crônica que você deve seguir..."
-            @input="hasUnsavedChanges = true"
-            :disabled="!canEdit"
-            class="df-input"
+            placeholder="Aguardando princípios definidos pelo Mestre da crônica..."
+            disabled
+            class="df-input opacity-90 cursor-not-allowed"
           ></textarea>
         </div>
 
@@ -1523,18 +1523,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
 import { useToast } from '~/composables/useToast'
 import { clanBanes } from '~/config/clanBanes'
 import { vantagensDados, vampireClans } from '~/config/advantagesData'
 import { usePredatorSystem } from '~/composables/usePredatorSystem'
+import { useRuntimeConfig } from '#imports'
+import { createClient } from '@supabase/supabase-js'
 
 const toast = useToast()
+const config = useRuntimeConfig()
+const supabase = createClient(config.public.supabaseUrl as string, config.public.supabaseKey as string)
 
 // Props
 interface Props {
   player: any
+  campaignId: string
   canEdit: boolean
 }
 
@@ -1548,6 +1553,10 @@ const emit = defineEmits<{
 
 // Reactive data
 const hasUnsavedChanges = ref(false)
+
+// Princípios da Crônica (carregado da campanha, não editável pelo jogador)
+const campaignChronicTenets = ref<string>('')
+let campaignSubscription: any = null
 
 // Confirmation modal
 const showConfirmModal = ref(false)
@@ -1605,6 +1614,7 @@ const disciplineDescriptions: Record<string, string> = {
   'Ofuscação': 'Capacidade de permanecer obscuro e invisivel, mesmo em meio a multidões',
   'Potência': 'Força monstruosa capaz de esmagar ossos e rasgar aço.',
   'Presença': 'Magnetismo sobrenatural que inspira terror, adoração ou desejo.',
+  'Proteanismo': 'Transformação física em garras, forma bestial ou névoa, moldando o corpo vampírico.',
   'Tenebrosidade': 'Controle sobre trevas vivas que devoram luz e carne.',
   'Serpentis': 'Poderes ofídicos ancestrais dos seguidores de Set.',
   'Quietus': 'Assassinato silencioso através de venenos de sangue mortais.',
@@ -1635,6 +1645,8 @@ const getDisciplineIconPath = (discipline: string): string => {
     'Potência': 'M7 24h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm-8-4h2v-2H7v2zm4 0h2v-2h-2v2zm4 0h2v-2h-2v2zm-4-8H9v6h2v-2h2v-2h-2V12zm-2-2h2V8h2V6h-2V4h-2v2H9v2h2v2zm10 10h2v-2h-2v2z',
     // Presença - pessoas/grupo
     'Presença': 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+    // Proteanismo - garra/transformação
+    'Proteanismo': 'M21 5v6.59l-2.29-2.3c-1.54 1.54-3.6 2.39-5.83 2.39-2.23 0-4.29-.85-5.83-2.39L4.76 11.6C6.77 13.61 9.54 14.88 12.64 15v.02c.17 0 .34-.01.51-.02V19H9v2h6v-2h-1.64v-4.03c3.1-.17 5.88-1.44 7.89-3.46L23 13.24V5h-2zm-9 3c.83 0 1.5-.67 1.5-1.5S12.83 5 12 5s-1.5.67-1.5 1.5S11.17 8 12 8zm5-1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5S19.33 5 18.5 5 17 5.67 17 6.5z',
     // Tenebrosidade - lua/trevas
     'Tenebrosidade': 'M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54 0 4.48-2.94 8.27-7 9.54.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z',
     // Serpentis - ondas serpentinas
@@ -1673,6 +1685,7 @@ const vampireDisciplines = [
   'Ofuscação',
   'Potência',
   'Presença',
+  'Proteanismo',
   'Tenebrosidade',
   'Serpentis',
   'Quietus',
@@ -1760,7 +1773,6 @@ const sheetData = ref({
   resonance: props.player.sheet?.resonance || '',
   resonanceIntensity: props.player.sheet?.resonanceIntensity || '',
   resonanceDetails: props.player.sheet?.resonanceDetails || '',
-  chronicleTenets: props.player.sheet?.chronicleTenets || '',
   touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
   advantages: props.player.sheet?.advantages || [],
@@ -1926,8 +1938,49 @@ watch(() => sheetData.value.clan, (newClan, oldClan) => {
   }
 })
 
+// Função para buscar Princípios da Crônica da campanha
+const loadCampaignChronicTenets = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('overview')
+      .eq('id', props.campaignId)
+      .single()
+    
+    if (error) {
+      console.error('Erro ao carregar princípios da crônica:', error)
+      return
+    }
+    
+    if (data?.overview?.principles) {
+      campaignChronicTenets.value = data.overview.principles
+    }
+  } catch (err) {
+    console.error('Erro ao buscar princípios da crônica:', err)
+  }
+}
+
 // Salvar snapshot inicial ao carregar a ficha (para restaurar ao trocar de predador)
-onMounted(() => {
+onMounted(async () => {
+  // Buscar Princípios da Crônica da campanha
+  await loadCampaignChronicTenets()
+  
+  // Subscrever a mudanças em tempo real nos Princípios da Crônica
+  campaignSubscription = supabase
+    .channel(`campaign-${props.campaignId}-overview`)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'campaigns',
+      filter: `id=eq.${props.campaignId}`
+    }, (payload: any) => {
+      if (payload.new?.overview?.principles) {
+        campaignChronicTenets.value = payload.new.overview.principles
+        console.log('✅ Princípios da Crônica atualizados pelo Mestre')
+      }
+    })
+    .subscribe()
+  
   // Usar função do composable para inicializar snapshot
   initializeSnapshot(props.player.sheet)
   
@@ -1949,6 +2002,14 @@ onMounted(() => {
         maxLevel: 5
       })
     }
+  }
+})
+
+// Cleanup subscription quando componente for desmontado
+onBeforeUnmount(() => {
+  if (campaignSubscription) {
+    supabase.removeChannel(campaignSubscription)
+    console.log('🧹 Subscription de Princípios da Crônica removida')
   }
 })
 

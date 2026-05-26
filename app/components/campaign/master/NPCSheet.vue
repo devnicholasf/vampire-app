@@ -446,7 +446,7 @@ const vampireClans = [
 
 const vampireDisciplines = [
   'Animalismo', 'Auspícios', 'Celeridade', 'Dominação', 'Feitiçaria de Sangue',
-  'Fortitude', 'Metamorfose', 'Ofuscação', 'Potência', 'Presença',
+  'Fortitude', 'Metamorfose', 'Ofuscação', 'Potência', 'Presença', 'Proteanismo',
   'Tenebrosidade', 'Serpentis', 'Quietus', 'Quimerismo', 'Vicissitude'
 ]
 

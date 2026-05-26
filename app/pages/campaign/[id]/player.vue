@@ -34,6 +34,7 @@
       v-if="showCharacterSheet && myCharacter"
       :key="sheetKey"
       :player="myCharacter"
+      :campaign-id="campaignId"
       :canEdit="true"
       @close="closeCharacterSheet"
       @save="saveCharacterSheet"

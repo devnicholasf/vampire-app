@@ -174,6 +174,7 @@
       <PlayerSheet
         v-if="viewingPlayerSheet"
         :player="viewingPlayerSheet"
+        :campaign-id="props.campaignId"
         :canEdit="false"
         @close="closePlayerSheet"
         @save="savePlayerSheet"
