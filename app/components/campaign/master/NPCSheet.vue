@@ -72,7 +72,7 @@
                 </select>
               </div>
             </div>
-            <div class="grid grid-cols-3 gap-3 mt-3">
+            <div class="grid grid-cols-2 gap-3 mt-3">
               <div>
                 <label class="df-label">Geração <span class="text-red-400">*</span></label>
                 <input v-model.number="sheetData.generation" type="number" min="3" max="15" required :disabled="!editMode" class="df-input" />
@@ -87,23 +87,35 @@
                   <option value="Independente">Independente</option>
                 </select>
               </div>
-              <div>
-                <label class="df-label">Refúgio</label>
-                <input v-model="sheetData.haven" placeholder="Local do refúgio" :disabled="!editMode" class="df-input" />
-              </div>
             </div>
             <div class="grid grid-cols-3 gap-3 mt-3">
               <div>
-                <label class="df-label">Comportamento</label>
-                <input v-model="sheetData.demeanor" placeholder="Ex: Rebelde" :disabled="!editMode" class="df-input" />
+                <label class="df-label">Predador</label>
+                <select v-model="sheetData.predator" :disabled="!editMode" class="df-input">
+                  <option value="">Selecionar</option>
+                  <option value="Consensualista">Consensualista</option>
+                  <option value="Fazendeiro" :disabled="sheetData.clan === 'Ventrue'">
+                    Fazendeiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
+                  </option>
+                  <option value="Osiris">Osiris</option>
+                  <option value="Sacoleiro" :disabled="sheetData.clan === 'Ventrue'">
+                    Sacoleiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
+                  </option>
+                  <option value="Sandman">Sandman</option>
+                  <option value="Sanguessuga">Sanguessuga</option>
+                  <option value="Scene Queen">Scene Queen</option>
+                  <option value="Sereia">Sereia</option>
+                  <option value="Trinchador">Trinchador</option>
+                  <option value="Vira-Lata">Vira-Lata</option>
+                </select>
               </div>
               <div>
-                <label class="df-label">Natureza</label>
-                <input v-model="sheetData.nature" placeholder="Ex: Sobrevivente" :disabled="!editMode" class="df-input" />
+                <label class="df-label">Ambição</label>
+                <input v-model="sheetData.ambition" placeholder="Ambição do NPC" :disabled="!editMode" class="df-input" />
               </div>
               <div>
-                <label class="df-label">Jogador</label>
-                <input v-model="sheetData.player" :disabled="!editMode" class="df-input" />
+                <label class="df-label">Desejo</label>
+                <input v-model="sheetData.desire" placeholder="Desejo do NPC" :disabled="!editMode" class="df-input" />
               </div>
             </div>
           </div>
@@ -295,27 +307,6 @@
                 </div>
               </div>
 
-              <!-- Experience -->
-              <div class="df-card mt-3">
-                <h3 class="df-section-title">
-                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M2 9h20"/><path d="M12 22L6 9"/><path d="M12 22l6-13"/></svg>
-                  Experiência
-                </h3>
-                <div class="grid grid-cols-3 gap-3">
-                  <div>
-                    <label class="df-sub-label">Total</label>
-                    <input v-model.number="sheetData.xpTotal" type="number" min="0" placeholder="0" :disabled="!editMode" class="df-input" />
-                  </div>
-                  <div>
-                    <label class="df-sub-label">Gasto</label>
-                    <input v-model.number="sheetData.xpSpent" type="number" min="0" placeholder="0" :disabled="!editMode" class="df-input" />
-                  </div>
-                  <div>
-                    <label class="df-sub-label">Disponível</label>
-                    <input :value="(sheetData.xpTotal || 0) - (sheetData.xpSpent || 0)" type="number" disabled class="df-input" />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -344,19 +335,19 @@
                 <div class="flex justify-between items-center">
                   <label class="df-attr-label">Humanidade</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
-                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.humanity = n" :disabled="!editMode" :class="['df-dot df-dot-sm', n <= sheetData.humanity ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
+                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.humanity = n" :disabled="!editMode" :class="['df-dot df-dot-sm df-dot-gold', n <= sheetData.humanity ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <label class="df-attr-label">Força de Vontade</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
-                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.willpower = n" :disabled="!editMode" :class="['df-dot df-dot-sm df-dot-blue', n <= sheetData.willpower ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
+                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.willpower = n" :disabled="!editMode" :class="['df-dot df-dot-sm df-dot-gold', n <= sheetData.willpower ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <label class="df-attr-label">Vitalidade</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
-                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.vitality = n" :disabled="!editMode" :class="['df-dot df-dot-sm df-dot-green', n <= sheetData.vitality ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
+                    <button v-for="n in 10" :key="n" type="button" @click="sheetData.vitality = n" :disabled="!editMode" :class="['df-dot df-dot-sm df-dot-gold', n <= sheetData.vitality ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
                   </div>
                 </div>
               </div>
@@ -467,12 +458,12 @@ const physicalAttributes = [
 const socialAttributes = [
   { key: 'charisma', name: 'Carisma' },
   { key: 'manipulation', name: 'Manipulação' },
-  { key: 'appearance', name: 'Aparência' }
+  { key: 'composure', name: 'Autocontrole' }
 ]
 const mentalAttributes = [
-  { key: 'perception', name: 'Percepção' },
   { key: 'intelligence', name: 'Inteligência' },
-  { key: 'wits', name: 'Raciocínio' }
+  { key: 'wits', name: 'Raciocínio' },
+  { key: 'resolve', name: 'Determinação' }
 ]
 
 const talents = [
@@ -523,10 +514,9 @@ const sheetData = ref({
   clan: existingSheet?.clan || props.npc.clan || '',
   generation: existingSheet?.generation || props.npc.generation || 13,
   sect: existingSheet?.sect || '',
-  haven: existingSheet?.haven || '',
-  demeanor: existingSheet?.demeanor || '',
-  nature: existingSheet?.nature || '',
-  player: existingSheet?.player || '',
+  predator: existingSheet?.predator || '',
+  ambition: existingSheet?.ambition || '',
+  desire: existingSheet?.desire || '',
   avatar: existingSheet?.avatar || props.npc.photo || '',
   keyPoints: (props.npc.keyPoints && props.npc.keyPoints.length > 0) ? [...props.npc.keyPoints] : [''],
   advantages: existingSheet?.advantages || [{ name: '', level: 0 }],
@@ -535,14 +525,12 @@ const sheetData = ref({
   powerBonus: existingSheet?.powerBonus || '0',
   feedingPenalty: existingSheet?.feedingPenalty || 'Sem Penalidade',
   baneSeverity: existingSheet?.baneSeverity || '0',
-  xpTotal: existingSheet?.xpTotal || 0,
-  xpSpent: existingSheet?.xpSpent || 0,
   embraceGeneration: existingSheet?.embraceGeneration || '',
   history: existingSheet?.history || props.npc.bio || '',
   attributes: existingSheet?.attributes || {
     physical: { strength: 1, dexterity: 1, stamina: 1 },
-    social: { charisma: 1, manipulation: 1, appearance: 1 },
-    mental: { perception: 1, intelligence: 1, wits: 1 }
+    social: { charisma: 1, manipulation: 1, composure: 1 },
+    mental: { intelligence: 1, wits: 1, resolve: 1 }
   },
   skills: existingSheet?.skills || {
     talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
@@ -706,13 +694,13 @@ const handleClose = () => { emit('close') }
 
 .df-section-title {
   display: flex; align-items: center; gap: 0.5rem;
-  color: var(--df-accent-red); font-size: 0.875rem; font-weight: 700;
+  color: var(--df-text-gold); font-size: 0.875rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.05em;
   margin-bottom: 0.75rem; padding-bottom: 0.5rem; position: relative;
 }
 .df-section-title::after {
   content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 1px;
-  background: linear-gradient(90deg, var(--df-accent-red), var(--df-border-silver) 50%, transparent);
+  background: linear-gradient(90deg, var(--df-text-gold), var(--df-border-silver) 50%, transparent);
 }
 @media (min-width: 640px) { .df-section-title { font-size: 1rem; } }
 @media (min-width: 768px) { .df-section-title { font-size: 1.125rem; } }

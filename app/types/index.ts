@@ -180,8 +180,9 @@ export interface CharacterSheet {
   generation: number
   sect: string
   haven: string
-  demeanor?: string // Comportamento
-  nature?: string // Natureza
+  predator?: string // Tipo de Predador (V5)
+  ambition?: string // Ambição (V5)
+  desire?: string // Desejo (V5)
   player: string
   avatar?: string // Avatar base64
   
@@ -205,8 +206,8 @@ export interface CharacterSheet {
   
   attributes: {
     physical: { strength: number; dexterity: number; stamina: number }
-    social: { charisma: number; manipulation: number; appearance: number }
-    mental: { perception: number; intelligence: number; wits: number }
+    social: { charisma: number; manipulation: number; composure: number }
+    mental: { intelligence: number; wits: number; resolve: number }
   }
   skills: {
     talents: Record<string, number>

@@ -26,10 +26,10 @@
       </select>
       <select v-if="groupBy === 'status'" v-model="groupFilter" class="df-filter-select">
         <option value="">Todos os status</option>
-        <option value="active">Ativo</option>
-        <option value="dead">Morto</option>
-        <option value="missing">Desaparecido</option>
-        <option value="traitor">Traidor</option>
+        <option value="Ativo">Ativo</option>
+        <option value="Desaparecido">Desaparecido</option>
+        <option value="Caçado">Caçado</option>
+        <option value="Traidor">Traidor</option>
       </select>
       <select v-if="groupBy === 'sect'" v-model="groupFilter" class="df-filter-select">
         <option value="">Todas as seitas</option>
@@ -233,22 +233,52 @@ const availableClans = computed(() => {
   return [...new Set(clans)].sort()
 })
 
+// Helper para normalizar status (suporta inglês e português)
+const normalizeStatus = (status: string | undefined): string => {
+  if (!status) return ''
+  const normalized: Record<string, string> = {
+    'active': 'Ativo',
+    'dead': 'Morto',
+    'missing': 'Desaparecido',
+    'traitor': 'Traidor',
+    'hunted': 'Caçado'
+  }
+  return normalized[status.toLowerCase()] || status
+}
+
 const filteredNPCs = computed(() => {
   let list = sortedNPCs.value
   if (groupBy.value && groupFilter.value) {
-    if (groupBy.value === 'status') list = list.filter(n => n.status === groupFilter.value)
+    if (groupBy.value === 'status') {
+      // Comparar status normalizado
+      list = list.filter(n => normalizeStatus(n.status) === groupFilter.value)
+    }
     else if (groupBy.value === 'sect') list = list.filter(n => n.sect === groupFilter.value)
     else if (groupBy.value === 'clan') list = list.filter(n => (typeof n.clan === 'string' ? n.clan : '') === groupFilter.value)
   }
   return list
 })
 
-const statusLabel = (s: string) => ({ active: 'Ativo', dead: 'Morto', missing: 'Desaparecido', traitor: 'Traidor' }[s] || s)
+const statusLabel = (s: string) => ({ 
+  active: 'Ativo', 
+  dead: 'Morto', 
+  missing: 'Desaparecido', 
+  traitor: 'Traidor',
+  'Ativo': 'Ativo',
+  'Desaparecido': 'Desaparecido',
+  'Caçado': 'Caçado',
+  'Traidor': 'Traidor'
+}[s] || s)
+
 const statusBadgeClass = (s: string) => ({
-  active: 'bg-emerald-900/40 text-emerald-400 border border-emerald-700/50',
-  dead: 'bg-red-900/40 text-red-400 border border-red-700/50',
-  missing: 'bg-amber-900/40 text-amber-400 border border-amber-700/50',
-  traitor: 'bg-purple-900/40 text-purple-400 border border-purple-700/50',
+  active: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/20',
+  'Ativo': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/20',
+  dead: 'bg-zinc-800/80 text-zinc-400 border border-zinc-600/50 shadow-lg shadow-zinc-900/30',
+  missing: 'bg-zinc-500/20 text-zinc-300 border border-zinc-400/50 shadow-lg shadow-zinc-500/20',
+  'Desaparecido': 'bg-zinc-500/20 text-zinc-300 border border-zinc-400/50 shadow-lg shadow-zinc-500/20',
+  'Caçado': 'bg-amber-500/20 text-amber-400 border border-amber-500/50 shadow-lg shadow-amber-500/20',
+  traitor: 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20',
+  'Traidor': 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20',
 }[s] || 'bg-gray-900/40 text-gray-400 border border-gray-700/50')
 
 const showCreateModal = ref(false)

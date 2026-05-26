@@ -104,12 +104,26 @@ withDefaults(defineProps<Props>(), {
 })
 defineEmits<{ close: []; edit: [npc: NPC]; addToGame: [npc: NPC] }>()
 
-const statusLabel = (s: string) => ({ active: 'Ativo', dead: 'Morto', missing: 'Desaparecido', traitor: 'Traidor' }[s] || s)
+const statusLabel = (s: string) => ({ 
+  active: 'Ativo', 
+  dead: 'Morto', 
+  missing: 'Desaparecido', 
+  traitor: 'Traidor',
+  'Ativo': 'Ativo',
+  'Desaparecido': 'Desaparecido',
+  'Caçado': 'Caçado',
+  'Traidor': 'Traidor'
+}[s] || s)
+
 const statusBadgeClass = (s: string) => ({
-  active: 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50',
-  dead: 'bg-red-900/60 text-red-300 border border-red-700/50',
-  missing: 'bg-amber-900/60 text-amber-300 border border-amber-700/50',
-  traitor: 'bg-purple-900/60 text-purple-300 border border-purple-700/50'
+  active: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/20',
+  'Ativo': 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 shadow-lg shadow-emerald-500/20',
+  dead: 'bg-zinc-800/80 text-zinc-400 border border-zinc-600/50 shadow-lg shadow-zinc-900/30',
+  missing: 'bg-zinc-500/20 text-zinc-300 border border-zinc-400/50 shadow-lg shadow-zinc-500/20',
+  'Desaparecido': 'bg-zinc-500/20 text-zinc-300 border border-zinc-400/50 shadow-lg shadow-zinc-500/20',
+  'Caçado': 'bg-amber-500/20 text-amber-400 border border-amber-500/50 shadow-lg shadow-amber-500/20',
+  traitor: 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20',
+  'Traidor': 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20'
 }[s] || 'bg-df-deep text-df-muted border border-df-border-silver')
 
 </script>
