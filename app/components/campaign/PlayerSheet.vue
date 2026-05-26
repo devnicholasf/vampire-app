@@ -870,6 +870,34 @@
               </select>
             </div>
           </div>
+
+          <!-- Mensagem de Bônus (aparece apenas para Intensa/Aguda) -->
+          <div
+            v-if="resonanceBonus"
+            class="mt-3 p-3 bg-df-input border border-df-gold/30 rounded-lg"
+          >
+            <p class="text-sm text-df-gold font-medium">
+              {{ resonanceBonus }}
+            </p>
+          </div>
+
+          <!-- Detalhes da Ressonância / Discrasia -->
+          <div v-if="sheetData.resonanceIntensity === 'Discrasia'" class="mt-3">
+            <label class="text-xs text-df-muted mb-1.5 block">
+              Detalhes / Observações
+              <span class="text-df-gold">
+                (Descreva o efeito mecânico ou bônus narrativo da Discrasia)
+              </span>
+            </label>
+            <textarea
+              v-model="sheetData.resonanceDetails"
+              rows="2"
+              placeholder="Caso a intensidade seja uma Discrasia, descreva aqui o efeito mecânico ou bônus narrativo recebido da sua presa."
+              @input="hasUnsavedChanges = true"
+              :disabled="!canEdit"
+              class="df-input"
+            ></textarea>
+          </div>
         </div>
 
         <!-- Princípios da Crônica -->
@@ -1731,6 +1759,7 @@ const sheetData = ref({
   // Novos campos da ficha oficial V5
   resonance: props.player.sheet?.resonance || '',
   resonanceIntensity: props.player.sheet?.resonanceIntensity || '',
+  resonanceDetails: props.player.sheet?.resonanceDetails || '',
   chronicleTenets: props.player.sheet?.chronicleTenets || '',
   touchstonesConvictions: props.player.sheet?.touchstonesConvictions || '',
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
@@ -1810,6 +1839,27 @@ const {
 
 // Validação para habilitar o botão de confirmar (usar função do composable)
 const canConfirmPredatorChoices = computed(() => canConfirmPredatorChoice())
+
+// Computed para mensagem de bônus de Ressonância
+const resonanceBonus = computed(() => {
+  const intensity = sheetData.value.resonanceIntensity
+  const type = sheetData.value.resonance
+  
+  // Só mostra bônus se intensidade for Intensa ou Aguda
+  if (intensity !== 'Intensa' && intensity !== 'Aguda') {
+    return null
+  }
+  
+  const bonuses: Record<string, string> = {
+    'Colérica': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Rapidez e Potência.',
+    'Melancólica': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Auspícios e Fortitude.',
+    'Flegmática': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Dominação e Ofuscação.',
+    'Sanguínea': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Feitiçaria de Sangue e Presença.',
+    'Animal': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Animalismo e Metamorfose.'
+  }
+  
+  return bonuses[type] || null
+})
 
 // Inicializar previousPredatorType com o valor atual (evita abrir modal na carga)
 previousPredatorType.value = props.player.sheet?.predator || ''
