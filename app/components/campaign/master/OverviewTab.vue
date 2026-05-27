@@ -258,6 +258,55 @@
 					</div>
 				</div>
 
+				<!-- Widget: Controle Territorial por Facção -->
+				<div class="df-card">
+					<div class="df-card-corner df-card-corner-tl"></div>
+					<div class="df-card-corner df-card-corner-tr"></div>
+					<div class="df-card-corner df-card-corner-bl"></div>
+					<div class="df-card-corner df-card-corner-br"></div>
+					<div class="relative z-10">
+						<div class="flex items-center gap-2 mb-4 pb-3 border-b border-df-border-red/30">
+							<svg class="w-4 h-4 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+								<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+								<polyline points="9 22 9 12 15 12 15 22"/>
+							</svg>
+							<h4 class="text-sm font-bold text-df-gold uppercase tracking-wider">Controle Territorial</h4>
+						</div>
+						<div v-if="loadingPolitics" class="flex items-center gap-2 text-df-muted text-xs py-2">
+							<svg class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+							Carregando...
+						</div>
+						<div v-else-if="factionRanking.length > 0">
+							<ul class="space-y-1.5 mb-4">
+								<li v-for="(faction, idx) in factionRanking" :key="faction.name" class="flex items-center gap-2 text-xs">
+									<span class="text-[10px] text-df-muted font-bold w-3 text-center">{{ idx + 1 }}</span>
+									<span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: faction.color }"></span>
+									<span class="text-df-silver flex-1 truncate font-medium">{{ faction.name }}</span>
+									<span class="text-[10px] font-bold" :style="{ color: faction.color }">{{ faction.relativePercent }}%</span>
+								</li>
+							</ul>
+							<div class="flex rounded-full overflow-hidden h-2 mb-2">
+								<div 
+									v-for="faction in factionRanking" 
+									:key="faction.name"
+									:style="{ width: faction.relativePercent + '%', background: faction.color }"
+								></div>
+							</div>
+							<div class="flex flex-wrap gap-x-3 gap-y-0.5">
+								<span 
+									v-for="faction in factionRanking" 
+									:key="faction.name"
+									class="text-[10px]" 
+									:style="{ color: faction.color }"
+								>
+									{{ faction.relativePercent }}% {{ faction.name }}
+								</span>
+							</div>
+						</div>
+						<p v-else class="text-df-muted text-xs italic">Nenhuma facção definida nos territórios.</p>
+					</div>
+				</div>
+
 			</div>
 			<!-- /Col direita -->
 
@@ -298,9 +347,17 @@ const toast = useToast()
 const editMode = ref(false)
 
 // ── Politics data (para widgets) ──
+interface TerritoryInfluence {
+	faction: string
+	customName?: string
+	percent: number
+	color: string
+}
+
 interface TerritoryZone {
 	name: string
 	status: 'stable' | 'contested' | 'war' | 'abandoned'
+	influences: TerritoryInfluence[]
 }
 interface GovernmentRole {
 	title: string
@@ -431,6 +488,51 @@ const statusLabel = (status: string) => {
 		stable: 'Estável', contested: 'Contestado', war: 'Em Guerra', abandoned: 'Abandonado'
 	}
 	return map[status] ?? status
+}
+
+// ── Faction ranking computeds ──
+const factionRanking = computed(() => {
+	const factionTotals = new Map<string, { name: string; color: string; totalPercent: number }>()
+	
+	for (const zone of territoryZones.value) {
+		if (!zone.influences) continue
+		
+		for (const inf of zone.influences) {
+			const displayName = inf.faction === '➕ Outros' || isCustomFaction(inf.faction) 
+				? (inf.customName || 'Facção')
+				: inf.faction
+			
+			if (!displayName || displayName === 'Facção') continue
+			
+			const existing = factionTotals.get(displayName)
+			if (existing) {
+				existing.totalPercent += inf.percent
+			} else {
+				factionTotals.set(displayName, {
+					name: displayName,
+					color: inf.color || '#6b7280',
+					totalPercent: inf.percent
+				})
+			}
+		}
+	}
+	
+	// Calcular porcentagem relativa do total geral
+	const totalControl = Array.from(factionTotals.values())
+		.reduce((sum, f) => sum + f.totalPercent, 0)
+	
+	return Array.from(factionTotals.values())
+		.map(f => ({
+			...f,
+			relativePercent: totalControl > 0 ? Math.round((f.totalPercent / totalControl) * 100) : 0
+		}))
+		.sort((a, b) => b.totalPercent - a.totalPercent)
+		.slice(0, 5) // Top 5
+})
+
+const isCustomFaction = (factionName: string) => {
+	const predefinedFactions = ['Camarilla', 'Anarquista', 'Sabá', 'Independentes', 'Lupinos / Lobisomens', 'Segunda Inquisição (SI)', '➕ Outros']
+	return factionName && !predefinedFactions.includes(factionName)
 }
 
 // ── Load politics data (widgets) ──
