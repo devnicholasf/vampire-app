@@ -162,83 +162,137 @@
         </div>
       </div>
 
-      <!-- Zone cards (below the map) -->
-      <div v-if="modelValue.length > 0" class="tm-zone-cards-list">
-        <div
-          v-for="(zone, zi) in modelValue" :key="'zcard' + zi"
-          class="tm-zone-card-view"
-          :class="{ 'tm-zone-card-view-active': selectedZone === zi }"
-          :style="{ borderColor: selectedZone === zi ? getStatusConf(zone.status).color : undefined }"
-          @click="selectedZone = selectedZone === zi ? -1 : zi"
-        >
-          <!-- Row 1: color dot + name + status badge -->
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="w-3 h-3 rounded-sm flex-shrink-0" :style="{ background: getStatusConf(zone.status).color }"></span>
-            <span class="text-df-gold font-bold text-xs uppercase tracking-wider">{{ zone.name || 'Território' }}</span>
-            <span
-              class="tm-status-badge-sm"
-              :style="{ color: getStatusConf(zone.status).color, background: getStatusConf(zone.status).bg, borderColor: getStatusConf(zone.status).border }"
-            >
-              {{ getStatusConf(zone.status).emoji }} {{ getStatusConf(zone.status).label }}
-            </span>
-          </div>
+      <!-- Zone cards layout: Lista Principal + Legenda -->
+      <div v-if="modelValue.length > 0" class="flex gap-4 items-start mt-6">
+        
+        <!-- COLUNA PRINCIPAL: Lista de Territórios (78%) -->
+        <div class="flex-1 tm-zone-cards-list">
+          <div
+            v-for="(zone, zi) in modelValue" :key="'zcard' + zi"
+            class="mb-3"
+            @click="selectedZone = selectedZone === zi ? -1 : zi"
+          >
+            <!-- ══ View mode: horizontal layout ══ -->
+            <template v-if="!editing">
+              <div class="flex gap-3">
+                
+                <!-- BLOCO 1: Nome + Barra de Progresso -->
+                <div 
+                  class="df-card flex-1 p-4 transition-all duration-200 cursor-pointer"
+                  :class="{ 'ring-2 ring-offset-2 ring-offset-[#0a0a1a]': selectedZone === zi }"
+                  :style="selectedZone === zi ? { '--tw-ring-color': getStatusConf(zone.status).color } : {}"
+                >
+                  <div class="df-card-corner df-card-corner-tl"></div>
+                  <div class="df-card-corner df-card-corner-tr"></div>
+                  <div class="df-card-corner df-card-corner-bl"></div>
+                  <div class="df-card-corner df-card-corner-br"></div>
+                  
+                  <div class="relative z-10 space-y-3">
+                    <!-- Linha 1: Bolinha + Nome -->
+                    <div class="flex items-center gap-2.5">
+                      <span 
+                        class="w-3 h-3 rounded-full flex-shrink-0" 
+                        :style="{ background: getStatusConf(zone.status).color }"
+                      ></span>
+                      <span class="text-df-gold font-bold text-base uppercase tracking-wide truncate">
+                        {{ zone.name || 'Território' }}
+                      </span>
+                    </div>
+                    
+                    <!-- Linha 2: Dominante (subtítulo) -->
+                    <div v-if="getDominantFaction(zone)" class="text-sm">
+                      <span class="text-df-silver/60">Dominante: </span>
+                      <span class="font-semibold" :style="{ color: getDominantFaction(zone)!.color }">
+                        {{ getFactionDisplayName(getDominantFaction(zone)!) }}
+                      </span>
+                    </div>
 
-          <!-- ══ View mode: info rows ══ -->
-          <template v-if="!editing">
-            <!-- Dominant faction -->
-            <div v-if="getDominantFaction(zone)" class="flex items-center gap-2 mt-3">
-              <span class="text-[10px] text-df-muted">Dominante:</span>
-              <span class="text-xs font-bold" :style="{ color: getDominantFaction(zone)!.color }">{{ getFactionDisplayName(getDominantFaction(zone)!) }}</span>
-              <span class="text-[10px] text-df-silver">({{ getDominantFaction(zone)!.percent }}%)</span>
-            </div>
-
-            <!-- Segmented influence bar + legend side by side -->
-            <div v-if="zone.influences.length > 0" class="flex items-start gap-6 mt-3">
-              <div class="tm-seg-bar-wrap flex-1" style="max-width: 50%;">
-                <div class="tm-seg-bar">
-                  <div
-                    v-for="(inf, ii) in [...zone.influences].sort((a, b) => b.percent - a.percent)" :key="'vseg' + ii"
-                    class="tm-seg-bar-piece"
-                    :class="{ 'tm-seg-bar-piece-dim': hoveredSegment >= 0 && selectedZone === zi && hoveredSegment !== ii }"
-                    :style="{ width: inf.percent + '%', background: inf.color }"
-                    @mouseenter="selectedZone = zi; hoveredSegment = ii"
-                    @mouseleave="hoveredSegment = -1"
-                  >
-                    <div v-if="hoveredSegment === ii && selectedZone === zi" class="tm-seg-tooltip">
-                      <span class="font-bold" :style="{ color: inf.color }">{{ getFactionDisplayName(inf) }}</span>
-                      <span class="text-df-silver font-bold">{{ inf.percent }}%</span>
+                    <!-- Barra de progresso -->
+                    <div v-if="zone.influences.length > 0" class="tm-seg-bar-horizontal">
+                      <div
+                        v-for="(inf, ii) in [...zone.influences].sort((a, b) => b.percent - a.percent)" :key="'hseg' + ii"
+                        class="tm-seg-bar-piece-horizontal"
+                        :class="{ 'tm-seg-bar-piece-dim': hoveredSegment >= 0 && selectedZone === zi && hoveredSegment !== ii }"
+                        :style="{ width: inf.percent + '%', background: inf.color }"
+                        @mouseenter="selectedZone = zi; hoveredSegment = ii"
+                        @mouseleave="hoveredSegment = -1"
+                      >
+                        <div v-if="hoveredSegment === ii && selectedZone === zi" class="tm-seg-tooltip-horizontal">
+                          <span class="font-bold text-[10px]" :style="{ color: inf.color }">{{ getFactionDisplayName(inf) }}</span>
+                          <span class="text-df-silver font-bold text-[10px]">{{ inf.percent }}%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <!-- Legend (sorted by percent desc) -->
-              <div class="flex flex-col gap-1">
-                <div v-for="(inf, ii) in [...zone.influences].sort((a, b) => b.percent - a.percent)" :key="'leg' + ii" class="flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" :style="{ background: inf.color }"></span>
-                  <span class="text-[10px] font-semibold" :style="{ color: inf.color }">{{ getFactionDisplayName(inf) }}</span>
-                  <span class="text-[10px] text-df-silver">({{ inf.percent }}%)</span>
+
+                <!-- BLOCO 2: Lista de Facções com Porcentagens -->
+                <div 
+                  class="df-card flex-shrink-0 w-56 p-4 transition-all duration-200 cursor-pointer"
+                  :class="{ 'ring-2 ring-offset-2 ring-offset-[#0a0a1a]': selectedZone === zi }"
+                  :style="selectedZone === zi ? { '--tw-ring-color': getStatusConf(zone.status).color } : {}"
+                >
+                  <div class="df-card-corner df-card-corner-tl"></div>
+                  <div class="df-card-corner df-card-corner-tr"></div>
+                  <div class="df-card-corner df-card-corner-bl"></div>
+                  <div class="df-card-corner df-card-corner-br"></div>
+                  
+                  <div class="relative z-10 space-y-2.5">
+                    <div v-for="(inf, ii) in [...zone.influences].sort((a, b) => b.percent - a.percent)" :key="'fact' + ii" class="flex items-center justify-between">
+                      <span class="text-sm font-semibold truncate flex-1" :style="{ color: inf.color }">
+                        {{ getFactionDisplayName(inf) }}
+                      </span>
+                      <span class="text-sm font-bold ml-3" :style="{ color: inf.color }">
+                        {{ inf.percent }}%
+                      </span>
+                    </div>
+                  </div>
                 </div>
+
               </div>
-            </div>
+            </template>
 
-            <!-- Description preview -->
-            <p v-if="zone.description" class="text-df-muted text-[10px] italic mt-3 line-clamp-2">{{ zone.description }}</p>
+            <!-- ══ Edit mode: show header always, expand details when selected ══ -->
+            <template v-if="editing">
+              <div class="df-card p-3">
+                <div class="df-card-corner df-card-corner-tl"></div>
+                <div class="df-card-corner df-card-corner-tr"></div>
+                <div class="df-card-corner df-card-corner-bl"></div>
+                <div class="df-card-corner df-card-corner-br"></div>
+                
+                <div class="relative z-10">
+                  <!-- Header Premium (sempre visível em modo edição) -->
+                  <div class="flex items-center justify-between py-1 cursor-pointer" @click.stop="selectedZone = selectedZone === zi ? -1 : zi">
+                    <div class="flex items-center gap-2.5">
+                      <span 
+                        class="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                        :style="{ background: getStatusConf(zone.status).color }"
+                      ></span>
+                      <span class="text-df-gold font-bold text-sm uppercase tracking-wide">
+                        {{ zone.name || 'Território' }}
+                      </span>
+                    </div>
+                    <svg 
+                      class="w-4 h-4 text-df-silver transition-transform duration-200" 
+                      :class="{ 'rotate-180': selectedZone === zi }"
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      stroke-width="2"
+                    >
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </div>
 
-            <!-- Status badge -->
-            <div class="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border" :style="{ borderColor: getStatusConf(zone.status).border, background: getStatusConf(zone.status).bg }">
-              <span class="text-[10px]" :style="{ color: getStatusConf(zone.status).color }">{{ getStatusConf(zone.status).emoji }} {{ getStatusConf(zone.status).label }}</span>
-            </div>
-          </template>
-
-          <!-- ══ Edit mode: editable fields (expanded when selected) ══ -->
-          <div v-if="editing && selectedZone === zi" class="tm-zone-card-body mt-3">
-            <div class="space-y-2">
-              <div class="flex gap-2 items-center">
-                <input v-model="zone.name" class="df-input text-xs flex-1" placeholder="Nome do bairro / distrito..." @click.stop />
-                <div class="px-3 py-1.5 rounded border flex items-center gap-1.5" :style="{ borderColor: getStatusConf(zone.status).border, background: getStatusConf(zone.status).bg }">
-                  <span class="text-xs" :style="{ color: getStatusConf(zone.status).color }">{{ getStatusConf(zone.status).emoji }}</span>
+                  <!-- Campos editáveis (expandem quando selecionado) -->
+                  <div v-if="selectedZone === zi" class="tm-zone-card-body mt-3">
+              <div class="space-y-2">
+                <div class="flex gap-2 items-center">
+                  <input v-model="zone.name" class="df-input text-xs flex-1" placeholder="Nome do bairro / distrito..." @click.stop />
+                  <div class="px-3 py-1.5 rounded border flex items-center gap-1.5" :style="{ borderColor: getStatusConf(zone.status).border, background: getStatusConf(zone.status).bg }">
+                    <span class="text-xs" :style="{ color: getStatusConf(zone.status).color }">{{ getStatusConf(zone.status).emoji }}</span>
+                  </div>
                 </div>
-              </div>
 
               <!-- Status selector -->
               <div @click.stop>
@@ -324,14 +378,52 @@
                   + Facção
                 </button>
               </div>
+            </div>
 
-              <button @click.stop="removeZone(zi)" class="mt-2 w-full py-1.5 border border-df-red/40 rounded text-df-red text-xs hover:bg-df-red/10 transition-colors flex items-center justify-center gap-1.5">
-                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                Remover Zona
-              </button>
+            <button @click.stop="removeZone(zi)" class="mt-2 w-full py-1.5 border border-df-red/40 rounded text-df-red text-xs hover:bg-df-red/10 transition-colors flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              Remover Zona
+            </button>
+          </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+        
+        <!-- COLUNA LATERAL: Legenda de Status (22%) -->
+        <div v-if="!editing" class="w-56 flex-shrink-0">
+          <div class="df-card p-5">
+            <div class="df-card-corner df-card-corner-tl"></div>
+            <div class="df-card-corner df-card-corner-tr"></div>
+            <div class="df-card-corner df-card-corner-bl"></div>
+            <div class="df-card-corner df-card-corner-br"></div>
+            
+            <!-- Header -->
+            <div class="flex items-center gap-2 mb-4 pb-3 border-b border-df-border-red/30 relative z-10">
+              <svg class="w-4 h-4 text-df-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <h4 class="text-sm font-bold text-df-gold uppercase tracking-wider">Status</h4>
+            </div>
+            
+            <!-- Legend items -->
+            <div class="space-y-3 relative z-10">
+              <div 
+                v-for="(conf, key) in statusConfig" 
+                :key="key"
+                class="flex items-center gap-3 text-sm"
+              >
+                <span 
+                  class="w-3 h-3 rounded-full flex-shrink-0" 
+                  :style="{ background: conf.color }"
+                ></span>
+                <span class="text-df-silver font-medium uppercase tracking-wide">{{ conf.label }}</span>
+              </div>
             </div>
           </div>
         </div>
+        
       </div>
 
       <!-- Hovered zone tooltip (only view mode) -->
@@ -442,7 +534,7 @@ const predefinedFactions = {
   'Sabá': '#4c1d95',
   'Independentes': '#064e3b',
   'Lupinos / Lobisomens': '#78350f',
-  'Segunda Inquisição (SI)': '#111827',
+  'Segunda Inquisição (SI)': '#d4a647',
   '➕ Outros': '' // Cor será customizável
 }
 
@@ -1232,6 +1324,20 @@ onBeforeUnmount(() => {
   background: #0f0f28;
 }
 
+/* ═══ Horizontal Zone Card (Compact & Premium) ═══ */
+.tm-zone-card-view-horizontal {
+  padding: 0.5rem 1rem;
+  background: #0d0d20;
+  border: 1px solid #4a4a5a;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.tm-zone-card-view-horizontal:hover {
+  border-color: #6b6b80;
+  background: #0d0d28;
+}
+
 /* ═══ Status Badge Small (inline) ═══ */
 .tm-status-badge-sm {
   display: inline-flex;
@@ -1305,6 +1411,60 @@ onBeforeUnmount(() => {
   left: 50%;
   transform: translateX(-50%);
   border: 5px solid transparent;
+  border-top-color: #7f1d1d;
+}
+
+/* ═══ Horizontal Segmented Bar (Compact) ═══ */
+.tm-seg-bar-horizontal {
+  display: flex;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  overflow: visible;
+  border: 1px solid rgba(74, 74, 90, 0.25);
+  background: #1a1a2e;
+}
+.tm-seg-bar-piece-horizontal {
+  position: relative;
+  height: 100%;
+  min-width: 2px;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+  cursor: pointer;
+}
+.tm-seg-bar-piece-horizontal:first-child {
+  border-radius: 0.25rem 0 0 0.25rem;
+}
+.tm-seg-bar-piece-horizontal:last-child {
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+.tm-seg-bar-piece-horizontal:only-child {
+  border-radius: 0.25rem;
+}
+
+/* ═══ Horizontal Tooltip (Compact) ═══ */
+.tm-seg-tooltip-horizontal {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  background: #0d0d20;
+  border: 1px solid #7f1d1d;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 20;
+}
+.tm-seg-tooltip-horizontal::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
   border-top-color: #7f1d1d;
 }
 
@@ -1389,4 +1549,39 @@ onBeforeUnmount(() => {
   transition: all 0.2s ease;
 }
 .df-btn-ghost:hover { border-color: #dc2626; color: #c0c0d0; background: rgba(127,29,29,0.1); }
+
+/* ═══ df-card: Premium styled cards with decorative corners ═══ */
+.df-card {
+  position: relative;
+  background: #0a0a1a;
+  border: 1px solid #7f1d1d;
+  box-shadow: 0 0 0 1px #4a4a5a, inset 0 1px 6px rgba(0,0,0,0.5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+.df-card-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 2;
+}
+.df-card-corner::before,
+.df-card-corner::after {
+  content: '';
+  position: absolute;
+  background: #dc2626;
+}
+.df-card-corner::before { width: 14px; height: 1px; }
+.df-card-corner::after  { width: 1px; height: 14px; }
+.df-card-corner-tl { top: -1px; left: -1px; }
+.df-card-corner-tr { top: -1px; right: -1px; }
+.df-card-corner-tr::before { right: 0; }
+.df-card-corner-tr::after  { right: 0; }
+.df-card-corner-bl { bottom: -1px; left: -1px; }
+.df-card-corner-bl::before { bottom: 0; }
+.df-card-corner-bl::after  { bottom: 0; }
+.df-card-corner-br { bottom: -1px; right: -1px; }
+.df-card-corner-br::before { right: 0; bottom: 0; }
+.df-card-corner-br::after  { right: 0; bottom: 0; }
 </style>
