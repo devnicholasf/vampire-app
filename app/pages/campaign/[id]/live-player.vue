@@ -162,6 +162,19 @@
           <p class="text-sm text-[#4a4a5a]">Nenhum personagem em cena no momento.</p>
         </div>
 
+        <!-- ── Mapa de Territórios ── -->
+        <div v-if="showTerritoryMap && territoryZones.length > 0" class="w-full max-w-5xl">
+          <div class="mb-4">
+            <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">🗺️ Mapa de Territórios</h3>
+            <p class="text-center text-xs text-[#6b6b7b]">Mapa político da cidade compartilhado pelo Mestre</p>
+          </div>
+          
+          <TerritoryMapViewer
+            :territories="territoryZones"
+            :map-image-url="territoryMapUrl"
+          />
+        </div>
+
       </div>
     </template>
 
@@ -173,6 +186,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { createClient } from '@supabase/supabase-js'
+import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 
 definePageMeta({
   middleware: 'is-player',
@@ -195,7 +209,10 @@ const currentImageUrl = ref('')
 const currentAudioUrl = ref('')
 const audioPlayerRef  = ref<HTMLAudioElement | null>(null)
 const pageLoading     = ref(true)
-
+// Territory map state
+const showTerritoryMap = ref(false)
+const territoryZones   = ref<any[]>([])
+const territoryMapUrl  = ref('')
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 
 // â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -207,11 +224,17 @@ const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
 const loadState = async () => {
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('name')
+    .select('name, politics')
     .eq('id', campaignId)
     .maybeSingle()
 
-  if (campaign) campaignName.value = campaign.name
+  if (campaign) {
+    campaignName.value = campaign.name
+    if (campaign.politics) {
+      territoryZones.value = campaign.politics.territoryZones || []
+      territoryMapUrl.value = campaign.politics.territoryMapImage || ''
+    }
+  }
 
   const state = await fetchLiveGameState(campaignId)
   if (state) {
@@ -219,6 +242,7 @@ const loadState = async () => {
     liveNpcs.value        = (state as any).current_npcs ?? []
     currentImageUrl.value = (state as any).current_image_url ?? ''
     currentAudioUrl.value = (state as any).current_audio_url ?? ''
+    showTerritoryMap.value = (state as any).show_territory_map ?? false
   }
 }
 
@@ -227,6 +251,7 @@ const applyState = (data: any) => {
   currentScene.value    = data.current_scene ?? ''
   liveNpcs.value        = data.current_npcs ?? []
   currentImageUrl.value = data.current_image_url ?? ''
+  showTerritoryMap.value = data.show_territory_map ?? false
   const newAudio        = data.current_audio_url ?? ''
   if (newAudio !== currentAudioUrl.value) {
     currentAudioUrl.value = newAudio

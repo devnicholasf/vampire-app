@@ -18,6 +18,7 @@ interface LiveGameState {
   timelineEvents: any[]
   currentImageUrl: string
   currentAudioUrl: string
+  showTerritoryMap: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -33,6 +34,7 @@ interface SupabaseLiveGameState {
   timeline_events: any[]
   current_image_url?: string
   current_audio_url?: string
+  show_territory_map?: boolean
   created_at: string
   updated_at: string
 }
@@ -68,6 +70,7 @@ export const useLiveGame = () => {
     timelineEvents: supabaseData.timeline_events || [],
     currentImageUrl: supabaseData.current_image_url ?? '',
     currentAudioUrl: supabaseData.current_audio_url ?? '',
+    showTerritoryMap: supabaseData.show_territory_map ?? false,
     createdAt: new Date(supabaseData.created_at),
     updatedAt: new Date(supabaseData.updated_at)
   })

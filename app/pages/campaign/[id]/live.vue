@@ -434,6 +434,38 @@
 
           </section>
 
+          <!-- Mapa de Territórios -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Mapa de Territórios</h3>
+            
+            <div class="rounded border border-[#2d1515] p-3 space-y-2" style="background:rgba(255,255,255,0.02)">
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-[#c4c4d4]">Mostrar aos jogadores</span>
+                <button
+                  class="p-1.5 rounded transition-colors"
+                  :class="showTerritoryMap ? 'text-green-400 hover:text-green-300' : 'text-[#4a4a5a] hover:text-[#6b6b7b]'"
+                  :title="showTerritoryMap ? 'Mapa visível — clique para ocultar' : 'Mapa oculto — clique para mostrar'"
+                  @click="toggleTerritoryMapVisibility"
+                >
+                  <svg v-if="showTerritoryMap" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+              <p class="text-[10px] text-[#6b6b7b]">
+                {{ showTerritoryMap 
+                  ? 'Jogadores podem ver o mapa político da cidade (sem porcentagens)' 
+                  : 'Mapa de territórios oculto dos jogadores' 
+                }}
+              </p>
+            </div>
+          </section>
+
           <!-- Criar Evento Narrativo -->
           <section>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-[#d4a647] mb-3">Criar Evento Narrativo</h3>
@@ -572,6 +604,19 @@
               <polygon points="3 11 22 2 13 21 11 13 3 11"/>
             </svg>
             <p class="text-sm text-[#4a4a5a]">Nenhum personagem visível para os jogadores.</p>
+          </div>
+
+          <!-- Mapa de Territórios -->
+          <div v-if="showTerritoryMap && territoryZones.length > 0" class="w-full max-w-5xl">
+            <div class="mb-4">
+              <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">🗺️ Mapa de Territórios</h3>
+              <p class="text-center text-xs text-[#6b6b7b]">Visão compartilhada com os jogadores</p>
+            </div>
+            
+            <TerritoryMapViewer
+              :territories="territoryZones"
+              :map-image-url="territoryMapUrl"
+            />
           </div>
 
         </div>
@@ -747,6 +792,7 @@ import { useAuth } from '~/composables/useAuth'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { useToast } from '~/composables/useToast'
 import { createClient } from '@supabase/supabase-js'
+import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 
 // ============================================
 // Route
@@ -802,6 +848,11 @@ const mediaPickerSearch = ref('')
 const sceneImages = ref<{ name: string; url: string }[]>([])
 const sceneAudios = ref<{ name: string; url: string }[]>([])
 const loadingMedia = ref(false)
+
+// Territory Map visibility
+const showTerritoryMap = ref(false)
+const territoryZones = ref<any[]>([])
+const territoryMapUrl = ref('')
 
 const eventDraft = ref({
   title: '',
@@ -907,6 +958,13 @@ const loadCampaignData = async () => {
     if (data) {
       campaign.value = data
       playerCount.value = data.campaign_players?.length ?? 0
+      // Load territory data for map display
+      if (data.politics) {
+        territoryZones.value = data.politics.territoryZones || []
+        territoryMapUrl.value = data.politics.territoryMapImage || ''
+        console.log('🗺️ Territory Map URL loaded:', territoryMapUrl.value)
+        console.log('🗺️ Territory Zones loaded:', territoryZones.value.length)
+      }
     }
   } catch (e) {
     console.error('LIVE: Erro ao carregar campanha:', e)
@@ -1179,6 +1237,54 @@ const toggleMediaVisibility = async (item: MediaItem) => {
   await updateSceneMedia(campaignId, visImg, visAud)
 }
 
+const toggleTerritoryMapVisibility = async () => {
+  const newValue = !showTerritoryMap.value
+  console.log('🗺️ Toggling territory map visibility to:', newValue)
+  
+  try {
+    // First check if live_game_state exists
+    const { data: existingState, error: fetchError } = await supabase
+      .from('live_game_state')
+      .select('id, show_territory_map')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    
+    if (fetchError) {
+      console.error('LIVE: Erro ao buscar estado do jogo:', fetchError)
+      throw fetchError
+    }
+    
+    if (!existingState) {
+      console.error('LIVE: live_game_state não encontrado para campaign_id:', campaignId)
+      throw new Error('Estado do jogo não encontrado. Inicie uma sessão primeiro.')
+    }
+    
+    // Update the state
+    const { error: updateError } = await supabase
+      .from('live_game_state')
+      .update({ show_territory_map: newValue })
+      .eq('campaign_id', campaignId)
+    
+    if (updateError) {
+      console.error('LIVE: Erro ao atualizar show_territory_map:', updateError)
+      throw updateError
+    }
+    
+    showTerritoryMap.value = newValue
+    console.log('🗺️ Territory map visibility updated successfully')
+    
+    toast.success(
+      newValue ? 'Mapa revelado' : 'Mapa ocultado',
+      newValue 
+        ? 'Os jogadores agora podem ver o mapa de territórios'
+        : 'O mapa de territórios foi ocultado dos jogadores'
+    )
+  } catch (e: any) {
+    console.error('LIVE: Erro ao atualizar visibilidade do mapa:', e)
+    toast.error('Erro ao atualizar visibilidade do mapa', e?.message || 'Erro desconhecido')
+  }
+}
+
 const goBackToMaster = () => router.push(`/campaign/${campaignId}/master`)
 const goToNPCTab = () => router.push(`/campaign/${campaignId}/master#npcs`)
 
@@ -1360,6 +1466,11 @@ const startRealtime = () => {
         if (Array.isArray(ns.timeline_events)) {
           sessionTimeline.value = sanitizeTimeline(ns.timeline_events)
         }
+
+        // Sync territory map visibility
+        if (typeof ns.show_territory_map === 'boolean') {
+          showTerritoryMap.value = ns.show_territory_map
+        }
       }
     )
     .subscribe()
@@ -1386,6 +1497,7 @@ onMounted(async () => {
     currentSceneName.value = (state as any).current_scene ?? ''
     sessionTimeline.value  = await purgeSessionTechnicalEvents((state as any).timeline_events ?? [])
     applyLiveNpcState((state as any).current_npcs ?? [])
+    showTerritoryMap.value = (state as any).show_territory_map ?? false
     // Restore active media into scene items
     sceneMediaItems.value = []
     const imgUrl = (state as any).current_image_url ?? ''
