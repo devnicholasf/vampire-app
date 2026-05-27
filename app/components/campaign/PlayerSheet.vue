@@ -829,6 +829,22 @@
           </div>
         </div>
 
+        <!-- Princípios da Crônica -->
+        <div class="df-card">
+          <h3 class="df-section-title">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10l4-4V5a2 2 0 00-2-2z"/><path d="M17 21v-4h4"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
+            Princípios da Crônica
+            <span class="text-[10px] text-df-gold/60 font-normal ml-2">(Definido pelo Mestre)</span>
+          </h3>
+          <textarea
+            :value="campaignChronicTenets"
+            rows="3"
+            placeholder="Aguardando princípios definidos pelo Mestre da crônica..."
+            disabled
+            class="df-input opacity-90 cursor-not-allowed"
+          ></textarea>
+        </div>
+
         <!-- Ressonância -->
         <div class="df-card">
           <h3 class="df-section-title">
@@ -898,22 +914,6 @@
               class="df-input"
             ></textarea>
           </div>
-        </div>
-
-        <!-- Princípios da Crônica -->
-        <div class="df-card">
-          <h3 class="df-section-title">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10l4-4V5a2 2 0 00-2-2z"/><path d="M17 21v-4h4"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/></svg>
-            Princípios da Crônica
-            <span class="text-[10px] text-df-gold/60 font-normal ml-2">(Definido pelo Mestre)</span>
-          </h3>
-          <textarea
-            :value="campaignChronicTenets"
-            rows="3"
-            placeholder="Aguardando princípios definidos pelo Mestre da crônica..."
-            disabled
-            class="df-input opacity-90 cursor-not-allowed"
-          ></textarea>
         </div>
 
         <!-- Pilares & Convicções -->
