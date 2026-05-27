@@ -94,8 +94,8 @@
             <g v-for="(zone, zi) in modelValue" :key="zi">
               <polygon
                 :points="zone.points.map(p => `${p[0]},${p[1]}`).join(' ')"
-                :fill="getStatusConf(zone.status).color + '55'"
-                :stroke="selectedZone === zi ? '#d4a647' : getStatusConf(zone.status).color"
+                :fill="getZoneFillColor(zone)"
+                :stroke="selectedZone === zi ? '#d4a647' : getZoneStrokeColor(zone)"
                 :stroke-width="selectedZone === zi ? 3 / zoom : 1.5 / zoom"
                 class="tm-zone-polygon"
                 :class="{ 'tm-zone-hover': !editing || drawingMode === null, 'tm-zone-war': zone.status === 'war' }"
@@ -188,7 +188,7 @@
             <!-- Dominant faction -->
             <div v-if="getDominantFaction(zone)" class="flex items-center gap-2 mt-3">
               <span class="text-[10px] text-df-muted">Dominante:</span>
-              <span class="text-xs font-bold" :style="{ color: getDominantFaction(zone)!.color }">{{ getDominantFaction(zone)!.faction }}</span>
+              <span class="text-xs font-bold" :style="{ color: getDominantFaction(zone)!.color }">{{ getFactionDisplayName(getDominantFaction(zone)!) }}</span>
               <span class="text-[10px] text-df-silver">({{ getDominantFaction(zone)!.percent }}%)</span>
             </div>
 
@@ -205,7 +205,7 @@
                     @mouseleave="hoveredSegment = -1"
                   >
                     <div v-if="hoveredSegment === ii && selectedZone === zi" class="tm-seg-tooltip">
-                      <span class="font-bold" :style="{ color: inf.color }">{{ inf.faction || 'Facção' }}</span>
+                      <span class="font-bold" :style="{ color: inf.color }">{{ getFactionDisplayName(inf) }}</span>
                       <span class="text-df-silver font-bold">{{ inf.percent }}%</span>
                     </div>
                   </div>
@@ -215,7 +215,7 @@
               <div class="flex flex-col gap-1">
                 <div v-for="(inf, ii) in [...zone.influences].sort((a, b) => b.percent - a.percent)" :key="'leg' + ii" class="flex items-center gap-1.5">
                   <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" :style="{ background: inf.color }"></span>
-                  <span class="text-[10px] font-semibold" :style="{ color: inf.color }">{{ inf.faction || 'Facção' }}</span>
+                  <span class="text-[10px] font-semibold" :style="{ color: inf.color }">{{ getFactionDisplayName(inf) }}</span>
                   <span class="text-[10px] text-df-silver">({{ inf.percent }}%)</span>
                 </div>
               </div>
@@ -261,18 +261,63 @@
 
               <!-- Faction influences -->
               <div class="border-t border-df-border-silver/20 pt-2 mt-2" @click.stop>
-                <h6 class="text-[10px] font-bold text-df-gold uppercase tracking-wider mb-2">Influência por Facção</h6>
-                <div class="space-y-1.5">
-                  <div v-for="(inf, ii) in zone.influences" :key="ii" class="flex items-center gap-2">
-                    <input v-model="inf.faction" class="df-input text-xs flex-1" placeholder="Facção..." />
-                    <div class="flex items-center gap-1 w-24">
-                      <input v-model.number="inf.percent" type="number" min="0" max="100" class="df-input text-xs w-14 text-center" />
-                      <span class="text-[10px] text-df-muted">%</span>
+                <div class="flex items-center justify-between mb-2">
+                  <h6 class="text-[10px] font-bold text-df-gold uppercase tracking-wider">Influência por Facção</h6>
+                  <div 
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    :class="{
+                      'text-emerald-400 bg-emerald-400/10 border border-emerald-400/30': getTotalPercent(zone) === 100,
+                      'text-amber-400 bg-amber-400/10 border border-amber-400/30': getTotalPercent(zone) > 0 && getTotalPercent(zone) < 100,
+                      'text-df-red bg-df-red/10 border border-df-red/30': getTotalPercent(zone) > 100,
+                      'text-df-muted bg-df-muted/10 border border-df-muted/30': getTotalPercent(zone) === 0
+                    }"
+                  >
+                    {{ getTotalPercent(zone) }}%
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div v-for="(inf, ii) in zone.influences" :key="ii" class="space-y-1.5">
+                    <!-- Dropdown de facção -->
+                    <div class="flex items-center gap-2">
+                      <select 
+                        v-model="inf.faction" 
+                        @change="onFactionChange(inf, $event)"
+                        class="df-input text-xs flex-1"
+                      >
+                        <option value="">Selecione...</option>
+                        <option v-for="(color, name) in predefinedFactions" :key="name" :value="name">
+                          {{ name }}
+                        </option>
+                      </select>
+                      <div class="flex items-center gap-1 w-24">
+                        <input 
+                          v-model.number="inf.percent" 
+                          type="number" 
+                          min="0" 
+                          :max="getMaxPercent(zone, inf)"
+                          @input="validatePercent(zone, inf)"
+                          class="df-input text-xs w-14 text-center" 
+                        />
+                        <span class="text-[10px] text-df-muted">%</span>
+                      </div>
+                      <button @click.stop="zone.influences.splice(ii, 1)" class="text-df-muted hover:text-df-red transition-colors flex-shrink-0">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
                     </div>
-                    <input v-model="inf.color" type="color" class="w-6 h-6 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" />
-                    <button @click.stop="zone.influences.splice(ii, 1)" class="text-df-muted hover:text-df-red transition-colors">
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
+                    
+                    <!-- Campos customizados para "Outros" -->
+                    <div v-if="inf.faction === '➕ Outros' || isCustomFaction(inf.faction)" class="flex items-center gap-2 pl-2 border-l-2 border-df-gold/30">
+                      <input 
+                        v-model="inf.customName" 
+                        class="df-input text-xs flex-1" 
+                        placeholder="Nome da facção/grupo..." 
+                      />
+                      <input 
+                        v-model="inf.color" 
+                        type="color" 
+                        class="w-6 h-6 rounded cursor-pointer border border-df-border-silver bg-transparent flex-shrink-0" 
+                      />
+                    </div>
                   </div>
                 </div>
                 <button @click.stop="addInfluence(zi)" class="mt-2 w-full py-1 border border-dashed border-df-border-silver/50 rounded text-df-muted text-[10px] hover:border-df-gold hover:text-df-gold transition-colors">
@@ -296,7 +341,7 @@
           <span class="text-[10px]" :style="{ color: getStatusConf(hovZone.status).color }">{{ getStatusConf(hovZone.status).emoji }} {{ getStatusConf(hovZone.status).label }}</span>
         </div>
         <div v-if="getDominantFaction(hovZone)" class="text-[10px] text-df-silver mb-1">
-          <span class="text-df-gold">Domínio:</span> <span :style="{ color: getDominantFaction(hovZone)!.color }">{{ getDominantFaction(hovZone)!.faction }}</span> <span class="text-df-muted">({{ getDominantFaction(hovZone)!.percent }}%)</span>
+          <span class="text-df-gold">Domínio:</span> <span :style="{ color: getDominantFaction(hovZone)!.color }">{{ getFactionDisplayName(getDominantFaction(hovZone)!) }}</span> <span class="text-df-muted">({{ getDominantFaction(hovZone)!.percent }}%)</span>
         </div>
         <div v-if="hovZone.influences.length > 0" class="tm-seg-bar" style="height: 8px;">
           <div v-for="(inf, ii) in [...hovZone.influences].sort((a, b) => b.percent - a.percent)" :key="ii" :style="{ width: inf.percent + '%', background: inf.color }" class="tm-seg-bar-piece"></div>
@@ -365,6 +410,7 @@ import { useToast } from '~/composables/useToast'
 
 export interface TerritoryInfluence {
   faction: string
+  customName?: string // Nome customizado quando "Outros" é selecionado
   percent: number
   color: string
 }
@@ -388,9 +434,53 @@ const statusConfig: Record<TerritoryStatus, { label: string; emoji: string; colo
 }
 
 const getStatusConf = (s: TerritoryStatus) => statusConfig[s] || statusConfig.stable
+
+// Facções pré-definidas com cores fixas
+const predefinedFactions = {
+  'Camarilla': '#2563eb',
+  'Anarquista': '#991b1b',
+  'Sabá': '#4c1d95',
+  'Independentes': '#064e3b',
+  'Lupinos / Lobisomens': '#78350f',
+  'Segunda Inquisição (SI)': '#111827',
+  '➕ Outros': '' // Cor será customizável
+}
+
 const getDominantFaction = (zone: TerritoryZone) => {
   if (zone.influences.length === 0) return null
   return [...zone.influences].sort((a, b) => b.percent - a.percent)[0]
+}
+
+const isCustomFaction = (factionName: string) => {
+  return factionName && !Object.keys(predefinedFactions).includes(factionName) && factionName !== '➕ Outros'
+}
+
+const getFactionColor = (factionName: string) => {
+  return predefinedFactions[factionName as keyof typeof predefinedFactions] || '#6b7280'
+}
+
+const getFactionDisplayName = (inf: TerritoryInfluence) => {
+  if (inf.faction === '➕ Outros' || isCustomFaction(inf.faction)) {
+    return inf.customName || 'Facção'
+  }
+  return inf.faction || 'Facção'
+}
+
+// Funções para obter cores do território baseadas na facção dominante
+const getZoneFillColor = (zone: TerritoryZone): string => {
+  const dominant = getDominantFaction(zone)
+  if (!dominant || !dominant.color) {
+    return '#6b7280' // Cor padrão cinza se não houver facção dominante
+  }
+  return dominant.color + '55' // Adiciona transparência
+}
+
+const getZoneStrokeColor = (zone: TerritoryZone): string => {
+  const dominant = getDominantFaction(zone)
+  if (!dominant || !dominant.color) {
+    return '#6b7280' // Cor padrão cinza se não houver facção dominante
+  }
+  return dominant.color
 }
 
 interface Props {
@@ -754,8 +844,55 @@ const confirmDelete = () => {
 
 const addInfluence = (zi: number) => {
   if (props.modelValue[zi]) {
-    props.modelValue[zi].influences.push({ faction: '', percent: 0, color: '#6b7280' })
+    props.modelValue[zi].influences.push({ faction: '', customName: '', percent: 0, color: '#6b7280' })
     emit('update:modelValue', [...props.modelValue])
+  }
+}
+
+const onFactionChange = (inf: TerritoryInfluence, event: Event) => {
+  const selectedFaction = (event.target as HTMLSelectElement).value
+  
+  // Se for uma facção pré-definida (não "Outros"), aplicar cor automática
+  if (selectedFaction && selectedFaction !== '➕ Outros') {
+    const predefinedColor = predefinedFactions[selectedFaction as keyof typeof predefinedFactions]
+    if (predefinedColor) {
+      inf.color = predefinedColor
+      inf.customName = '' // Limpar nome customizado
+    }
+  } else if (selectedFaction === '➕ Outros') {
+    // Para "Outros", manter cor atual ou usar padrão
+    if (!inf.color || inf.color === '#6b7280') {
+      inf.color = '#6b7280'
+    }
+    inf.customName = inf.customName || ''
+  }
+}
+
+// Validação de porcentagem total por território
+const getTotalPercent = (zone: TerritoryZone): number => {
+  return zone.influences.reduce((sum, inf) => sum + (inf.percent || 0), 0)
+}
+
+const getMaxPercent = (zone: TerritoryZone, currentInf: TerritoryInfluence): number => {
+  const otherPercents = zone.influences
+    .filter(inf => inf !== currentInf)
+    .reduce((sum, inf) => sum + (inf.percent || 0), 0)
+  return Math.max(0, 100 - otherPercents)
+}
+
+const validatePercent = (zone: TerritoryZone, inf: TerritoryInfluence) => {
+  // Garantir que o valor não seja negativo
+  if (inf.percent < 0) {
+    inf.percent = 0
+  }
+  
+  // Verificar se o total ultrapassa 100%
+  const total = getTotalPercent(zone)
+  if (total > 100) {
+    // Ajustar automaticamente para o máximo permitido
+    const maxAllowed = getMaxPercent(zone, inf)
+    inf.percent = Math.min(inf.percent, maxAllowed)
+    toast.warning('Limite atingido', 'Total de influência não pode ultrapassar 100%')
   }
 }
 
