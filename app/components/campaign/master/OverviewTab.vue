@@ -165,14 +165,55 @@
 					Carregando...
 				</div>
 
-				<!-- Event found -->
-				<EventCard
-					v-else-if="lastEvent"
-					:title="lastEvent.title"
-					:description="lastEvent.description"
-					:type="lastEvent.type"
-					:occurred-at="lastEvent.occurred_at"
-				/>
+				<!-- Event found with pulsing dot -->
+				<div v-else-if="lastEvent" class="flex items-start gap-3">
+					<!-- Pulsing dot indicator -->
+					<span
+						class="relative flex items-center justify-center rounded-full ring-2 ring-[#0a0a1a] flex-shrink-0 mt-1.5"
+						style="width: 28px; height: 28px;"
+						:style="`background: ${eventTypeColor(lastEvent.type)}18; border: 1px solid ${eventTypeColor(lastEvent.type)}50;`"
+					>
+						<!-- Ripple ring -->
+						<span
+							class="dot-ripple absolute rounded-full"
+							style="inset: 0;"
+							:style="`background: ${eventTypeColor(lastEvent.type)};`"
+						/>
+						<!-- Core dot -->
+						<span
+							class="rounded-full relative z-10 dot-core"
+							style="width: 11px; height: 11px;"
+							:style="`background: ${eventTypeColor(lastEvent.type)};`"
+						/>
+					</span>
+
+					<!-- Event content -->
+					<div class="flex-1 min-w-0">
+						<div class="ev-item">
+							<!-- Title + type badge -->
+							<div class="flex items-start justify-between gap-2 mb-1">
+								<p class="text-sm font-semibold text-white leading-tight">{{ lastEvent.title }}</p>
+								<span
+									class="shrink-0 text-xs px-2 py-0.5 rounded-full border"
+									:style="`color: ${eventTypeColor(lastEvent.type)}; border-color: ${eventTypeColor(lastEvent.type)}44; background: ${eventTypeColor(lastEvent.type)}11`"
+								>{{ eventTypeLabel(lastEvent.type) }}</span>
+							</div>
+
+							<!-- Description -->
+							<p v-if="lastEvent.description" class="text-xs text-white/75 mb-1.5 leading-relaxed">{{ lastEvent.description }}</p>
+
+							<!-- Meta row -->
+							<div class="flex flex-wrap gap-x-4 gap-y-1 text-xs" style="color: rgba(100,100,120,0.9)">
+								<span v-if="lastEvent.occurred_at" class="flex items-center gap-1">
+									<svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+										<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+									</svg>
+									{{ formatEventDate(lastEvent.occurred_at) }}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
 
 				<!-- No events -->
 				<div v-else class="p-4 rounded-lg bg-df-deep/50 border border-df-border-silver/10">
@@ -333,8 +374,8 @@ import { createClient } from '@supabase/supabase-js'
 import type { NPC } from '~/types'
 import { useCampaign } from '~/composables/useCampaign'
 import { useToast } from '~/composables/useToast'
+import { EVENT_TYPE_CONFIG, type EventType } from '~/composables/useEvents'
 import BaseButton from '~/components/ui/BaseButton.vue'
-import EventCard from '~/components/campaign/master/EventCard.vue'
 
 const props = defineProps<{
 	campaignId: string
@@ -688,6 +729,27 @@ const cancelEdits = () => {
 	editMode.value = false
 }
 
+// ── Event helpers ──
+const eventTypeColor = (type: string) => {
+	return EVENT_TYPE_CONFIG[type as EventType]?.color ?? '#4a4a5a'
+}
+
+const eventTypeLabel = (type: string) => {
+	return EVENT_TYPE_CONFIG[type as EventType]?.label ?? type
+}
+
+const formatEventDate = (dateStr: string | Date) => {
+	if (!dateStr) return ''
+	const d = dateStr instanceof Date ? dateStr : new Date(dateStr)
+	return new Intl.DateTimeFormat('pt-BR', {
+		day: '2-digit',
+		month: 'short',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	}).format(d)
+}
+
 // ── Lifecycle ──
 onMounted(async () => {
 	await loadOverview()
@@ -787,5 +849,36 @@ watch(() => props.campaign, (val) => {
 .ov-row-value {
 	flex: 1;
 	min-width: 0;
+}
+
+/* ── Event card style (matching EventCard.vue) ── */
+.ev-item {
+	background: #0f0c22;
+	border: 1px solid rgba(127, 29, 29, 0.35);
+	border-radius: 0.375rem;
+	padding: 0.75rem 1rem;
+	transition: border-color 0.2s, background 0.2s;
+}
+.ev-item:hover {
+	border-color: rgba(212, 166, 71, 0.4);
+	background: #130f28;
+}
+
+/* ── Pulsing dot animations (matching EventsTab) ── */
+@keyframes dot-core-breathe {
+	0%, 100% { transform: scale(1); opacity: 1; }
+	50% { transform: scale(1.45); opacity: 0.75; }
+}
+@keyframes dot-ripple-expand {
+	0%   { transform: scale(0.4); opacity: 0.55; }
+	70%  { opacity: 0.12; }
+	100% { transform: scale(2.6); opacity: 0; }
+}
+.dot-core {
+	animation: dot-core-breathe 3s ease-in-out infinite;
+}
+.dot-ripple {
+	opacity: 0;
+	animation: dot-ripple-expand 2.4s ease-out infinite;
 }
 </style>
