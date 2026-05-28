@@ -9,7 +9,7 @@ import type { Campaign, NPC } from '~/types'
 
 export const useCampaign = () => {
   const config = useRuntimeConfig()
-  const { user } = useAuth()
+  const { user, restoreSession } = useAuth()
   
   // Criar cliente Supabase
   const supabase = createClient(
@@ -742,22 +742,77 @@ export const useCampaign = () => {
    * Decline a campaign invite
    */
   const declineCampaignInvite = async (inviteId: string): Promise<boolean> => {
+    if (!user.value) {
+      await restoreSession()
+    }
+
     if (!user.value) throw new Error('Usuário não autenticado')
 
     try {
-      const { error: updateError } = await supabase
+      // Caminho principal: RPC SECURITY DEFINER
+      const { data: declinedByRpc, error: rpcError } = await supabase
+        .rpc('decline_campaign_invite', { invite_id_param: inviteId })
+
+      if (!rpcError) {
+        return !!declinedByRpc
+      }
+
+      // Quando já existe outro registro "declined" para a mesma campanha+usuário,
+      // a transição pending -> declined pode violar a UNIQUE(campaign_id, invited_user_id, status).
+      // Nesse caso, remover o pending equivale a recusar para fins de UX/lista de convites.
+      if (rpcError.code === '23505') {
+        const { data: deletedRows, error: deleteError } = await supabase
+          .from('campaign_invites')
+          .delete()
+          .eq('id', inviteId)
+          .eq('invited_user_id', user.value.id)
+          .eq('status', 'pending')
+          .select('id')
+
+        if (deleteError) {
+          throw new Error(`Erro ao recusar convite: ${deleteError.message}`)
+        }
+
+        return !!(deletedRows && deletedRows.length > 0)
+      }
+
+      console.warn('decline_campaign_invite RPC indisponível, usando fallback legacy:', rpcError)
+
+      const { data: declinedRows, error: updateError } = await supabase
         .from('campaign_invites')
         .update({ status: 'declined', responded_at: new Date().toISOString() })
         .eq('id', inviteId)
         .eq('invited_user_id', user.value.id)
         .eq('status', 'pending')
+        .select('id')
 
       if (updateError) {
+        if (updateError.code === '23505') {
+          const { data: deletedRows, error: deleteError } = await supabase
+            .from('campaign_invites')
+            .delete()
+            .eq('id', inviteId)
+            .eq('invited_user_id', user.value.id)
+            .eq('status', 'pending')
+            .select('id')
+
+          if (deleteError) {
+            throw new Error(`Erro ao recusar convite: ${deleteError.message}`)
+          }
+
+          return !!(deletedRows && deletedRows.length > 0)
+        }
+
         console.error('Erro ao recusar convite:', updateError)
-        throw new Error('Erro ao recusar convite')
+        throw new Error(`Erro ao recusar convite: ${updateError.message}`)
       }
 
-      return true
+      if (declinedRows && declinedRows.length > 0) {
+        return true
+      }
+
+      // Sem erro, mas sem update: convite já expirou/respondido ou não pertence ao usuário.
+      return false
 
     } catch (err: any) {
       console.error('Erro ao recusar convite:', err)
@@ -850,6 +905,18 @@ export const useCampaign = () => {
         },
         (payload) => {
           console.log('Novo convite recebido:', payload)
+          callback(payload.new)
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'campaign_invites',
+          filter: `invited_user_id=eq.${user.value.id}`
+        },
+        (payload) => {
           callback(payload.new)
         }
       )

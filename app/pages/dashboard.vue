@@ -699,8 +699,8 @@ const handleProfileUpdate = (updatedUser: any) => {
 .df-page-title {
   font-size: 1.8rem;
   font-weight: 800;
-  color: var(--df-accent-red);
-  text-shadow: 0 0 24px var(--df-glow-red), 0 2px 4px rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.12), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* ─── Buttons ─── */

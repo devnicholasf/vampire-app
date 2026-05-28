@@ -7,6 +7,9 @@ let realtimeChannel: any = null
 let expiryCheckInterval: ReturnType<typeof setInterval> | null = null
 
 export const useNotifications = () => {
+  const { user, restoreSession } = useAuth()
+  const toast = useToast()
+
   // Estado reativo
   const isLoading = ref(false)
   const showNotifications = ref(false)
@@ -109,6 +112,7 @@ export const useNotifications = () => {
           // Always remove notification and close dropdown
           removeNotification(notification.id)
           showNotifications.value = false
+          toast.success('Convite aceito', 'Você entrou na campanha com sucesso.')
           
           // Reload campaigns to show the new one (no page reload needed)
           try {
@@ -119,10 +123,17 @@ export const useNotifications = () => {
         }
         case 'decline': {
           const inviteId = notification.data?.inviteId || notification.id
-          await declineCampaignInvite(inviteId)
+          const declined = await declineCampaignInvite(inviteId)
+          if (!declined) {
+            removeNotification(notification.id)
+            await loadNotifications()
+            toast.info('Convite indisponível', 'Este convite já foi respondido ou expirou.')
+            break
+          }
           
           // Remove the notification
           removeNotification(notification.id)
+          toast.success('Convite recusado', 'O convite foi recusado com sucesso.')
           break
         }
         case 'view':
@@ -134,6 +145,7 @@ export const useNotifications = () => {
       }
     } catch (error: any) {
       console.error('Error handling notification action:', error)
+      toast.error('Erro na notificação', error?.message || 'Não foi possível processar esta ação.')
     }
   }
 
@@ -222,6 +234,8 @@ export const useNotifications = () => {
   // ============================================
   const setupRealtimeSubscription = () => {
     try {
+      if (realtimeChannel) return
+
       const { subscribeToInvites } = useCampaign()
       
       realtimeChannel = subscribeToInvites((invite: any) => {
@@ -273,6 +287,9 @@ export const useNotifications = () => {
   // Inicialização
   // ============================================
   const initialize = async () => {
+    await restoreSession()
+    if (!user.value) return
+
     await loadNotifications()
     setupRealtimeSubscription()
     startExpiryChecker()

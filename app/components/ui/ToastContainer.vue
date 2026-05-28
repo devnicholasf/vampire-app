@@ -28,11 +28,11 @@
               </div>
               
               <div class="flex-1 pt-1">
-                <p v-if="toast.message" class="text-base font-bold mb-1" :class="getTitleClasses(toast.type)">
-                  {{ toast.message }}
-                </p>
-                <p class="text-sm leading-relaxed" :class="getMessageClasses(toast.type)">
+                <p v-if="toast.title" class="text-base font-bold mb-1" :class="getTitleClasses(toast.type)">
                   {{ toast.title }}
+                </p>
+                <p v-if="toast.message" class="text-sm leading-relaxed" :class="getMessageClasses(toast.type)">
+                  {{ toast.message }}
                 </p>
               </div>
 
