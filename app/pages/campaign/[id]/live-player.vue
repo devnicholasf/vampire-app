@@ -145,8 +145,10 @@
           v-if="currentAudioUrl"
           ref="audioPlayerRef"
           :src="currentAudioUrl"
+          preload="auto"
           style="display:none;"
           @loadeddata="syncAudioPlayer"
+          @canplay="syncAudioPlayer"
         ></audio>
 
         <!-- ── NPCs visíveis ── -->
@@ -311,7 +313,7 @@ const territoryMapUrl  = ref('')
 // Audio sync state
 const currentAudioPlaying = ref(false)
 const currentAudioTime    = ref(0)
-const currentAudioVolume  = ref(20)
+const currentAudioVolume  = ref(2)
 // Dice system state
 const showDiceRollModal = ref(false)
 const currentHunger     = ref(2) // TODO: Pegar da ficha do jogador
@@ -386,7 +388,7 @@ const loadState = async () => {
     showTerritoryMap.value = (state as any).show_territory_map ?? false
     currentAudioPlaying.value = (state as any).current_audio_playing ?? false
     currentAudioTime.value = (state as any).current_audio_time ?? 0
-    currentAudioVolume.value = (state as any).current_audio_volume ?? 20
+    currentAudioVolume.value = (state as any).current_audio_volume ?? 2
   }
 }
 
@@ -433,7 +435,7 @@ const applyState = (data: any) => {
   // Sincronizar estado do áudio
   const isPlaying = data.current_audio_playing ?? false
   const audioTime = data.current_audio_time ?? 0
-  const audioVolume = data.current_audio_volume ?? 20
+  const audioVolume = data.current_audio_volume ?? 2
   
   currentAudioPlaying.value = isPlaying
   currentAudioTime.value = audioTime
@@ -480,11 +482,24 @@ const syncAudioPlayer = async () => {
   
   // Sincronizar play/pause
   if (currentAudioPlaying.value && audio.paused) {
-    try { 
-      await audio.play() 
-      console.log('▶️ Áudio reproduzindo')
-    } catch (e) { 
-      console.log('Autoplay bloqueado pelo navegador') 
+    const playNow = async () => {
+      try {
+        await audio.play()
+        console.log('▶️ Áudio reproduzindo')
+      } catch (e) {
+        console.log('Autoplay bloqueado pelo navegador')
+      }
+    }
+
+    if (audio.readyState >= 2) {
+      await playNow()
+    } else {
+      const handleCanPlay = async () => {
+        audio.removeEventListener('canplay', handleCanPlay)
+        await playNow()
+      }
+      audio.addEventListener('canplay', handleCanPlay)
+      audio.load()
     }
   } else if (!currentAudioPlaying.value && !audio.paused) {
     audio.pause()

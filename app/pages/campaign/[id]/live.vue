@@ -1267,8 +1267,8 @@ const saveSceneName = async () => {
 // Definir volume inicial do player quando a música carrega
 const initializeAudioVolume = () => {
   if (!masterAudioRef.value) return
-  masterAudioRef.value.volume = 0.2 // 20%
-  console.log('🎵 Mestre: Volume inicial definido para 20%')
+  masterAudioRef.value.volume = 0.02 // 2%
+  console.log('🎵 Mestre: Volume inicial definido para 2%')
   syncAudioImmediate() // Sincronizar imediatamente
 }
 
