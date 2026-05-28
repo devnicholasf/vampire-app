@@ -18,6 +18,13 @@ logs
 .fleet
 .idea
 .copilot
+.vscode
+
+# Backup files
+*.backup
+*.bak
+*.CORRUPTED.*
+*~
 
 # Local env files
 .env

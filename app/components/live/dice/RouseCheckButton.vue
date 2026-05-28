@@ -148,6 +148,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useDice } from '~/composables/useDice'
 import type { RouseCheckResult } from '~/types/dice'
 
 const props = defineProps<{

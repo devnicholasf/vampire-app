@@ -82,11 +82,20 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch, nextTick } from 'vue'
 import type { RollResult } from '~/types/dice'
 import DiceCard from './DiceCard.vue'
 
+// Tipo flexível que aceita RollResult com arrays mutáveis ou readonly
+type FlexibleRollResult = Omit<RollResult, 'diceResults'> & {
+  diceResults: {
+    normal: readonly number[] | number[]
+    hunger: readonly number[] | number[]
+  }
+}
+
 const props = defineProps<{
-  rolls: readonly RollResult[]
+  rolls: readonly FlexibleRollResult[]
   maxDisplay?: number
 }>()
 

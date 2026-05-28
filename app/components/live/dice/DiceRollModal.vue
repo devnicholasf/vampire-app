@@ -219,6 +219,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue'
 import { VTM_ATTRIBUTES, VTM_SKILLS, ROLL_TYPES } from '~/types/dice'
 import type { DiceRollConfig } from '~/types/dice'
 

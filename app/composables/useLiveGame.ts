@@ -262,7 +262,7 @@ export const useLiveGame = () => {
     const npcData = {
       id: npc.id,
       name: npc.name,
-      photo: npc.photo,
+      photo_url: npc.photo,
       type: npc.type,
       isVisible
     }

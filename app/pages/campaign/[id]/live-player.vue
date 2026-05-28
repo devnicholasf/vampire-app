@@ -1,19 +1,19 @@
-﻿<template>
+<template>
   <div class="min-h-screen" style="background:#080810; color:#c4c4d4;">
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════ -->
     <!-- CARREGANDO                                     -->
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════ -->
     <div v-if="pageLoading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="df-spinner"></div>
-        <p class="df-text-muted mt-4">Carregando sessão...</p>
+        <p class="df-text-muted mt-4">Carregando sess�o...</p>
       </div>
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-    <!-- AGUARDANDO SESSÃƒO                              -->
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- AGUARDANDO SESSÃO                              -->
+    <!-- ═══════════════════════════════════════════════ -->
     <div v-else-if="!isLiveActive" class="flex flex-col items-center justify-center min-h-screen px-4">
       <div class="w-full max-w-lg text-center space-y-8">
         <div class="flex items-center justify-center gap-4">
@@ -25,9 +25,9 @@
         </div>
 
         <div>
-          <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A MÃ¡scara V5</p>
+          <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A Máscara V5</p>
           <h1 class="text-3xl font-bold text-white mb-1">{{ campaignName || 'Carregando...' }}</h1>
-          <p class="text-sm text-[#6b6b7b]">Aguardando o Mestre iniciar a sessÃ£o...</p>
+          <p class="text-sm text-[#6b6b7b]">Aguardando o Mestre iniciar a sessão...</p>
         </div>
 
         <div class="relative border border-[#7f1d1d] rounded-lg p-6"
@@ -36,7 +36,7 @@
           <span class="lc lc-bl"/><span class="lc lc-br"/>
           <div class="flex items-center gap-3">
             <span class="w-2.5 h-2.5 rounded-full bg-[#4a4a5a] shrink-0"/>
-            <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">SessÃ£o Inativa</p>
+            <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">Sessão Inativa</p>
           </div>
         </div>
 
@@ -50,9 +50,9 @@
       </div>
     </div>
 
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-    <!-- SESSÃƒO ATIVA â€” visÃ£o do jogador                -->
-    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- SESSÃO ATIVA — visão do jogador                -->
+    <!-- ═══════════════════════════════════════════════ -->
     <template v-else>
 
       <!-- Header -->
@@ -75,10 +75,13 @@
         </div>
       </div>
 
-      <!-- ConteÃºdo principal -->
-      <div class="flex flex-col items-center justify-start min-h-[calc(100vh-57px)] px-6 py-8 gap-8">
+      <!-- Layout principal: 2 colunas -->
+      <div class="flex" style="min-height:calc(100vh - 57px);">
+        
+        <!-- Coluna Esquerda: Conte�do principal -->
+        <div class="flex-1 flex flex-col items-center justify-start px-6 py-8 gap-8 overflow-y-auto">
 
-        <!-- ── Cena Atual ── -->
+        <!-- -- Cena Atual -- -->
         <div v-if="currentScene" class="text-center">
           <p class="text-[11px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-1">Cena</p>
           <h2 class="text-2xl font-bold text-white">{{ currentScene }}</h2>
@@ -87,26 +90,22 @@
           <p class="text-sm text-[#4a4a5a]">Aguardando o Mestre definir a cena...</p>
         </div>
 
-        <!-- ── Imagem da Cena ── -->
+        <!-- -- Imagem da Cena -- -->
         <div v-if="currentImageUrl" class="w-full max-w-3xl rounded-xl overflow-hidden border border-[#7f1d1d]"
              style="box-shadow:0 4px 32px rgba(127,29,29,0.35)">
           <img :src="currentImageUrl" alt="Imagem da cena" style="width:100%;object-fit:contain;max-height:65vh;display:block;">
         </div>
 
-        <!-- ── Música da Cena ── -->
-        <div v-if="currentAudioUrl" class="w-full max-w-xl rounded-lg border border-[#2d1515] px-4 py-3"
-             style="background:#0a0a1a">
-          <p class="text-[10px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-2">Música da Cena</p>
-          <audio
-            ref="audioPlayerRef"
-            controls
-            :src="currentAudioUrl"
-            class="w-full"
-            style="color-scheme:dark;accent-color:#d4a647;"
-          ></audio>
-        </div>
+        <!-- ── Player de Áudio Escondido (Sincronizado com o Mestre) ── -->
+        <audio
+          v-if="currentAudioUrl"
+          ref="audioPlayerRef"
+          :src="currentAudioUrl"
+          style="display:none;"
+          @loadeddata="syncAudioPlayer"
+        ></audio>
 
-        <!-- â”€â”€ NPCs visÃ­veis â”€â”€ -->
+        <!-- ── NPCs visíveis ── -->
         <div v-if="displayNPCs.length > 0" class="w-full max-w-4xl">
 
           <!-- Grid adaptativo: 1, 2 ou 3 colunas -->
@@ -127,8 +126,8 @@
               <!-- Foto -->
               <div class="w-full overflow-hidden h-[380px]">
                 <img
-                  v-if="npc.photo"
-                  :src="npc.photo"
+                  v-if="npc.photo_url"
+                  :src="npc.photo_url"
                   :alt="npc.name"
                   class="w-full h-full object-cover object-top"
                 >
@@ -149,7 +148,7 @@
             </div>
           </div>
 
-          <!-- Indicador se hÃ¡ mais que 3 visÃ­veis -->
+          <!-- Indicador se há mais que 3 visíveis -->
           <p v-if="visibleNPCs.length > 3" class="text-center text-xs text-[#4a4a5a] mt-3">
             +{{ visibleNPCs.length - 3 }} personagem{{ visibleNPCs.length - 3 > 1 ? 's' : '' }} na cena
           </p>
@@ -162,11 +161,11 @@
           <p class="text-sm text-[#4a4a5a]">Nenhum personagem em cena no momento.</p>
         </div>
 
-        <!-- ── Mapa de Territórios ── -->
+        <!-- -- Mapa de Territ�rios -- -->
         <div v-if="showTerritoryMap && territoryZones.length > 0" class="w-full max-w-5xl">
           <div class="mb-4">
-            <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">🗺️ Mapa de Territórios</h3>
-            <p class="text-center text-xs text-[#6b6b7b]">Mapa político da cidade compartilhado pelo Mestre</p>
+            <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">??? Mapa de Territ�rios</h3>
+            <p class="text-center text-xs text-[#6b6b7b]">Mapa pol�tico da cidade compartilhado pelo Mestre</p>
           </div>
           
           <TerritoryMapViewer
@@ -175,7 +174,25 @@
           />
         </div>
 
+        </div>
+        
+        <!-- Coluna Direita: Sistema de Dados -->
+        <div class="w-96 border-l border-[#2d1515] shrink-0" style="background:#0a0a1a">
+          <DiceFeed 
+            :rolls="rolls"
+            @open-roll-modal="showDiceRollModal = true"
+          />
+        </div>
+        
       </div>
+      
+      <!-- Modal de Rolagem de Dados -->
+      <DiceRollModal 
+        v-model="showDiceRollModal"
+        :current-hunger="currentHunger"
+        @roll="handleDiceRoll"
+      />
+      
     </template>
 
   </div>
@@ -185,8 +202,13 @@
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
 import { useLiveGame } from '~/composables/useLiveGame'
+import { useDice } from '~/composables/useDice'
+import { useAuth } from '~/composables/useAuth'
 import { createClient } from '@supabase/supabase-js'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
+import DiceFeed from '~/components/live/dice/DiceFeed.vue'
+import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
+import type { DiceRollConfig } from '~/types/dice'
 
 definePageMeta({
   middleware: 'is-player',
@@ -201,8 +223,9 @@ const supabase   = createClient(config.public.supabaseUrl, config.public.supabas
 
 const { isGameLive, fetchLiveGameState, joinGame, leaveGame } = useLiveGame()
 const { user } = useAuth()
+const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = useDice()
 
-// â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── State ──────────────────────────────────────────
 const campaignName    = ref('')
 const currentScene    = ref('')
 const liveNpcs        = ref<any[]>([])
@@ -214,14 +237,22 @@ const pageLoading     = ref(true)
 const showTerritoryMap = ref(false)
 const territoryZones   = ref<any[]>([])
 const territoryMapUrl  = ref('')
+// Audio sync state
+const currentAudioPlaying = ref(false)
+const currentAudioTime    = ref(0)
+const currentAudioVolume  = ref(20)
+// Dice system state
+const showDiceRollModal = ref(false)
+const currentHunger     = ref(2) // TODO: Pegar da ficha do jogador
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+let isDiceRolling = false
 
-// â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Computed ───────────────────────────────────────
 const isLiveActive  = computed(() => isGameLive.value)
 const visibleNPCs   = computed(() => liveNpcs.value.filter(n => n.isVisible))
 const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
 
-// â”€â”€ Load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Load ───────────────────────────────────────────
 const loadState = async () => {
   const { data: campaign } = await supabase
     .from('campaigns')
@@ -244,6 +275,9 @@ const loadState = async () => {
     currentImageUrl.value = (state as any).current_image_url ?? ''
     currentAudioUrl.value = (state as any).current_audio_url ?? ''
     showTerritoryMap.value = (state as any).show_territory_map ?? false
+    currentAudioPlaying.value = (state as any).current_audio_playing ?? false
+    currentAudioTime.value = (state as any).current_audio_time ?? 0
+    currentAudioVolume.value = (state as any).current_audio_volume ?? 20
   }
 }
 
@@ -253,13 +287,26 @@ const applyState = (data: any) => {
   liveNpcs.value        = data.current_npcs ?? []
   currentImageUrl.value = data.current_image_url ?? ''
   showTerritoryMap.value = data.show_territory_map ?? false
+  
   const newAudio        = data.current_audio_url ?? ''
   if (newAudio !== currentAudioUrl.value) {
     currentAudioUrl.value = newAudio
   }
+  
+  // Sincronizar estado do �udio
+  const isPlaying = data.current_audio_playing ?? false
+  const audioTime = data.current_audio_time ?? 0
+  const audioVolume = data.current_audio_volume ?? 20
+  
+  currentAudioPlaying.value = isPlaying
+  currentAudioTime.value = audioTime
+  currentAudioVolume.value = audioVolume
+  
+  // Aplicar estado ao player
+  syncAudioPlayer()
 }
 
-// â”€â”€ Realtime â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Realtime ───────────────────────────────────────
 const startRealtime = () => {
   realtimeChannel = supabase
     .channel(`live_player:${campaignId}`)
@@ -277,17 +324,50 @@ const startRealtime = () => {
     )
     .subscribe()
 }
-// ── Autoplay audio when master changes track ──────────────
+// -- Sync audio player with master's control --------------
+const syncAudioPlayer = async () => {
+  await nextTick()
+  const audio = audioPlayerRef.value
+  if (!audio) return
+  
+  // Sincronizar volume PRIMEIRO (antes de qualquer outra coisa)
+  const targetVolume = currentAudioVolume.value / 100
+  audio.volume = targetVolume
+  console.log(`🔊 Volume sincronizado: ${Math.round(targetVolume * 100)}%`)
+  
+  // Sincronizar tempo (com tolerância de 0.3 segundo)
+  const timeDiff = Math.abs(audio.currentTime - currentAudioTime.value)
+  if (timeDiff > 0.3) {
+    audio.currentTime = currentAudioTime.value
+  }
+  
+  // Sincronizar play/pause
+  if (currentAudioPlaying.value && audio.paused) {
+    try { 
+      await audio.play() 
+      console.log('▶️ Áudio reproduzindo')
+    } catch (e) { 
+      console.log('Autoplay bloqueado pelo navegador') 
+    }
+  } else if (!currentAudioPlaying.value && !audio.paused) {
+    audio.pause()
+    console.log('⏸️ Áudio pausado')
+  }
+}
+
+// Watch para mudanças no áudio (sincronização imediata)
 watch(currentAudioUrl, async (newUrl) => {
   if (!newUrl) return
   await nextTick()
-  if (audioPlayerRef.value) {
-    try { await audioPlayerRef.value.play() } catch (_) { /* autoplay blocked */ }
-  }
+  syncAudioPlayer()
 })
 
+watch([currentAudioPlaying, currentAudioTime, currentAudioVolume], () => {
+  syncAudioPlayer()
+}, { flush: 'sync' }) // Executa sincronamente para zero delay
 
-// â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// ── Navigation ─────────────────────────────────────
 const goBack = async () => {
   await leaveGame(campaignId)
   router.push(`/campaign/${campaignId}/player`)
@@ -297,7 +377,7 @@ const goBack = async () => {
 const handleBeforeUnload = () => {
   if (!user.value) return
   
-  // Chamada síncrona para remover jogador da lista de ativos
+  // Chamada s�ncrona para remover jogador da lista de ativos
   const leaveGameSync = async () => {
     try {
       const { data: state } = await supabase
@@ -323,11 +403,29 @@ const handleBeforeUnload = () => {
   leaveGameSync()
 }
 
-// â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Lifecycle ──────────────────────────────────────
+// -- Dice System --------------------------------------------------
+const handleDiceRoll = async (config: DiceRollConfig) => {
+  if (isDiceRolling) return
+  isDiceRolling = true
+  
+  try {
+    const characterName = user.value?.email?.split('@')[0] || 'Jogador'
+    await rollDice(campaignId, config, characterName)
+    showDiceRollModal.value = false
+    
+    // TODO: Mostrar toast de sucesso
+  } catch (error) {
+    console.error('Erro ao rolar dados:', error)
+  } finally {
+    isDiceRolling = false
+  }
+}
+
 onMounted(async () => {
   await loadState()
   
-  // Adicionar jogador à lista de ativos quando entrar na sessão
+  // Adicionar jogador � lista de ativos quando entrar na sess�o
   if (isGameLive.value && user.value) {
     try {
       await joinGame(campaignId)
@@ -336,9 +434,17 @@ onMounted(async () => {
     }
   }
   
+  // Carregar rolagens de dados e subscrever
+  try {
+    await loadRolls(campaignId)
+    subscribeToRolls(campaignId)
+  } catch (e) {
+    console.error('Erro ao carregar sistema de dados:', e)
+  }
+  
   startRealtime()
   
-  // Adicionar listener para fechar página
+  // Adicionar listener para fechar p�gina
   if (process.client) {
     window.addEventListener('beforeunload', handleBeforeUnload)
   }
@@ -347,10 +453,13 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(async () => {
-  // Remover jogador da lista ao sair da página
+  // Remover jogador da lista ao sair da p�gina
   if (user.value) {
     await leaveGame(campaignId)
   }
+  
+  // Desinscrever do sistema de dados
+  unsubscribeFromRolls()
   
   if (process.client) {
     window.removeEventListener('beforeunload', handleBeforeUnload)
@@ -387,7 +496,7 @@ onBeforeUnmount(async () => {
 .lc-br::after  { right: 0; bottom: 0; }
 @keyframes spin  { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-/* ── Spinner padrão do sistema ── */
+/* -- Spinner padr�o do sistema -- */
 .df-spinner {
   display: inline-block;
   width: 48px;

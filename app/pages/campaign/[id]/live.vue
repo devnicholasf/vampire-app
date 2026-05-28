@@ -559,10 +559,16 @@
                style="background:#0a0a1a">
             <p class="text-[10px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-2">Música da Cena</p>
             <audio
+              ref="masterAudioRef"
               controls
               :src="currentSceneMedia.audioUrl"
               class="w-full"
               style="color-scheme:dark;accent-color:#d4a647;"
+              @loadeddata="initializeAudioVolume"
+              @play="syncAudioImmediate"
+              @pause="syncAudioImmediate"
+              @volumechange="syncAudioImmediate"
+              @seeked="syncAudioImmediate"
             ></audio>
           </div>
 
@@ -786,12 +792,6 @@
 
 <script setup lang="ts">
 // ============================================
-// Vue + Nuxt imports
-// ============================================
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
-
-// ============================================
 // Middleware: only master can access live
 // ============================================
 definePageMeta({
@@ -882,6 +882,9 @@ const loadingMedia = ref(false)
 const showTerritoryMap = ref(false)
 const territoryZones = ref<any[]>([])
 const territoryMapUrl = ref('')
+
+// Master audio player ref (for syncing with players)
+const masterAudioRef = ref<HTMLAudioElement | null>(null)
 
 const eventDraft = ref({
   title: '',
@@ -1151,6 +1154,7 @@ const toggleNPCVisibility = async (npc: any) => {
   const updated = inGameNpcs.map((currentNpc: any) => ({
     id: currentNpc.id,
     name: currentNpc.name,
+    photo_url: currentNpc.photo,
     type: currentNpc.type,
     isVisible: currentNpc.id === npc.id ? newValue : currentNpc.visibleToPlayers,
     isSpotlight: currentNpc.isSpotlight
@@ -1191,6 +1195,7 @@ const setNpcSpotlight = async (npcId: string | null) => {
   const updated = inGameNpcs.map((currentNpc: any) => ({
     id: currentNpc.id,
     name: currentNpc.name,
+    photo_url: currentNpc.photo,
     type: currentNpc.type,
     isVisible: currentNpc.visibleToPlayers,
     isSpotlight: npcId ? currentNpc.id === npcId : false
@@ -1230,6 +1235,45 @@ const saveSceneName = async () => {
       console.error('LIVE: Erro ao salvar cena:', e)
     }
   }, 300)
+}
+
+// ============================================
+// Audio sync to players
+// ============================================
+
+// Definir volume inicial do player quando a música carrega
+const initializeAudioVolume = () => {
+  if (!masterAudioRef.value) return
+  masterAudioRef.value.volume = 0.2 // 20%
+  console.log('🎵 Mestre: Volume inicial definido para 20%')
+  syncAudioImmediate() // Sincronizar imediatamente
+}
+
+// Sincronização IMEDIATA (sem delay) para play/pause/volume/seek
+const syncAudioImmediate = async () => {
+  if (!masterAudioRef.value || !isGameLive.value) return
+  
+  try {
+    const audio = masterAudioRef.value
+    
+    console.log('🔄 Mestre: Sincronizando áudio com jogadores', {
+      playing: !audio.paused,
+      time: audio.currentTime.toFixed(2),
+      volume: Math.round(audio.volume * 100)
+    })
+    
+    await supabase
+      .from('live_game_state')
+      .update({
+        current_audio_playing: !audio.paused,
+        current_audio_time: audio.currentTime,
+        current_audio_volume: Math.round(audio.volume * 100)
+      })
+      .eq('campaign_id', campaignId)
+    
+  } catch (e) {
+    console.error('LIVE: Erro ao sincronizar áudio:', e)
+  }
 }
 
 // ============================================
@@ -1565,46 +1609,46 @@ const startRealtime = () => {
 // Lifecycle
 // ============================================
 
-// Stop live session when master navigates away (handles logout + manual navigation)
-const handleBeforeUnload = () => {
+// Stop live session ONLY when master closes browser/tab (NOT when navigating)
+const handleBeforeUnload = (event: BeforeUnloadEvent) => {
   if (!isGameLive.value) return
   
-  // Chamada síncrona para garantir que a sessão seja encerrada antes da página fechar
-  // Usando fetch com keepalive para garantir que a requisição seja enviada mesmo após a página fechar
-  const stopSessionSync = async () => {
-    try {
-      // Buscar current_npcs para ocultar NPCs
-      const { data: currentState } = await supabase
-        .from('live_game_state')
-        .select('current_npcs')
-        .eq('campaign_id', campaignId)
-        .maybeSingle()
-
-      const hiddenNpcs = (currentState?.current_npcs ?? []).map((npc: any) => ({
-        ...npc,
-        isVisible: false,
-        isSpotlight: false,
-      }))
-
-      // Atualizar estado para encerrar sessão
-      await supabase
-        .from('live_game_state')
-        .update({
-          is_live: false,
-          active_players: [],
-          current_scene: '',
-          current_npcs: hiddenNpcs,
-          timeline_events: [],
-          show_territory_map: false,
-        })
-        .eq('campaign_id', campaignId)
-    } catch (e) {
-      console.error('Erro ao encerrar sessão:', e)
-    }
+  console.log('⚠️ MESTRE: Encerrando sessão (fechando navegador/aba)')
+  
+  // Usar sendBeacon para garantir que a requisição seja enviada mesmo após fechar
+  // Essa é a forma mais confiável de enviar dados ao fechar a página
+  const supabaseUrl = config.public.supabaseUrl
+  const supabaseKey = config.public.supabaseKey
+  
+  // Criar payload para encerrar sessão
+  const payload = {
+    is_live: false,
+    active_players: [],
+    current_scene: '',
+    timeline_events: [],
+    show_territory_map: false
   }
   
-  // Executar de forma síncrona (navegador garante que a chamada seja completada)
-  stopSessionSync()
+  // Tentar com fetch + keepalive (mais confiável que async/await no beforeunload)
+  try {
+    fetch(`${supabaseUrl}/rest/v1/live_game_state?campaign_id=eq.${campaignId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload),
+      keepalive: true // Garante que a requisição continue mesmo após fechar a página
+    })
+  } catch (e) {
+    console.error('❌ Erro ao encerrar sessão:', e)
+  }
+  
+  // Opcional: Adicionar mensagem de confirmação (alguns navegadores não mostram mais)
+  // event.preventDefault()
+  // event.returnValue = ''
 }
 
 onMounted(async () => {
@@ -1651,12 +1695,22 @@ watch(sessionActive, async (isActive) => {
   }
 })
 
-onBeforeUnmount(async () => {
+onBeforeUnmount(() => {
+  console.log('🔄 MESTRE: Componente sendo desmontado (navegando no sistema)')
+  
+  // Remover event listener
   if (process.client) {
     window.removeEventListener('beforeunload', handleBeforeUnload)
-    // NÃO encerrar sessão ao navegar - só ao fechar navegador (handleBeforeUnload já cuida disso)
   }
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  
+  // NÃO encerrar sessão ao navegar - apenas ao fechar navegador/aba
+  // A sessão continua ativa quando o mestre vai para outras páginas do sistema
+  console.log('✅ Sessão permanece ativa (navegação interna)')
+  
+  // Limpar canal realtime
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel)
+  }
   
   // Desinscrever do canal de dados
   unsubscribeFromRolls()

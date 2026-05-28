@@ -2,7 +2,10 @@
 // useDice - Composable para Sistema de Dados
 // ============================================
 
+import { ref, readonly } from 'vue'
 import { createClient } from '@supabase/supabase-js'
+import { useRuntimeConfig } from '#imports'
+import { useAuth } from '~/composables/useAuth'
 import type { DiceRollConfig, RollResult, RouseCheckResult } from '~/types/dice'
 import { performRoll, performRouseCheck } from '~/components/live/dice/DiceEngine'
 
@@ -288,7 +291,10 @@ export const useDice = () => {
       difficulty: dbRow.difficulty,
       modifier: dbRow.modifier,
       
-      diceResults: dbRow.dice_results,
+      diceResults: {
+        normal: [...(dbRow.dice_results?.normal || [])],
+        hunger: [...(dbRow.dice_results?.hunger || [])]
+      },
       
       successes: dbRow.successes,
       totalSuccesses: dbRow.successes,
@@ -304,7 +310,7 @@ export const useDice = () => {
 
   return {
     // Estado
-    rolls: readonly(rolls),
+    rolls,
     isRolling: readonly(isRolling),
     lastRollId: readonly(lastRollId),
 

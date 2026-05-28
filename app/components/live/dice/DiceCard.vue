@@ -126,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RollResult } from '~/types/dice'
 
 const props = defineProps<{
