@@ -51,6 +51,7 @@ Scripts que corrigem bugs ou problemas:
 - `fix-invite-campaign-name.sql` - Correção do nome na tabela de convites
 - `fix-invite-code-policy.sql` - Correção de política RLS de convites
 - `fix-player-update-policy.sql` - Correção de política de update de jogadores
+- `fix-live-active-players-policy.sql` - Corrige presença online (active_players) para jogadores no live
 
 ### Utilitários
 - `supabase-disable-rls.sql` - ⚠️ **Emergências apenas** - Desabilita RLS

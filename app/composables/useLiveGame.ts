@@ -499,6 +499,18 @@ export const useLiveGame = () => {
     if (!user.value) return
 
     try {
+      // Caminho principal: RPC SECURITY DEFINER (evita bloqueio por RLS em active_players)
+      const { data: rpcPlayers, error: rpcError } = await supabase.rpc('join_live_game_presence', {
+        campaign_id_param: campaignId,
+      })
+
+      if (!rpcError) {
+        setActivePlayers((rpcPlayers as string[]) || [])
+        return
+      }
+
+      console.warn('join_live_game_presence RPC indisponível, usando fallback legacy:', rpcError)
+
       // Sempre lê do banco — evita estado local desatualizado ou nulo
       const { data: state, error: fetchErr } = await supabase
         .from('live_game_state')
@@ -534,10 +546,22 @@ export const useLiveGame = () => {
   }
 
   const leaveGame = async (campaignId: string) => {
-    if (!user.value || !liveGameState.value) return
+    if (!user.value) return
 
     try {
-      const currentPlayers = liveGameState.value.activePlayers || []
+      // Caminho principal: RPC SECURITY DEFINER (evita bloqueio por RLS em active_players)
+      const { data: rpcPlayers, error: rpcError } = await supabase.rpc('leave_live_game_presence', {
+        campaign_id_param: campaignId,
+      })
+
+      if (!rpcError) {
+        setActivePlayers((rpcPlayers as string[]) || [])
+        return
+      }
+
+      console.warn('leave_live_game_presence RPC indisponível, usando fallback legacy:', rpcError)
+
+      const currentPlayers = liveGameState.value?.activePlayers || []
       const updatedPlayers = currentPlayers.filter(playerId => playerId !== user.value!.id)
       
       const { error: updateError } = await supabase
@@ -548,6 +572,8 @@ export const useLiveGame = () => {
         .eq('campaign_id', campaignId)
 
       if (updateError) throw updateError
+
+      setActivePlayers(updatedPlayers)
     } catch (err: any) {
       console.error('Erro ao sair do jogo:', err)
       throw err
