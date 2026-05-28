@@ -621,6 +621,14 @@
 
         </div>
 
+        <!-- ── Painel Direito — Sistema de Dados ── -->
+        <div class="w-96 border-l border-[#2d1515] shrink-0" style="background:#0a0a1a;">
+          <DiceFeed 
+            :rolls="diceRolls"
+            @open-roll-modal="showDiceRollModal = true"
+          />
+        </div>
+
         <!-- ── Overlay detalhe de NPC ── -->
         <div
           v-if="selectedNPC"
@@ -642,6 +650,13 @@
 
       </div><!-- /flex layout -->
     </template>
+
+    <!-- Modal de Rolagem de Dados -->
+    <DiceRollModal 
+      v-model="showDiceRollModal"
+      :current-hunger="currentHunger"
+      @roll="handleDiceRoll"
+    />
 
     <!-- Confirmação de evento narrativo -->
     <div
@@ -791,8 +806,12 @@ import { useCampaign } from '~/composables/useCampaign'
 import { useAuth } from '~/composables/useAuth'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { useToast } from '~/composables/useToast'
+import { useDice } from '~/composables/useDice'
 import { createClient } from '@supabase/supabase-js'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
+import DiceFeed from '~/components/live/dice/DiceFeed.vue'
+import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
+import type { DiceRollConfig } from '~/types/dice'
 
 // ============================================
 // Route
@@ -826,6 +845,16 @@ const {
   addNPCToGame,
   removeNPCFromGame,
 } = useLiveGame()
+
+// Sistema de dados
+const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = useDice()
+
+// Sistema de dados - Estados
+const showDiceRollModal = ref(false)
+const currentHunger = ref(2) // TODO: Pegar da ficha do mestre
+
+// Converter rolls readonly para array normal (compatibilidade com componente)
+const diceRolls = computed(() => [...rolls.value] as any[])
 
 // ============================================
 // Local state
@@ -1487,6 +1516,21 @@ const confirmDeleteEvent = async () => {
 }
 
 // ============================================
+// Sistema de Dados - Handlers
+// ============================================
+const handleDiceRoll = async (config: DiceRollConfig) => {
+  try {
+    const characterName = campaign.value?.master_name || 'Mestre'
+    await rollDice(campaignId, config, characterName)
+    showDiceRollModal.value = false
+    toast.success('Rolagem realizada!', 'Os dados foram lançados.')
+  } catch (e: any) {
+    console.error('LIVE: Erro ao rolar dados:', e)
+    toast.error('Erro ao rolar dados', e?.message ?? 'Tente novamente.')
+  }
+}
+
+// ============================================
 // Realtime subscription — sync session state
 // ============================================
 const startRealtime = () => {
@@ -1582,6 +1626,11 @@ onMounted(async () => {
   }
 
   startRealtime()
+  
+  // Carregar e sincronizar rolagens de dados
+  await loadRolls(campaignId)
+  subscribeToRolls(campaignId)
+  
   if (process.client) window.addEventListener('beforeunload', handleBeforeUnload)
   pageLoading.value = false
 })
@@ -1605,12 +1654,12 @@ watch(sessionActive, async (isActive) => {
 onBeforeUnmount(async () => {
   if (process.client) {
     window.removeEventListener('beforeunload', handleBeforeUnload)
-    // Encerrar sessão ao sair da página (navegação ou logout)
-    if (isGameLive.value) {
-      await stopLiveGame(campaignId)
-    }
+    // NÃO encerrar sessão ao navegar - só ao fechar navegador (handleBeforeUnload já cuida disso)
   }
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  
+  // Desinscrever do canal de dados
+  unsubscribeFromRolls()
 })
 </script>
 
