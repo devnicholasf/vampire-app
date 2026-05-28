@@ -209,7 +209,7 @@ const resultBannerClass = computed(() => {
   if (props.result.isBestialFailure) return 'bg-red-950/60 border border-red-800'
   if (props.result.isCritical) return 'bg-yellow-950/30 border border-yellow-900/40'
   if (props.result.successes >= props.result.difficulty) return 'bg-green-950/30 border border-green-900/40'
-  return 'bg-[#0a0a1a] border border-[#2d1515]'
+  return 'bg-red-950/20 border border-red-900/40'
 })
 
 const resultTextClass = computed(() => {
@@ -217,13 +217,14 @@ const resultTextClass = computed(() => {
   if (props.result.isBestialFailure) return 'text-red-500'
   if (props.result.isCritical) return 'text-yellow-400'
   if (props.result.successes >= props.result.difficulty) return 'text-green-400'
-  return 'text-gray-400'
+  return 'text-red-300'
 })
 
 const resultDescriptionClass = computed(() => {
   if (props.result.isMessyCritical || props.result.isBestialFailure) return 'text-red-200/80'
   if (props.result.isCritical) return 'text-yellow-200/70'
-  return 'text-[#c4c4d4]/70'
+  if (props.result.successes >= props.result.difficulty) return 'text-[#c4c4d4]/70'
+  return 'text-red-200/65'
 })
 </script>
 

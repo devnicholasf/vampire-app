@@ -408,6 +408,31 @@ export const useCampaign = () => {
     try {
       console.log('Deletando campanha:', campaignId)
 
+      // Limpar arquivos de mídia da campanha no Storage para evitar lixo órfão.
+      const { data: mediaFiles, error: listError } = await supabase.storage
+        .from('campaign-media')
+        .list(campaignId, { limit: 1000, sortBy: { column: 'name', order: 'asc' } })
+
+      if (listError) {
+        console.error('Erro ao listar mídias da campanha:', listError)
+        throw new Error(`Erro ao limpar mídias da campanha: ${listError.message}`)
+      }
+
+      const filePathsToDelete = (mediaFiles || [])
+        .filter((file: any) => file?.name && file.name !== '.emptyFolderPlaceholder')
+        .map((file: any) => `${campaignId}/${file.name}`)
+
+      if (filePathsToDelete.length > 0) {
+        const { error: removeError } = await supabase.storage
+          .from('campaign-media')
+          .remove(filePathsToDelete)
+
+        if (removeError) {
+          console.error('Erro ao remover mídias da campanha:', removeError)
+          throw new Error(`Erro ao remover mídias da campanha: ${removeError.message}`)
+        }
+      }
+
       const { error: deleteError } = await supabase
         .from('campaigns')
         .delete()

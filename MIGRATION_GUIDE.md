@@ -65,6 +65,25 @@ CREATE TABLE IF NOT EXISTS dice_rolls (
 CREATE INDEX idx_dice_rolls_campaign ON dice_rolls(campaign_id, created_at DESC);
 ```
 
+### 2.1 Otimização de Sessão Inativa (recomendado)
+
+Execute:
+
+```sql
+-- Arquivo: database/add-live-session-timeout.sql
+-- Adiciona last_activity_at + RPC cleanup_inactive_live_sessions(timeout_minutes)
+```
+
+### 2.2 Retenção de Rolagens (recomendado)
+
+Execute:
+
+```sql
+-- Arquivo: database/optimize-dice-retention.sql
+-- Adiciona cleanup_dice_rolls_retention(retention_days, batch_size)
+-- Exemplo manual: SELECT cleanup_dice_rolls_retention(90, 5000);
+```
+
 ### 2. Configuração do Supabase Storage
 
 - Criar bucket `campaign-media` (público)

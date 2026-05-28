@@ -301,6 +301,8 @@ const { permissions } = useCampaign(campaignId)
 ### ⚠️ Pendente imediato
 - [ ] **EXECUTAR SQL 1**: `database/add-live-media-columns.sql` no Supabase SQL Editor
 - [ ] **EXECUTAR SQL 2**: `database/create-dice-rolls.sql` no Supabase SQL Editor (tabela dice_rolls)
+- [ ] **EXECUTAR SQL 3**: `database/add-live-session-timeout.sql` (timeout por inatividade)
+- [ ] **EXECUTAR SQL 4**: `database/optimize-dice-retention.sql` (limpeza em lotes de rolagens)
 - [ ] Testar fluxo completo: upload → picker → adicionar à cena → olho → jogador vê
 - [ ] Testar autoplay de áudio nos navegadores (pode precisar de interação do usuário primeiro)
 

@@ -52,6 +52,7 @@ interface TimelineEvent {
 export const useLiveGame = () => {
   const config = useRuntimeConfig()
   const { user } = useAuth()
+  const LIVE_TIMEOUT_MINUTES = 30
   
   // Criar cliente Supabase
   const supabase = createClient(
@@ -404,6 +405,8 @@ export const useLiveGame = () => {
     loading.value = true
     error.value = null
     try {
+      await cleanupInactiveSessions()
+
       const { data, error: sbErr } = await supabase
         .from('live_game_state')
         .select('*')
@@ -437,6 +440,17 @@ export const useLiveGame = () => {
       return null
     } finally {
       loading.value = false
+    }
+  }
+
+  const cleanupInactiveSessions = async (timeoutMinutes: number = LIVE_TIMEOUT_MINUTES) => {
+    try {
+      await supabase.rpc('cleanup_inactive_live_sessions', {
+        timeout_minutes: timeoutMinutes,
+      })
+    } catch (err) {
+      // Falha não-bloqueante: a sessão segue funcional mesmo sem cleanup.
+      console.warn('cleanup_inactive_live_sessions não disponível ou falhou:', err)
     }
   }
 
@@ -589,6 +603,7 @@ export const useLiveGame = () => {
 
     // Real-time Methods
     subscribeToLiveGame,
+    cleanupInactiveSessions,
 
     // Utility Methods
     clearLiveGameData
