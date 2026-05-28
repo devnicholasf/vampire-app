@@ -93,6 +93,33 @@
             :active-players="(activePlayers as string[])"
             mode="vertical"
           />
+
+          <!-- Botão da Ficha (fixo no final da coluna) -->
+          <div class="mt-auto pt-6">
+            <button
+              class="group flex flex-col items-center gap-1.5 text-[#d4a647] hover:text-[#ffe7a3] transition-colors"
+              title="Abrir ficha do personagem"
+              @click="openPlayerSheet"
+            >
+              <span
+                class="w-11 h-11 rounded-lg border flex items-center justify-center transition-all duration-200 group-hover:scale-105"
+                style="
+                  border-color:#b91c1c;
+                  background:linear-gradient(160deg,#1a0a0a 0%,#2a0d0d 45%,#0d0d20 100%);
+                  box-shadow:0 0 14px rgba(185,28,28,0.45), inset 0 0 12px rgba(212,166,71,0.18);
+                "
+              >
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="8" y1="13" x2="16" y2="13"/>
+                  <line x1="8" y1="17" x2="13" y2="17"/>
+                  <line x1="8" y1="9" x2="10" y2="9"/>
+                </svg>
+              </span>
+              <span class="text-[9px] uppercase tracking-[0.12em] font-semibold text-[#fca5a5] group-hover:text-[#ffe7a3]">Ficha</span>
+            </button>
+          </div>
         </div>
 
         <!-- Coluna Central: Conteúdo principal -->
@@ -209,6 +236,26 @@
         :current-hunger="currentHunger"
         @roll="handleDiceRoll"
       />
+
+      <!-- Modal da Ficha do Jogador -->
+      <PlayerSheet
+        v-if="showPlayerSheet && myCharacter"
+        :key="playerSheetKey"
+        :player="myCharacter"
+        :campaign-id="campaignId"
+        :canEdit="true"
+        @close="closePlayerSheet"
+        @save="savePlayerSheetFromLive"
+      />
+
+      <BaseToast
+        :message="toastMessage"
+        title="Ficha do Personagem"
+        :variant="toastVariant"
+        :show="showToast"
+        @dismiss="hideToast"
+        class="fixed top-4 right-4 z-[10000]"
+      />
       
     </template>
 
@@ -220,8 +267,11 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter, definePageMeta, useRuntimeConfig, navigateTo } from '#imports'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { useDice } from '~/composables/useDice'
+import { useCampaign } from '~/composables/useCampaign'
 import { useAuth } from '~/composables/useAuth'
 import { createClient } from '@supabase/supabase-js'
+import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
+import BaseToast from '~/components/ui/BaseToast.vue'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
@@ -243,6 +293,7 @@ const supabase   = createClient(config.public.supabaseUrl, config.public.supabas
 const { isGameLive, fetchLiveGameState, joinGame, leaveGame, activePlayers, setActivePlayers } = useLiveGame()
 const { user } = useAuth()
 const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = useDice()
+const { savePlayerSheet } = useCampaign()
 
 // ── State ──────────────────────────────────────────
 const campaignName    = ref('')
@@ -268,6 +319,12 @@ let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let isDiceRolling = false
 const isLeavingPage    = ref(false)
 const coteriePlayers   = ref<CoteriePlayer[]>([])
+const myCharacter      = ref<any>(null)
+const showPlayerSheet  = ref(false)
+const playerSheetKey   = ref(0)
+const showToast        = ref(false)
+const toastMessage     = ref('')
+const toastVariant     = ref<'success' | 'error' | 'warning' | 'info'>('success')
 
 // ── Computed ───────────────────────────────────────────────
 const isLiveActive     = computed(() => isGameLive.value)
@@ -307,6 +364,17 @@ const loadState = async () => {
         sheet: p.sheet ?? null,
         role: p.role ?? 'player',
       }))
+
+    const currentPlayer = rawPlayers.find((p: any) => p.user_id === user.value?.id)
+    if (currentPlayer) {
+      myCharacter.value = {
+        user_id: currentPlayer.user_id,
+        character_name: currentPlayer.character_name,
+        name: currentPlayer.character_name,
+        sheet: currentPlayer.sheet || null,
+        role: currentPlayer.role,
+      }
+    }
   }
 
   const state = await fetchLiveGameState(campaignId)
@@ -453,6 +521,43 @@ const goBack = async () => {
     }
     await navigateTo(`/campaign/${campaignId}/player`)
   }
+}
+
+const openPlayerSheet = () => {
+  if (!myCharacter.value) return
+  showPlayerSheet.value = true
+}
+
+const closePlayerSheet = async () => {
+  showPlayerSheet.value = false
+  await loadState()
+  playerSheetKey.value++
+}
+
+const savePlayerSheetFromLive = async (updatedPlayer: any) => {
+  if (!user.value?.id) return
+
+  try {
+    await savePlayerSheet(campaignId, user.value.id, updatedPlayer.sheet)
+    showPlayerSheet.value = false
+    await loadState()
+    playerSheetKey.value++
+
+    toastMessage.value = 'Ficha salva com sucesso.'
+    toastVariant.value = 'success'
+    showToast.value = true
+    setTimeout(() => { showToast.value = false }, 4000)
+  } catch (error) {
+    console.error('Erro ao salvar ficha no live-player:', error)
+    toastMessage.value = 'Erro ao salvar ficha. Tente novamente.'
+    toastVariant.value = 'error'
+    showToast.value = true
+    setTimeout(() => { showToast.value = false }, 4000)
+  }
+}
+
+const hideToast = () => {
+  showToast.value = false
 }
 
 // Remove player from active list when closing page/logging out
