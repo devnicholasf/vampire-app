@@ -199,7 +199,8 @@ const campaignId = route.params.id as string
 const config     = useRuntimeConfig()
 const supabase   = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
-const { isGameLive, fetchLiveGameState } = useLiveGame()
+const { isGameLive, fetchLiveGameState, joinGame, leaveGame } = useLiveGame()
+const { user } = useAuth()
 
 // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const campaignName    = ref('')
@@ -287,16 +288,74 @@ watch(currentAudioUrl, async (newUrl) => {
 
 
 // â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const goBack = () => router.push(`/campaign/${campaignId}/player`)
+const goBack = async () => {
+  await leaveGame(campaignId)
+  router.push(`/campaign/${campaignId}/player`)
+}
+
+// Remove player from active list when closing page/logging out
+const handleBeforeUnload = () => {
+  if (!user.value) return
+  
+  // Chamada síncrona para remover jogador da lista de ativos
+  const leaveGameSync = async () => {
+    try {
+      const { data: state } = await supabase
+        .from('live_game_state')
+        .select('active_players')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+      
+      if (state) {
+        const currentPlayers = state.active_players || []
+        const updatedPlayers = currentPlayers.filter((id: string) => id !== user.value!.id)
+        
+        await supabase
+          .from('live_game_state')
+          .update({ active_players: updatedPlayers })
+          .eq('campaign_id', campaignId)
+      }
+    } catch (e) {
+      console.error('Erro ao sair do jogo:', e)
+    }
+  }
+  
+  leaveGameSync()
+}
 
 // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 onMounted(async () => {
   await loadState()
+  
+  // Adicionar jogador à lista de ativos quando entrar na sessão
+  if (isGameLive.value && user.value) {
+    try {
+      await joinGame(campaignId)
+    } catch (e) {
+      console.error('Erro ao entrar no jogo:', e)
+    }
+  }
+  
   startRealtime()
+  
+  // Adicionar listener para fechar página
+  if (process.client) {
+    window.addEventListener('beforeunload', handleBeforeUnload)
+  }
+  
   pageLoading.value = false
 })
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
+  // Remover jogador da lista ao sair da página
+  if (user.value) {
+    await leaveGame(campaignId)
+  }
+  
+  if (process.client) {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+  }
+  
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
 })
 </script>

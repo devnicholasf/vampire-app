@@ -1104,13 +1104,30 @@ const fetchLiveNpcsFromDb = async () => {
 }
 
 const toggleNPCVisibility = async (npc: any) => {
-  const current = await fetchLiveNpcsFromDb()
-  if (!current.length) return  // Guard: don't wipe NPCs if DB fetch failed or returned empty
-  const updated = current.map((currentNpc: any) => {
-    if (currentNpc.id !== npc.id) return currentNpc
-    return { ...currentNpc, isVisible: !currentNpc.isVisible }
-  })
+  // Use estado local (já sincronizado via realtime) ao invés de buscar do banco
+  const inGameNpcs = allNPCs.value.filter(n => n.inGame)
+  if (inGameNpcs.length === 0) return
 
+  // Capturar valor original ANTES de modificar
+  const targetNpc = allNPCs.value.find(n => n.id === npc.id)
+  if (!targetNpc) return
+  
+  const originalValue = targetNpc.visibleToPlayers
+  const newValue = !originalValue
+
+  // Aplicar mudança localmente primeiro (otimista)
+  targetNpc.visibleToPlayers = newValue
+
+  // Construir array atualizado para o banco usando o NOVO valor
+  const updated = inGameNpcs.map((currentNpc: any) => ({
+    id: currentNpc.id,
+    name: currentNpc.name,
+    type: currentNpc.type,
+    isVisible: currentNpc.id === npc.id ? newValue : currentNpc.visibleToPlayers,
+    isSpotlight: currentNpc.isSpotlight
+  }))
+
+  // Atualizar banco (assíncrono)
   const { error } = await supabase
     .from('live_game_state')
     .update({ current_npcs: updated })
@@ -1118,25 +1135,39 @@ const toggleNPCVisibility = async (npc: any) => {
 
   if (error) {
     console.error('LIVE: Erro ao atualizar visibilidade de NPC:', error)
-    return
+    // Reverter para valor original em caso de erro
+    targetNpc.visibleToPlayers = originalValue
+    toast.error('Erro ao atualizar visibilidade', 'Tente novamente')
   }
-
-  applyLiveNpcState(updated)
 }
 
 const setNpcSpotlight = async (npcId: string | null) => {
-  const current = await fetchLiveNpcsFromDb()
-  if (!current.length) return
+  // Use estado local ao invés de buscar do banco
+  const inGameNpcs = allNPCs.value.filter(n => n.inGame)
+  if (inGameNpcs.length === 0) return
 
-  if (npcId && !current.some((currentNpc: any) => currentNpc.id === npcId)) {
+  if (npcId && !inGameNpcs.some(n => n.id === npcId)) {
     return
   }
 
-  const updated = current.map((currentNpc: any) => ({
-    ...currentNpc,
-    isSpotlight: npcId ? currentNpc.id === npcId : false,
+  // Capturar estados originais ANTES de modificar
+  const originalStates = new Map(allNPCs.value.map(n => [n.id, n.isSpotlight]))
+
+  // Aplicar mudança localmente primeiro (otimista)
+  allNPCs.value.forEach(n => {
+    n.isSpotlight = npcId ? n.id === npcId : false
+  })
+
+  // Construir array atualizado para o banco
+  const updated = inGameNpcs.map((currentNpc: any) => ({
+    id: currentNpc.id,
+    name: currentNpc.name,
+    type: currentNpc.type,
+    isVisible: currentNpc.visibleToPlayers,
+    isSpotlight: npcId ? currentNpc.id === npcId : false
   }))
 
+  // Atualizar banco (assíncrono)
   const { error } = await supabase
     .from('live_game_state')
     .update({ current_npcs: updated })
@@ -1144,22 +1175,32 @@ const setNpcSpotlight = async (npcId: string | null) => {
 
   if (error) {
     console.error('LIVE: Erro ao destacar NPC na cena:', error)
-    return
+    // Reverter para estados originais em caso de erro
+    allNPCs.value.forEach(n => {
+      n.isSpotlight = originalStates.get(n.id) ?? false
+    })
+    toast.error('Erro ao destacar NPC', 'Tente novamente')
   }
-
-  applyLiveNpcState(updated)
 }
 
 // ============================================
 // Scene name
 // ============================================
+let saveSceneTimeout: NodeJS.Timeout | null = null
+
 const saveSceneName = async () => {
   if (!isGameLive.value) return
-  try {
-    await updateCurrentScene(currentSceneName.value)
-  } catch (e) {
-    console.error('LIVE: Erro ao salvar cena:', e)
-  }
+  
+  // Debounce: aguarda 300ms após última edição antes de salvar
+  if (saveSceneTimeout) clearTimeout(saveSceneTimeout)
+  
+  saveSceneTimeout = setTimeout(async () => {
+    try {
+      await updateCurrentScene(currentSceneName.value)
+    } catch (e) {
+      console.error('LIVE: Erro ao salvar cena:', e)
+    }
+  }, 300)
 }
 
 // ============================================
@@ -1482,10 +1523,44 @@ const startRealtime = () => {
 
 // Stop live session when master navigates away (handles logout + manual navigation)
 const handleBeforeUnload = () => {
-  if (isGameLive.value) {
-    // Best-effort stop on tab close/refresh
-    stopLiveGame(campaignId)
+  if (!isGameLive.value) return
+  
+  // Chamada síncrona para garantir que a sessão seja encerrada antes da página fechar
+  // Usando fetch com keepalive para garantir que a requisição seja enviada mesmo após a página fechar
+  const stopSessionSync = async () => {
+    try {
+      // Buscar current_npcs para ocultar NPCs
+      const { data: currentState } = await supabase
+        .from('live_game_state')
+        .select('current_npcs')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      const hiddenNpcs = (currentState?.current_npcs ?? []).map((npc: any) => ({
+        ...npc,
+        isVisible: false,
+        isSpotlight: false,
+      }))
+
+      // Atualizar estado para encerrar sessão
+      await supabase
+        .from('live_game_state')
+        .update({
+          is_live: false,
+          active_players: [],
+          current_scene: '',
+          current_npcs: hiddenNpcs,
+          timeline_events: [],
+          show_territory_map: false,
+        })
+        .eq('campaign_id', campaignId)
+    } catch (e) {
+      console.error('Erro ao encerrar sessão:', e)
+    }
   }
+  
+  // Executar de forma síncrona (navegador garante que a chamada seja completada)
+  stopSessionSync()
 }
 
 onMounted(async () => {
@@ -1528,7 +1603,13 @@ watch(sessionActive, async (isActive) => {
 })
 
 onBeforeUnmount(async () => {
-  if (process.client) window.removeEventListener('beforeunload', handleBeforeUnload)
+  if (process.client) {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    // Encerrar sessão ao sair da página (navegação ou logout)
+    if (isGameLive.value) {
+      await stopLiveGame(campaignId)
+    }
+  }
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
 })
 </script>
