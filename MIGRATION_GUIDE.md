@@ -1,12 +1,12 @@
 # 🔄 Guia de Migração
 
-![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-5.1.0-blue?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
 
 > Guia completo para migração entre versões e setup de novos ambientes
 
-**Versão Atual:** 5.0.0  
-**Última Atualização:** Maio 19, 2026
+**Versão Atual:** 5.1.0  
+**Última Atualização:** Maio 28, 2026
 
 ---
 
@@ -30,11 +30,39 @@
 Execute estes scripts no Supabase SQL Editor:
 
 ```sql
--- Adicionar colunas de mídia ao vivo
+-- 1. Adicionar colunas de mídia ao vivo
 -- Arquivo: database/add-live-media-columns.sql
 ALTER TABLE live_game_state
   ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
-  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS current_audio_playing BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS current_audio_time DOUBLE PRECISION DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS current_audio_volume INTEGER DEFAULT 20;
+
+-- 2. Criar tabela de rolagens de dados
+-- Arquivo: database/create-dice-rolls.sql
+CREATE TABLE IF NOT EXISTS dice_rolls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  character_name TEXT NOT NULL,
+  roll_type TEXT NOT NULL,
+  attribute TEXT NOT NULL,
+  skill TEXT,
+  pool_total INTEGER NOT NULL,
+  hunger INTEGER NOT NULL,
+  difficulty INTEGER NOT NULL,
+  modifier INTEGER DEFAULT 0,
+  dice_results JSONB NOT NULL,
+  successes INTEGER NOT NULL,
+  is_critical BOOLEAN DEFAULT false,
+  is_messy_critical BOOLEAN DEFAULT false,
+  is_bestial_failure BOOLEAN DEFAULT false,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_dice_rolls_campaign ON dice_rolls(campaign_id, created_at DESC);
 ```
 
 ### 2. Configuração do Supabase Storage

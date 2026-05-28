@@ -30,8 +30,8 @@
 
 ## ✨ Visão Geral
 
-**Versão Atual:** 5.0.0 - Sistema de Jogo ao Vivo Completo  
-**Última Atualização:** Maio 19, 2026
+**Versão Atual:** 5.1.0 - Sistema de Dados V5 e Jogo ao Vivo Sincronizado  
+**Última Atualização:** Maio 28, 2026
 
 Uma plataforma web completa para mestres e jogadores gerenciarem suas crônicas de Vampire: The Masquerade V5. Sistema desenvolvido com foco em experiência do usuário, sincronização em tempo real e design vampírico imersivo.
 
@@ -52,6 +52,7 @@ Proporcionar uma experiência digital completa para campanhas de V5, desde a cri
 | 🎭 NPCs Integrados | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 📜 Eventos Persistentes | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🎮 Jogo ao Vivo | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
+| 🎲 Sistema de Dados V5 | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🖼️ Upload de Mídia | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) | 
 | 🗺️ Mapa interativo com Marcadores | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |
 | 🗺️ Mapa Político | ![100%](https://img.shields.io/badge/100%25-success?style=flat-square) |

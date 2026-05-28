@@ -195,40 +195,47 @@ export const useAuth = () => {
       if (user.value?.id) {
         const { data: liveStates } = await supabase
           .from('live_game_state')
-          .select('campaign_id')
+          .select('campaign_id, current_npcs, active_players')
           .eq('is_live', true)
           .contains('active_players', [user.value.id])
 
         if (liveStates && liveStates.length > 0) {
-          // Buscar NPCs de cada sessão e ocultar todos (mas não remover da lista)
-          const stateResults = await Promise.all(
-            liveStates.map((ls: any) =>
-              supabase
-                .from('live_game_state')
-                .select('campaign_id, current_npcs')
-                .eq('campaign_id', ls.campaign_id)
-                .maybeSingle()
-            )
-          )
+          const campaignIds = liveStates.map((state: any) => state.campaign_id)
+          const { data: masterCampaigns } = await supabase
+            .from('campaigns')
+            .select('id')
+            .in('id', campaignIds)
+            .eq('master_id', user.value.id)
+
+          const masterCampaignIds = new Set((masterCampaigns ?? []).map((campaign: any) => campaign.id))
 
           await Promise.all(
-            stateResults.map((res: any) => {
-              const state = res.data
-              if (!state) return Promise.resolve()
-              const hiddenNpcs = (state.current_npcs ?? []).map((npc: any) => ({
-                ...npc,
-                isVisible: false,
-                isSpotlight: false,
-              }))
+            liveStates.map((state: any) => {
+              if (masterCampaignIds.has(state.campaign_id)) {
+                // Se for mestre da campanha, encerra a sessão ao vivo.
+                const hiddenNpcs = (state.current_npcs ?? []).map((npc: any) => ({
+                  ...npc,
+                  isVisible: false,
+                  isSpotlight: false,
+                }))
+
+                return supabase
+                  .from('live_game_state')
+                  .update({
+                    is_live: false,
+                    active_players: [],
+                    current_scene: '',
+                    current_npcs: hiddenNpcs,
+                    timeline_events: [],
+                  })
+                  .eq('campaign_id', state.campaign_id)
+              }
+
+              // Se for jogador, apenas remove da lista de ativos.
+              const updatedPlayers = (state.active_players ?? []).filter((playerId: string) => playerId !== user.value!.id)
               return supabase
                 .from('live_game_state')
-                .update({
-                  is_live: false,
-                  active_players: [],
-                  current_scene: '',
-                  current_npcs: hiddenNpcs,
-                  timeline_events: [],
-                })
+                .update({ active_players: updatedPlayers })
                 .eq('campaign_id', state.campaign_id)
             })
           )

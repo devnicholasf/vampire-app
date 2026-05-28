@@ -1,13 +1,13 @@
 ﻿# 📖 Guia de Desenvolvimento
 
-![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-5.1.0-blue?style=flat-square)
 ![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 > Guia completo para desenvolvedores trabalhando no sistema Vampire RPG
 
-**Versão Atual:** 5.0.0  
-**Última Atualização:** Maio 19, 2026
+**Versão Atual:** 5.1.0  
+**Última Atualização:** Maio 28, 2026
 
 ---
 
@@ -299,7 +299,8 @@ const { permissions } = useCampaign(campaignId)
   - [x] Eventos narrativos na timeline
 
 ### ⚠️ Pendente imediato
-- [ ] **EXECUTAR SQL**: `database/add-live-media-columns.sql` no Supabase SQL Editor
+- [ ] **EXECUTAR SQL 1**: `database/add-live-media-columns.sql` no Supabase SQL Editor
+- [ ] **EXECUTAR SQL 2**: `database/create-dice-rolls.sql` no Supabase SQL Editor (tabela dice_rolls)
 - [ ] Testar fluxo completo: upload → picker → adicionar à cena → olho → jogador vê
 - [ ] Testar autoplay de áudio nos navegadores (pode precisar de interação do usuário primeiro)
 

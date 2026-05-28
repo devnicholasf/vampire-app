@@ -1,7 +1,7 @@
 ﻿# 📝 Changelog
 
-![Version](https://img.shields.io/badge/Latest-v5.0.0-blue?style=flat-square)
-![Updated](https://img.shields.io/badge/Updated-May_2026-green?style=flat-square)
+![Version](https://img.shields.io/badge/Latest-v5.1.0-blue?style=flat-square)
+![Updated](https://img.shields.io/badge/Updated-May_28_2026-green?style=flat-square)
 
 > Histórico completo de mudanças e atualizações do projeto
 
@@ -9,11 +9,82 @@
 
 ## 📋 Índice
 
+- [v5.1.0 - Sistema de Dados V5 e Áudio Sincronizado](#-versão-510---sistema-de-dados-v5-e-áudio-sincronizado)
 - [v5.0.0 - Sistema de Jogo ao Vivo](#-versão-500---sistema-de-jogo-ao-vivo)
 - [v4.0.0 - Ficha de Personagem V5](#-versão-400---ficha-de-personagem-v5)
 - [v3.0.0 - Sistema Multi-Usuário](#-versão-300---sistema-multi-usuário)
 - [v2.0.0 - Sistema de Campanhas](#-versão-200---sistema-de-campanhas)
 - [v1.0.0 - Base do Sistema](#-versão-100---base-do-sistema)
+
+---
+
+## 🎲 Versão 5.1.0 - Sistema de Dados V5 e Áudio Sincronizado
+**Data:** Maio 28, 2026
+
+### 🎲 **SISTEMA DE DADOS COMPLETO V5 (DiceEngine.ts)**
+- Engine de rolagem Vampire V5 com matemática correta
+- RNG validado: `Math.floor(Math.random() * 10) + 1` = 1~10 (50% sucesso em 6+)
+- Críticos calculados corretamente: par de 10s = 4 sucessos TOTAIS
+- Fome SUBSTITUI dados normais (não soma)
+- Suporte para: Normal, Oculta, Resistida, Frenesi, Despertar
+- Messy Critical e Bestial Failure detectados automaticamente
+- Função de teste estatístico `testeEstatistico()` para validação
+
+### 🎨 **COMPONENTES DE DADOS**
+- **DiceFeed.vue**: Feed de rolagens em tempo real com scroll automático
+- **DiceCard.vue**: Card de resultado com visual V5 (dados ordenados, cores por tipo)
+- **DiceRollModal.vue**: Modal de rolagem com cálculo de pool, modificadores e dificuldade
+- **RouseCheckButton.vue**: Botão de Teste de Despertar com animação e resultado
+
+### 🔄 **COMPOSABLE useDice.ts**
+- `rollDice()` - Executa rolagem completa e salva no banco
+- `rouseCheck()` - Teste de Despertar com aumento de Fome
+- `loadRolls()` - Carrega histórico de rolagens
+- `subscribeToRolls()` - Realtime sync via Supabase
+- Estado: `rolls`, `isRolling`, `lastRollId`
+
+### 🗄️ **BANCO DE DADOS**
+- Nova tabela `dice_rolls` com todos os campos V5
+- Colunas: pool_total, hunger, difficulty, dice_results (JSONB), successes, is_critical, is_messy_critical, is_bestial_failure
+- Script SQL: `database/create-dice-rolls.sql` (⚠️ EXECUTAR)
+
+### 🎵 **SISTEMA DE ÁUDIO SINCRONIZADO**
+- Sincronização imediata (0ms) sem debounce
+- Volume inicial 20% (correção do bug de 100%)
+- Eventos otimizados: @play, @pause, @volumechange, @seeked, @loadeddata
+- @timeupdate REMOVIDO (causava delay constante)
+- Watch com `flush: 'sync'` no player
+- Tolerância de tempo reduzida para 0.3s (era 1s)
+- Delay total: ~50-100ms (era 300-700ms) = **3-4x mais rápido**
+
+### 🔒 **SISTEMA DE CONFIRMAÇÃO DE SAÍDA**
+- Modal customizado ao clicar em "Dashboard" durante sessão ativa
+- Dialog padrão do navegador ao fechar aba/navegador (beforeunload)
+- Flag `allowPageExit` para controlar saída sem confirmação
+- Sessão continua ativa ao navegar no sistema
+- Sessão encerra apenas ao: fechar navegador/aba OU botão "Encerrar Sessão"
+- Funções: `goBackToMaster()`, `confirmExitAndNavigate()`, `cancelExit()`
+
+### 🔧 **CORREÇÕES TÉCNICAS**
+- ✅ Imports explícitos do Vue em todos os componentes de dados
+- ✅ useDice.ts com `ref`, `readonly` do Vue
+- ✅ live.vue e live-player.vue sem imports duplicados
+- ✅ DiceFeed com tipo flexível para arrays readonly
+- ✅ .gitignore atualizado (.vscode/, *.backup, *.CORRUPTED.*)
+- ✅ Script `dev:chrome` para desenvolvimento no Chrome
+- ✅ OverviewTab.CORRUPTED.vue deletado
+
+### 📦 **NOVOS ARQUIVOS**
+- `app/components/live/dice/DiceEngine.ts` - Engine de rolagem V5
+- `app/components/live/dice/DiceFeed.vue` - Feed de rolagens
+- `app/components/live/dice/DiceCard.vue` - Card de resultado
+- `app/components/live/dice/DiceRollModal.vue` - Modal de rolagem
+- `app/components/live/dice/RouseCheckButton.vue` - Teste de Despertar
+- `app/composables/useDice.ts` - Composable de dados
+- `app/types/dice.ts` - Types do sistema de dados
+- `app/plugins/dice-test.client.ts` - Plugin de teste
+- `database/create-dice-rolls.sql` - SQL migration
+- `.vscode/settings.json` - Config do VS Code
 
 ---
 

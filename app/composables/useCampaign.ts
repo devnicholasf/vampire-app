@@ -322,7 +322,7 @@ export const useCampaign = () => {
         avatar: '',
         resonance: '',
         chronicleTenets: '',
-        touchstonesConvictions: '',
+        touchstonesConvictions: [],
         clanBane: '',
         advantages: [{ name: '', level: 0 }],
         bloodPotency: 0,
@@ -663,6 +663,7 @@ export const useCampaign = () => {
           virtues: { conscience: 1, selfControl: 1, courage: 1 },
           vitality: 1,
           conditions: [''],
+          touchstonesConvictions: [],
           notes: ''
         }
 

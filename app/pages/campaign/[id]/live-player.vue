@@ -7,7 +7,7 @@
     <div v-if="pageLoading" class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="df-spinner"></div>
-        <p class="df-text-muted mt-4">Carregando sess�o...</p>
+        <p class="df-text-muted mt-4">Carregando sessão...</p>
       </div>
     </div>
 
@@ -66,19 +66,23 @@
             <h1 class="text-base font-bold text-white">{{ campaignName }}</h1>
           </div>
           <button
-            class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border border-[#4a4a5a]/40 text-[#6b6b7b] hover:text-white hover:border-[#6b6b7b] transition-colors"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded border font-semibold transition-colors"
+            :class="isLeavingPage
+              ? 'border-[#7f1d1d]/50 text-[#9b9bbb] bg-[#0d0d20] cursor-not-allowed opacity-80'
+              : 'border-[#7f1d1d] text-[#c4c4d4] bg-[#0d0d20] hover:text-white hover:border-[#b91c1c] hover:bg-[#1a0a0a]'"
+            :disabled="isLeavingPage"
             @click="goBack"
           >
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-            Sair
+            {{ isLeavingPage ? 'Saindo...' : 'Sair' }}
           </button>
         </div>
       </div>
 
       <!-- Layout principal: 2 colunas -->
-      <div class="flex" style="min-height:calc(100vh - 57px);">
+      <div class="flex" style="height:calc(100vh - 57px);">
         
-        <!-- Coluna Esquerda: Conte�do principal -->
+        <!-- Coluna Esquerda: Conteúdo principal -->
         <div class="flex-1 flex flex-col items-center justify-start px-6 py-8 gap-8 overflow-y-auto">
 
         <!-- -- Cena Atual -- -->
@@ -161,11 +165,11 @@
           <p class="text-sm text-[#4a4a5a]">Nenhum personagem em cena no momento.</p>
         </div>
 
-        <!-- -- Mapa de Territ�rios -- -->
+        <!-- -- Mapa de Territórios -- -->
         <div v-if="showTerritoryMap && territoryZones.length > 0" class="w-full max-w-5xl">
           <div class="mb-4">
-            <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">??? Mapa de Territ�rios</h3>
-            <p class="text-center text-xs text-[#6b6b7b]">Mapa pol�tico da cidade compartilhado pelo Mestre</p>
+            <h3 class="text-center text-base font-semibold text-[#d4a647] mb-1">🗺️ Mapa de Territórios</h3>
+            <p class="text-center text-xs text-[#6b6b7b]">Mapa político da cidade compartilhado pelo Mestre</p>
           </div>
           
           <TerritoryMapViewer
@@ -177,7 +181,7 @@
         </div>
         
         <!-- Coluna Direita: Sistema de Dados -->
-        <div class="w-96 border-l border-[#2d1515] shrink-0" style="background:#0a0a1a">
+        <div class="w-96 border-l border-[#2d1515] shrink-0 flex flex-col" style="background:#0a0a1a">
           <DiceFeed 
             :rolls="rolls"
             @open-roll-modal="showDiceRollModal = true"
@@ -200,7 +204,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter, definePageMeta, useRuntimeConfig } from '#imports'
+import { useRoute, useRouter, definePageMeta, useRuntimeConfig, navigateTo } from '#imports'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { useDice } from '~/composables/useDice'
 import { useAuth } from '~/composables/useAuth'
@@ -227,6 +231,7 @@ const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = u
 
 // ── State ──────────────────────────────────────────
 const campaignName    = ref('')
+const playerCharacterName = ref('')
 const currentScene    = ref('')
 const liveNpcs        = ref<any[]>([])
 const currentImageUrl = ref('')
@@ -246,6 +251,7 @@ const showDiceRollModal = ref(false)
 const currentHunger     = ref(2) // TODO: Pegar da ficha do jogador
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let isDiceRolling = false
+const isLeavingPage = ref(false)
 
 // ── Computed ───────────────────────────────────────
 const isLiveActive  = computed(() => isGameLive.value)
@@ -281,6 +287,29 @@ const loadState = async () => {
   }
 }
 
+const loadPlayerCharacterName = async () => {
+  if (!user.value?.id) return
+
+  try {
+    const { data: player, error } = await supabase
+      .from('campaign_players')
+      .select('character_name, sheet')
+      .eq('campaign_id', campaignId)
+      .eq('user_id', user.value.id)
+      .maybeSingle()
+
+    if (error) throw error
+
+    const sheetName = String((player as any)?.sheet?.name ?? '').trim()
+    const characterName = String((player as any)?.character_name ?? '').trim()
+
+    playerCharacterName.value = sheetName || characterName
+  } catch (error) {
+    console.error('Erro ao carregar nome do personagem para rolagem:', error)
+    playerCharacterName.value = ''
+  }
+}
+
 const applyState = (data: any) => {
   if (!data) return
   currentScene.value    = data.current_scene ?? ''
@@ -293,7 +322,7 @@ const applyState = (data: any) => {
     currentAudioUrl.value = newAudio
   }
   
-  // Sincronizar estado do �udio
+  // Sincronizar estado do áudio
   const isPlaying = data.current_audio_playing ?? false
   const audioTime = data.current_audio_time ?? 0
   const audioVolume = data.current_audio_volume ?? 20
@@ -369,15 +398,28 @@ watch([currentAudioPlaying, currentAudioTime, currentAudioVolume], () => {
 
 // ── Navigation ─────────────────────────────────────
 const goBack = async () => {
-  await leaveGame(campaignId)
-  router.push(`/campaign/${campaignId}/player`)
+  if (isLeavingPage.value) return
+  isLeavingPage.value = true
+
+  try {
+    await leaveGame(campaignId)
+  } catch (error) {
+    console.error('Erro ao sair da partida ao vivo:', error)
+  } finally {
+    unsubscribeFromRolls()
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel)
+      realtimeChannel = null
+    }
+    await navigateTo(`/campaign/${campaignId}/player`)
+  }
 }
 
 // Remove player from active list when closing page/logging out
 const handleBeforeUnload = () => {
   if (!user.value) return
   
-  // Chamada s�ncrona para remover jogador da lista de ativos
+  // Chamada síncrona para remover jogador da lista de ativos
   const leaveGameSync = async () => {
     try {
       const { data: state } = await supabase
@@ -410,7 +452,8 @@ const handleDiceRoll = async (config: DiceRollConfig) => {
   isDiceRolling = true
   
   try {
-    const characterName = user.value?.email?.split('@')[0] || 'Jogador'
+    const fallbackName = user.value?.username || user.value?.email?.split('@')[0] || 'Jogador'
+    const characterName = playerCharacterName.value || fallbackName
     await rollDice(campaignId, config, characterName)
     showDiceRollModal.value = false
     
@@ -423,9 +466,10 @@ const handleDiceRoll = async (config: DiceRollConfig) => {
 }
 
 onMounted(async () => {
+  await loadPlayerCharacterName()
   await loadState()
   
-  // Adicionar jogador � lista de ativos quando entrar na sess�o
+  // Adicionar jogador à lista de ativos quando entrar na sessão
   if (isGameLive.value && user.value) {
     try {
       await joinGame(campaignId)
@@ -444,7 +488,7 @@ onMounted(async () => {
   
   startRealtime()
   
-  // Adicionar listener para fechar p�gina
+  // Adicionar listener para fechar página
   if (process.client) {
     window.addEventListener('beforeunload', handleBeforeUnload)
   }
@@ -453,7 +497,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(async () => {
-  // Remover jogador da lista ao sair da p�gina
+  // Remover jogador da lista ao sair da página
   if (user.value) {
     await leaveGame(campaignId)
   }
@@ -496,7 +540,7 @@ onBeforeUnmount(async () => {
 .lc-br::after  { right: 0; bottom: 0; }
 @keyframes spin  { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-/* -- Spinner padr�o do sistema -- */
+/* -- Spinner padrão do sistema -- */
 .df-spinner {
   display: inline-block;
   width: 48px;

@@ -1,13 +1,13 @@
 ﻿# 📊 Status de Implementação
 
-![Version](https://img.shields.io/badge/Version-5.0.0-blue?style=flat-square)
-![Progress](https://img.shields.io/badge/Overall-85%25-yellow?style=flat-square)
-![Last_Updated](https://img.shields.io/badge/Updated-May_2026-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-5.1.0-blue?style=flat-square)
+![Progress](https://img.shields.io/badge/Overall-92%25-success?style=flat-square)
+![Last_Updated](https://img.shields.io/badge/Updated-May_28_2026-green?style=flat-square)
 
 > Rastreamento detalhado do progresso de implementação de todas as funcionalidades
 
-**Última Atualização:** Maio 19, 2026  
-**Versão Atual:** 5.0.0
+**Última Atualização:** Maio 28, 2026  
+**Versão Atual:** 5.1.0
 
 ---
 
@@ -39,27 +39,55 @@
 | NPCs | ✅ Funcional | 90% |
 | Timeline | ✅ Funcional | 85% |
 | Mídia/Upload (MediaTab) | ✅ Funcional | 85% |
-| Jogo ao Vivo — Mestre (live.vue) | ✅ Funcional | 90% |
-| Jogo ao Vivo — Jogador (live-player.vue) | ✅ Funcional | 85% |
+| Jogo ao Vivo — Mestre (live.vue) | ✅ Funcional | 95% |
+| Jogo ao Vivo — Jogador (live-player.vue) | ✅ Funcional | 95% |
+| Sistema de Dados V5 (DiceEngine/useDice) | ✅ Completo | 100% |
 | Chat | ⚠️ Parcial | 30% |
 | Combate | ❌ Pendente | 10% |
 
 ---
 
+## 🧭 Sessão Atual (Maio 28, 2026)
+
+### ✅ Concluído nesta sessão
+- Sistema de Dados V5 implementado e integrado em `live.vue` e `live-player.vue`
+- Engine RNG corrigida com validação estatística (`testeEstatistico()`)
+- Feed de rolagens visível para mestre e jogador
+- Sincronização de áudio otimizada (volume inicial 20%, sem debounce, latência reduzida)
+- Fluxo de saída revisado para manter sessão ativa em navegação interna
+- Modal de confirmação para saída via botão "Dashboard"
+
+### ⚠️ Ponto em validação
+- Confirmação/encerramento ao fechar aba/navegador depende de comportamento do `beforeunload` do navegador
+- Navegadores modernos não permitem modal customizado no fechamento da aba; usam diálogo nativo
+
+### 📌 Próximo chat deve validar
+1. Se a sessão está encerrando corretamente ao fechar aba/navegador do mestre
+2. Se o fluxo "Dashboard" está: cancelar mantém online, confirmar encerra e sai
+3. Se o script SQL `database/create-dice-rolls.sql` já foi executado no Supabase
+
+---
+
 ## ⚠️ AÇÃO PENDENTE — BANCO DE DADOS
 
-Execute este SQL no Supabase SQL Editor antes de testar o sistema de mídia ao vivo:
+Execute estes SQLs no Supabase SQL Editor:
 
 ```sql
 -- database/add-live-media-columns.sql
 ALTER TABLE live_game_state
   ADD COLUMN IF NOT EXISTS current_image_url TEXT DEFAULT '',
-  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '';
+  ADD COLUMN IF NOT EXISTS current_audio_url  TEXT DEFAULT '',
+  ADD COLUMN IF NOT EXISTS current_audio_playing BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS current_audio_time DOUBLE PRECISION DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS current_audio_volume INTEGER DEFAULT 20;
+
+-- database/create-dice-rolls.sql
+-- Criar tabela dice_rolls e índices (arquivo completo na pasta database)
 ```
 
 ---
 
-## 🎮 Sistema de Jogo ao Vivo (v5.0.0)
+## 🎮 Sistema de Jogo ao Vivo (v5.1.0)
 
 ### 🏗️ Arquitetura de Mídia ao Vivo
 
