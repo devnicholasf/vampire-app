@@ -496,21 +496,36 @@ export const useLiveGame = () => {
   // ============================================
 
   const joinGame = async (campaignId: string) => {
-    if (!user.value || !liveGameState.value) return
+    if (!user.value) return
 
     try {
-      const currentPlayers = liveGameState.value.activePlayers || []
+      // Sempre lê do banco — evita estado local desatualizado ou nulo
+      const { data: state, error: fetchErr } = await supabase
+        .from('live_game_state')
+        .select('active_players')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      if (fetchErr) throw fetchErr
+      if (!state) return // Sessão não existe no banco
+
+      const currentPlayers: string[] = state.active_players || []
+
       if (!currentPlayers.includes(user.value.id)) {
         const updatedPlayers = [...currentPlayers, user.value.id]
-        
+
         const { error: updateError } = await supabase
           .from('live_game_state')
-          .update({
-            active_players: updatedPlayers
-          })
+          .update({ active_players: updatedPlayers })
           .eq('campaign_id', campaignId)
 
         if (updateError) throw updateError
+
+        // Atualiza estado local imediatamente (sem esperar realtime)
+        setActivePlayers(updatedPlayers)
+      } else {
+        // Jogador já está na lista — garante que o estado local está correto
+        setActivePlayers(currentPlayers)
       }
     } catch (err: any) {
       console.error('Erro ao entrar no jogo:', err)
@@ -572,6 +587,14 @@ export const useLiveGame = () => {
     currentSceneMedia.value = { imageUrl: '', audioUrl: '' }
   }
 
+  /** Atualiza a lista de jogadores ativos (chamado por páginas via realtime) */
+  const setActivePlayers = (players: string[]) => {
+    activePlayers.value = players
+    if (liveGameState.value) {
+      liveGameState.value.activePlayers = players
+    }
+  }
+
   return {
     // State
     liveGameState: readonly(liveGameState),
@@ -600,6 +623,7 @@ export const useLiveGame = () => {
     // Player Methods
     joinGame,
     leaveGame,
+    setActivePlayers,
 
     // Real-time Methods
     subscribeToLiveGame,

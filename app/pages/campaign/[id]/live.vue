@@ -88,19 +88,26 @@
 
       <!-- Header -->
       <div style="background:#0a0a1a; border-bottom:1px solid #2d1515;" class="px-6 py-4 sticky top-0 z-30">
-        <div class="flex items-center justify-between">
+        <div class="grid grid-cols-3 items-center gap-4">
+          <!-- Coluna esquerda: status + nome da crônica -->
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
               <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"/>
               <span class="text-red-400 font-semibold text-xs uppercase tracking-widest">Ao Vivo</span>
             </div>
             <h1 class="text-lg font-bold text-white">{{ campaign?.name }}</h1>
-            <span class="text-xs text-[#4a4a5a] border border-[#4a4a5a]/40 px-2 py-0.5 rounded">
-              {{ activePlayers.length }} jogador{{ activePlayers.length !== 1 ? 'es' : '' }} conectado{{ activePlayers.length !== 1 ? 's' : '' }}
-            </span>
           </div>
 
-          <div class="flex items-center gap-2">
+          <!-- Coluna central: Coterie (avatares dos jogadores) -->
+          <div class="flex justify-center">
+            <CoterieAvatars
+              :players="coteriePlayers"
+              :active-players="(activePlayers as string[])"
+              mode="horizontal"
+            />
+          </div>
+
+          <div class="flex items-center justify-end gap-2">
             <button
               style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:5px;border:1px solid #4a4a5a;background:transparent;color:#9b9bbb;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;"
               @mouseover="e => { const el = e.currentTarget as HTMLElement; el.style.color='#fff'; el.style.borderColor='#9b9bbb'; }"
@@ -811,7 +818,9 @@ import { createClient } from '@supabase/supabase-js'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
+import CoterieAvatars from '~/components/live/CoterieAvatars.vue'
 import type { DiceRollConfig } from '~/types/dice'
+import type { CoteriePlayer } from '~/components/live/CoterieAvatars.vue'
 
 // ============================================
 // Route
@@ -844,6 +853,7 @@ const {
   updateSceneMedia,
   addNPCToGame,
   removeNPCFromGame,
+  setActivePlayers,
 } = useLiveGame()
 
 // Sistema de dados
@@ -855,6 +865,19 @@ const currentHunger = ref(2) // TODO: Pegar da ficha do mestre
 
 // Converter rolls readonly para array normal (compatibilidade com componente)
 const diceRolls = computed(() => [...rolls.value] as any[])
+
+// Jogadores da crônica para exibição da Coterie
+const coteriePlayers = computed<CoteriePlayer[]>(() => {
+  const raw = campaign.value?.campaign_players ?? []
+  return raw
+    .filter((p: any) => p.role !== 'master')
+    .map((p: any) => ({
+      user_id: p.user_id,
+      character_name: p.character_name ?? null,
+      sheet: p.sheet ?? null,
+      role: p.role ?? 'player',
+    }))
+})
 
 // ============================================
 // Local state
@@ -1589,6 +1612,11 @@ const startRealtime = () => {
         // Drive NPC display directly from realtime payload — avoids shared-state race conditions
         if (Array.isArray(ns.current_npcs)) {
           applyLiveNpcState(ns.current_npcs)
+        }
+
+        // Sync active players list (needed for CoterieAvatars online status)
+        if (Array.isArray(ns.active_players)) {
+          setActivePlayers(ns.active_players)
         }
 
         // Sync local session timeline

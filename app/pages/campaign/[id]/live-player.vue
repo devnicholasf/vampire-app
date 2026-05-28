@@ -79,10 +79,23 @@
         </div>
       </div>
 
-      <!-- Layout principal: 2 colunas -->
+      <!-- Layout principal: 3 colunas -->
       <div class="flex" style="height:calc(100vh - 57px);">
-        
-        <!-- Coluna Esquerda: Conteúdo principal -->
+
+        <!-- ── Sidebar Esquerda: Coterie (jogadores) ── -->
+        <div
+          class="flex flex-col items-center pt-5 pb-4 gap-3 shrink-0 border-r border-[#2d1515] overflow-y-auto"
+          style="width:88px; background:#080810;"
+        >
+          <!-- Avatares da Coterie (sem AO VIVO redundante) -->
+          <CoterieAvatars
+            :players="coteriePlayers"
+            :active-players="(activePlayers as string[])"
+            mode="vertical"
+          />
+        </div>
+
+        <!-- Coluna Central: Conteúdo principal -->
         <div class="flex-1 flex flex-col items-center justify-start px-6 py-8 gap-8 overflow-y-auto">
 
         <!-- -- Cena Atual -- -->
@@ -212,7 +225,9 @@ import { createClient } from '@supabase/supabase-js'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
+import CoterieAvatars from '~/components/live/CoterieAvatars.vue'
 import type { DiceRollConfig } from '~/types/dice'
+import type { CoteriePlayer } from '~/components/live/CoterieAvatars.vue'
 
 definePageMeta({
   middleware: 'is-player',
@@ -225,7 +240,7 @@ const campaignId = route.params.id as string
 const config     = useRuntimeConfig()
 const supabase   = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
-const { isGameLive, fetchLiveGameState, joinGame, leaveGame } = useLiveGame()
+const { isGameLive, fetchLiveGameState, joinGame, leaveGame, activePlayers, setActivePlayers } = useLiveGame()
 const { user } = useAuth()
 const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = useDice()
 
@@ -251,10 +266,11 @@ const showDiceRollModal = ref(false)
 const currentHunger     = ref(2) // TODO: Pegar da ficha do jogador
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let isDiceRolling = false
-const isLeavingPage = ref(false)
+const isLeavingPage    = ref(false)
+const coteriePlayers   = ref<CoteriePlayer[]>([])
 
-// ── Computed ───────────────────────────────────────
-const isLiveActive  = computed(() => isGameLive.value)
+// ── Computed ───────────────────────────────────────────────
+const isLiveActive     = computed(() => isGameLive.value)
 const visibleNPCs   = computed(() => liveNpcs.value.filter(n => n.isVisible))
 const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
 
@@ -262,7 +278,16 @@ const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
 const loadState = async () => {
   const { data: campaign } = await supabase
     .from('campaigns')
-    .select('name, politics')
+    .select(`
+      name,
+      politics,
+      campaign_players(
+        user_id,
+        character_name,
+        sheet,
+        role
+      )
+    `)
     .eq('id', campaignId)
     .maybeSingle()
 
@@ -272,6 +297,16 @@ const loadState = async () => {
       territoryZones.value = campaign.politics.territoryZones || []
       territoryMapUrl.value = campaign.politics.territoryMapImage || ''
     }
+    // Popula coterie (todos os jogadores, exceto o próprio mestre)
+    const rawPlayers: any[] = (campaign as any).campaign_players ?? []
+    coteriePlayers.value = rawPlayers
+      .filter((p: any) => p.role !== 'master')
+      .map((p: any) => ({
+        user_id: p.user_id,
+        character_name: p.character_name ?? null,
+        sheet: p.sheet ?? null,
+        role: p.role ?? 'player',
+      }))
   }
 
   const state = await fetchLiveGameState(campaignId)
@@ -316,6 +351,11 @@ const applyState = (data: any) => {
   liveNpcs.value        = data.current_npcs ?? []
   currentImageUrl.value = data.current_image_url ?? ''
   showTerritoryMap.value = data.show_territory_map ?? false
+
+  // Sincroniza jogadores ativos (para CoterieAvatars)
+  if (Array.isArray(data.active_players)) {
+    setActivePlayers(data.active_players)
+  }
   
   const newAudio        = data.current_audio_url ?? ''
   if (newAudio !== currentAudioUrl.value) {
