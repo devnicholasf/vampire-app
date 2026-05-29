@@ -116,7 +116,12 @@ export function performRoll(config: DiceRollConfig): {
   const { hunger, modifier } = config
   
   // 🎯 PASSO 1: Calcular pool total
-  const basePool = calculatePoolSize(config.attribute, config.skill)
+  const basePool = calculatePoolSize(
+    config.attribute,
+    config.skill,
+    config.attributeValue,
+    config.skillValue
+  )
   const totalPool = Math.max(1, basePool + modifier)
   
   // 🎯 PASSO 2: Dividir entre dados normais e de fome
@@ -216,8 +221,17 @@ export function performRoll(config: DiceRollConfig): {
  * Calcula tamanho da pool baseado em atributo + habilidade
  * TODO: Integrar com sistema de fichas
  */
-function calculatePoolSize(attribute: string, skill: string): number {
-  // Por enquanto retorna valor padrão para demonstração
+function calculatePoolSize(
+  attribute: string,
+  skill: string,
+  attributeValue?: number,
+  skillValue?: number
+): number {
+  if (Number.isFinite(attributeValue) && Number.isFinite(skillValue)) {
+    return Math.max(0, Number(attributeValue) + Number(skillValue))
+  }
+
+  // Fallback legado para fluxos que ainda não enviam os valores resolvidos
   return 5
 }
 

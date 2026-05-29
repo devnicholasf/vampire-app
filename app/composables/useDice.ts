@@ -270,8 +270,12 @@ export const useDice = () => {
 
   // Helpers
   function calculatePoolSize(config: DiceRollConfig): number {
-    // TODO: Integrar com sistema de fichas
-    return 5 + config.modifier
+    const hasResolvedValues = Number.isFinite(config.attributeValue) && Number.isFinite(config.skillValue)
+    const basePool = hasResolvedValues
+      ? Math.max(0, Number(config.attributeValue) + Number(config.skillValue))
+      : 5
+
+    return Math.max(1, basePool + config.modifier)
   }
 
   function convertDbToRollResult(dbRow: any): RollResult {

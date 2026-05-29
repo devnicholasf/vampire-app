@@ -24,11 +24,20 @@
       <!-- Header: Character + Roll Type -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div 
-            class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-            style="background: linear-gradient(135deg, #7f1d1d, #d4a647);"
-          >
-            {{ result.characterName.charAt(0).toUpperCase() }}
+          <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-[#7f1d1d]/50">
+            <img
+              v-if="avatarUrl"
+              :src="avatarUrl"
+              :alt="result.characterName"
+              class="w-full h-full object-cover"
+            >
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center text-white text-xs font-bold"
+              style="background: linear-gradient(135deg, #7f1d1d, #d4a647);"
+            >
+              {{ characterInitial }}
+            </div>
           </div>
           <div>
             <p class="text-sm font-semibold text-white">{{ result.characterName }}</p>
@@ -53,7 +62,7 @@
       <!-- Pool Info -->
       <div class="flex items-center gap-4 text-xs">
         <div class="flex items-center gap-1.5">
-          <span class="text-[#6b6b7b]">Parada:</span>
+          <span class="text-[#6b6b7b]">Dados:</span>
           <span class="text-white font-semibold">{{ result.poolTotal }}</span>
         </div>
         <div v-if="result.hunger > 0" class="flex items-center gap-1.5">
@@ -131,8 +140,14 @@ import type { RollResult } from '~/types/dice'
 
 const props = defineProps<{
   result: RollResult
+  avatarUrl?: string
   isNew?: boolean
 }>()
+
+const characterInitial = computed(() => {
+  const name = String(props.result.characterName || '').trim()
+  return name ? name.charAt(0).toUpperCase() : '?'
+})
 
 const sortedNormalDice = computed(() => {
   if (!props.result.diceResults.normal) return []

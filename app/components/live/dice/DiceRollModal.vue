@@ -226,6 +226,9 @@ import type { DiceRollConfig } from '~/types/dice'
 const props = defineProps<{
   modelValue: boolean
   currentHunger?: number
+  attributeValues?: Record<string, number>
+  skillValues?: Record<string, number>
+  autoCalculatePool?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -244,6 +247,11 @@ const rollConfig = ref<DiceRollConfig>({
 
 const isRolling = ref(false)
 
+const getValueFromMap = (map: Record<string, number> | undefined, key: string): number => {
+  if (!map || !key) return 0
+  return Number(map[key] ?? 0)
+}
+
 // Atualizar hunger quando prop mudar
 watch(() => props.currentHunger, (newHunger) => {
   if (newHunger !== undefined) {
@@ -252,9 +260,11 @@ watch(() => props.currentHunger, (newHunger) => {
 })
 
 const calculatedPool = computed(() => {
-  // TODO: Integrar com sistema de fichas para pegar valores reais
-  // Por enquanto, retorna valor base para demonstração
-  const base = 5
+  const shouldAutoCalculate = props.autoCalculatePool ?? false
+  const base = shouldAutoCalculate
+    ? getValueFromMap(props.attributeValues, rollConfig.value.attribute) + getValueFromMap(props.skillValues, rollConfig.value.skill)
+    : 5
+
   return Math.max(0, base + rollConfig.value.modifier)
 })
 
@@ -310,8 +320,15 @@ const executeRoll = async () => {
   try {
     // Pequeno delay para efeito dramático
     await new Promise(resolve => setTimeout(resolve, 300))
+
+    const resolvedAttributeValue = getValueFromMap(props.attributeValues, rollConfig.value.attribute)
+    const resolvedSkillValue = getValueFromMap(props.skillValues, rollConfig.value.skill)
     
-    emit('roll', { ...rollConfig.value })
+    emit('roll', {
+      ...rollConfig.value,
+      attributeValue: resolvedAttributeValue,
+      skillValue: resolvedSkillValue
+    })
     
     // Reset form após rolagem
     setTimeout(() => {

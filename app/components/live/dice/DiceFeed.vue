@@ -45,6 +45,7 @@
           v-for="roll in displayedRolls"
           :key="roll.id"
           :result="roll"
+          :avatar-url="getAvatarForCharacter(roll.characterName)"
           :is-new="isNewRoll(roll.id)"
         />
       </TransitionGroup>
@@ -97,6 +98,7 @@ type FlexibleRollResult = Omit<RollResult, 'diceResults'> & {
 const props = defineProps<{
   rolls: readonly FlexibleRollResult[]
   maxDisplay?: number
+  characterAvatars?: Record<string, string>
 }>()
 
 const emit = defineEmits<{
@@ -121,6 +123,27 @@ const hasMoreRolls = computed(() => {
 const hasNewRolls = computed(() => {
   return newRollIds.value.size > 0
 })
+
+const normalizedAvatarMap = computed(() => {
+  const source = props.characterAvatars || {}
+  const normalized: Record<string, string> = {}
+
+  for (const [name, avatarUrl] of Object.entries(source)) {
+    const key = name.trim().toLowerCase()
+    const value = String(avatarUrl || '').trim()
+    if (key && value) {
+      normalized[key] = value
+    }
+  }
+
+  return normalized
+})
+
+const getAvatarForCharacter = (characterName: string): string => {
+  const key = String(characterName || '').trim().toLowerCase()
+  if (!key) return ''
+  return normalizedAvatarMap.value[key] || ''
+}
 
 const isNewRoll = (rollId: string) => {
   return newRollIds.value.has(rollId)

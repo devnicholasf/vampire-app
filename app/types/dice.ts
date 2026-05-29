@@ -5,6 +5,8 @@
 export interface DiceRollConfig {
   attribute: string
   skill: string
+  attributeValue?: number
+  skillValue?: number
   modifier: number
   difficulty: number
   rollType: 'normal' | 'oculta' | 'resistida' | 'frenesi' | 'despertar'

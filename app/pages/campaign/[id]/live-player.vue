@@ -226,6 +226,7 @@
         <div class="w-96 border-l border-[#2d1515] shrink-0 flex flex-col" style="background:#0a0a1a">
           <DiceFeed 
             :rolls="rolls"
+            :character-avatars="playerCharacterAvatars"
             @open-roll-modal="showDiceRollModal = true"
           />
         </div>
@@ -236,6 +237,9 @@
       <DiceRollModal 
         v-model="showDiceRollModal"
         :current-hunger="currentHunger"
+        :attribute-values="attributeValuesForDice"
+        :skill-values="skillValuesForDice"
+        :auto-calculate-pool="true"
         @roll="handleDiceRoll"
       />
 
@@ -316,8 +320,9 @@ const currentAudioTime    = ref(0)
 const currentAudioVolume  = ref(2)
 // Dice system state
 const showDiceRollModal = ref(false)
-const currentHunger     = ref(2) // TODO: Pegar da ficha do jogador
+const currentHunger     = ref(1)
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+let playerSheetChannel: ReturnType<typeof supabase.channel> | null = null
 let isDiceRolling = false
 const isLeavingPage    = ref(false)
 const coteriePlayers   = ref<CoteriePlayer[]>([])
@@ -332,6 +337,89 @@ const toastVariant     = ref<'success' | 'error' | 'warning' | 'info'>('success'
 const isLiveActive     = computed(() => isGameLive.value)
 const visibleNPCs   = computed(() => liveNpcs.value.filter(n => n.isVisible))
 const displayNPCs   = computed(() => visibleNPCs.value.slice(0, 3))
+
+const playerCharacterAvatars = computed<Record<string, string>>(() => {
+  const avatarsByName: Record<string, string> = {}
+
+  const addAvatar = (name: string | null | undefined, avatarUrl: string | null | undefined) => {
+    const normalizedName = String(name || '').trim()
+    const normalizedAvatar = String(avatarUrl || '').trim()
+    if (!normalizedName || !normalizedAvatar) return
+    avatarsByName[normalizedName] = normalizedAvatar
+  }
+
+  for (const player of coteriePlayers.value) {
+    const avatar = player?.sheet?.avatar
+    addAvatar(player?.character_name, avatar)
+    addAvatar(player?.sheet?.name, avatar)
+  }
+
+  addAvatar(myCharacter.value?.character_name, myCharacter.value?.sheet?.avatar)
+  addAvatar(myCharacter.value?.sheet?.name, myCharacter.value?.sheet?.avatar)
+
+  return avatarsByName
+})
+
+const attributeValuesForDice = computed<Record<string, number>>(() => {
+  const attrs = myCharacter.value?.sheet?.attributes || {}
+  const physical = attrs.physical || {}
+  const social = attrs.social || {}
+  const mental = attrs.mental || {}
+
+  return {
+    'Força': Number(physical.strength ?? 0),
+    'Destreza': Number(physical.dexterity ?? 0),
+    'Vigor': Number(physical.stamina ?? 0),
+    'Carisma': Number(social.charisma ?? 0),
+    'Manipulação': Number(social.manipulation ?? 0),
+    // O sistema atual usa "Aparência" no modal, enquanto a ficha usa "Autocontrole".
+    'Aparência': Number(social.composure ?? 0),
+    // A ficha V5 não tem atributo "Percepção"; usamos Determinação como aproximação.
+    'Percepção': Number(mental.resolve ?? 0),
+    'Inteligência': Number(mental.intelligence ?? 0),
+    'Raciocínio': Number(mental.wits ?? 0)
+  }
+})
+
+const skillValuesForDice = computed<Record<string, number>>(() => {
+  const sheetSkills = myCharacter.value?.sheet?.skills || {}
+  const talents = sheetSkills.talents || {}
+  const skills = sheetSkills.skills || {}
+  const knowledges = sheetSkills.knowledges || {}
+  const virtues = myCharacter.value?.sheet?.virtues || {}
+
+  return {
+    'Persuasão': Number(skills.persuasion ?? 0),
+    'Briga': Number(talents.brawl ?? 0),
+    'Etiqueta': Number(skills.etiquette ?? 0),
+    'Intimidação': Number(skills.intimidation ?? 0),
+    'Investigação': Number(knowledges.investigation ?? 0),
+    'Armas de Fogo': Number(talents.firearms ?? 0),
+    'Liderança': Number(skills.leadership ?? 0),
+    'Subterfúgio': Number(skills.subterfuge ?? 0),
+    'Armas Brancas': Number(talents.melee ?? 0),
+    'Atletismo': Number(talents.athletics ?? 0),
+    'Furtividade': Number(talents.stealth ?? 0),
+    'Sobrevivência': Number(talents.survival ?? 0),
+    'Condução': Number(talents.drive ?? 0),
+    'Acadêmico': Number(knowledges.academics ?? 0),
+    'Ciências': Number(knowledges.science ?? 0),
+    'Finanças': Number(knowledges.finance ?? 0),
+    'Medicina': Number(knowledges.medicine ?? 0),
+    'Ocultismo': Number(knowledges.occult ?? 0),
+    'Tecnologia': Number(knowledges.technology ?? 0),
+    'Consciência': Number(virtues.conscience ?? 0),
+    'Manha': Number(skills.streetwise ?? 0),
+    'Empatia': Number(skills.animalKen ?? 0),
+    'Intuição': Number(skills.awareness ?? 0),
+    'Performance': Number(skills.performance ?? 0)
+  }
+})
+
+const syncHungerFromSheet = () => {
+  const hunger = Number(myCharacter.value?.sheet?.hunger ?? 1)
+  currentHunger.value = Math.max(0, Math.min(5, hunger))
+}
 
 // ── Load ───────────────────────────────────────────
 const loadState = async () => {
@@ -376,6 +464,7 @@ const loadState = async () => {
         sheet: currentPlayer.sheet || null,
         role: currentPlayer.role,
       }
+      syncHungerFromSheet()
     }
   }
 
@@ -459,6 +548,42 @@ const startRealtime = () => {
             router.push(`/campaign/${campaignId}/player`)
           }
         }
+      }
+    )
+    .subscribe()
+}
+
+const startPlayerSheetRealtime = () => {
+  if (!user.value?.id) return
+
+  playerSheetChannel = supabase
+    .channel(`live_player_sheet:${campaignId}:${user.value.id}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'campaign_players', filter: `user_id=eq.${user.value.id}` },
+      (payload) => {
+        const row = payload.new as any
+        if (row?.campaign_id !== campaignId) return
+
+        if (!myCharacter.value) {
+          myCharacter.value = {
+            user_id: row.user_id,
+            character_name: row.character_name,
+            name: row.character_name,
+            sheet: row.sheet || null,
+            role: row.role,
+          }
+        } else {
+          myCharacter.value = {
+            ...myCharacter.value,
+            character_name: row.character_name,
+            name: row.character_name,
+            sheet: row.sheet || myCharacter.value.sheet,
+            role: row.role ?? myCharacter.value.role,
+          }
+        }
+
+        syncHungerFromSheet()
       }
     )
     .subscribe()
@@ -647,6 +772,7 @@ onMounted(async () => {
   }
   
   startRealtime()
+  startPlayerSheetRealtime()
   
   // Adicionar listener para fechar página
   if (process.client) {
@@ -670,6 +796,7 @@ onBeforeUnmount(async () => {
   }
   
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+  if (playerSheetChannel) supabase.removeChannel(playerSheetChannel)
 })
 </script>
 

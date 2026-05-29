@@ -639,6 +639,7 @@
         <div class="w-96 border-l border-[#2d1515] shrink-0" style="background:#0a0a1a;">
           <DiceFeed 
             :rolls="diceRolls"
+            :character-avatars="playerCharacterAvatarsForMaster"
             @open-roll-modal="showDiceRollModal = true"
           />
         </div>
@@ -879,6 +880,30 @@ const coteriePlayers = computed<CoteriePlayer[]>(() => {
       sheet: p.sheet ?? null,
       role: p.role ?? 'player',
     }))
+})
+
+const playerCharacterAvatarsForMaster = computed<Record<string, string>>(() => {
+  const avatarsByName: Record<string, string> = {}
+  const rawPlayers: any[] = campaign.value?.campaign_players ?? []
+
+  const addAvatar = (name: string | null | undefined, avatarUrl: string | null | undefined) => {
+    const normalizedName = String(name || '').trim()
+    const normalizedAvatar = String(avatarUrl || '').trim()
+    if (!normalizedName || !normalizedAvatar) return
+    avatarsByName[normalizedName] = normalizedAvatar
+  }
+
+  for (const player of rawPlayers) {
+    const isMasterRole = player?.role === 'master'
+    const isCurrentMasterUser = player?.user_id && player.user_id === user.value?.id
+    if (isMasterRole || isCurrentMasterUser) continue
+
+    const avatar = player?.sheet?.avatar
+    addAvatar(player?.character_name, avatar)
+    addAvatar(player?.sheet?.name, avatar)
+  }
+
+  return avatarsByName
 })
 
 // ============================================
