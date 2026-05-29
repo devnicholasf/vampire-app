@@ -5,17 +5,17 @@
       cardClasses,
       { 'animate-pulse-subtle': isNew }
     ]"
-    style="background: linear-gradient(135deg, #05010A 0%, #090312 100%); border: 1px solid rgba(127, 29, 29, 0.4);"
+    :style="cardStyle"
   >
     <!-- Decorative corners -->
-    <span class="dice-corner dice-corner-tl" />
-    <span class="dice-corner dice-corner-tr" />
-    <span class="dice-corner dice-corner-bl" />
-    <span class="dice-corner dice-corner-br" />
+    <span class="dice-corner dice-corner-tl" :class="{ 'dice-corner-frenzy': isFrenzyRoll }" />
+    <span class="dice-corner dice-corner-tr" :class="{ 'dice-corner-frenzy': isFrenzyRoll }" />
+    <span class="dice-corner dice-corner-bl" :class="{ 'dice-corner-frenzy': isFrenzyRoll }" />
+    <span class="dice-corner dice-corner-br" :class="{ 'dice-corner-frenzy': isFrenzyRoll }" />
 
     <!-- Glow effect for special results -->
     <div 
-      v-if="result.isMessyCritical || result.isBestialFailure"
+      v-if="result.isMessyCritical || result.isBestialFailure || isFrenzyRoll"
       class="absolute inset-0 pointer-events-none"
       :style="glowStyle"
     />
@@ -123,7 +123,7 @@
         </div>
         <div v-if="result.difficulty" class="text-xs">
           <span 
-            :class="result.successes >= result.difficulty ? 'text-green-400' : 'text-red-400'"
+            :class="summaryStatusClass"
             class="font-semibold"
           >
             {{ result.successes >= result.difficulty ? '✓ SUCESSO' : '✗ FALHA' }}
@@ -175,6 +175,23 @@ const formattedTime = computed(() => {
   return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 })
 
+const isFrenzyRoll = computed(() => props.result.rollType === 'frenesi')
+const isFrenzyFailure = computed(() => isFrenzyRoll.value && props.result.successes < props.result.difficulty)
+
+const cardStyle = computed(() => {
+  if (isFrenzyFailure.value) {
+    return {
+      background: 'linear-gradient(135deg, #120205 0%, #1e0308 45%, #090312 100%)',
+      border: '1px solid rgba(185, 28, 28, 0.75)'
+    }
+  }
+
+  return {
+    background: 'linear-gradient(135deg, #05010A 0%, #090312 100%)',
+    border: '1px solid rgba(127, 29, 29, 0.4)'
+  }
+})
+
 const getDiceClass = (value: number, isHunger: boolean) => {
   if (isHunger) {
     if (value === 10) return 'dice-ten-hunger'
@@ -189,6 +206,7 @@ const getDiceClass = (value: number, isHunger: boolean) => {
 }
 
 const cardClasses = computed(() => {
+  if (isFrenzyFailure.value) return 'shadow-[0_0_32px_rgba(185,28,28,0.45)]'
   if (props.result.isMessyCritical) return 'shadow-[0_0_30px_rgba(220,38,38,0.4)]'
   if (props.result.isBestialFailure) return 'shadow-[0_0_30px_rgba(127,29,29,0.6)]'
   if (props.result.isCritical) return 'shadow-[0_0_25px_rgba(212,166,71,0.3)]'
@@ -196,6 +214,13 @@ const cardClasses = computed(() => {
 })
 
 const glowStyle = computed(() => {
+  if (isFrenzyFailure.value) {
+    return {
+      background: 'radial-gradient(circle at 50% 50%, rgba(185, 28, 28, 0.22), transparent 70%)',
+      animation: 'pulse-glow 1.2s ease-in-out infinite'
+    }
+  }
+
   if (props.result.isMessyCritical) {
     return {
       background: 'radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.15), transparent 70%)',
@@ -212,6 +237,12 @@ const glowStyle = computed(() => {
 })
 
 const resultTitle = computed(() => {
+  if (props.result.rollType === 'frenesi') {
+    return props.result.successes >= props.result.difficulty
+      ? '✓ Frenesi Suprimido'
+      : '✗ Frenesi Desencadeado'
+  }
+
   if (props.result.isMessyCritical) return '⚠️ Crítico Descontrolado'
   if (props.result.isBestialFailure) return '🩸 Falha Bestial'
   if (props.result.isCritical) return '✨ Crítico'
@@ -220,6 +251,12 @@ const resultTitle = computed(() => {
 })
 
 const resultBannerClass = computed(() => {
+  if (isFrenzyRoll.value) {
+    return props.result.successes >= props.result.difficulty
+      ? 'bg-green-950/30 border border-green-900/40'
+      : 'bg-red-950/70 border border-red-700'
+  }
+
   if (props.result.isMessyCritical) return 'bg-red-950/40 border border-red-900/60'
   if (props.result.isBestialFailure) return 'bg-red-950/60 border border-red-800'
   if (props.result.isCritical) return 'bg-yellow-950/30 border border-yellow-900/40'
@@ -228,6 +265,10 @@ const resultBannerClass = computed(() => {
 })
 
 const resultTextClass = computed(() => {
+  if (isFrenzyRoll.value) {
+    return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-500'
+  }
+
   if (props.result.isMessyCritical) return 'text-red-400'
   if (props.result.isBestialFailure) return 'text-red-500'
   if (props.result.isCritical) return 'text-yellow-400'
@@ -236,10 +277,21 @@ const resultTextClass = computed(() => {
 })
 
 const resultDescriptionClass = computed(() => {
+  if (isFrenzyRoll.value) {
+    return props.result.successes >= props.result.difficulty ? 'text-[#c4c4d4]/70' : 'text-red-200/90'
+  }
   if (props.result.isMessyCritical || props.result.isBestialFailure) return 'text-red-200/80'
   if (props.result.isCritical) return 'text-yellow-200/70'
   if (props.result.successes >= props.result.difficulty) return 'text-[#c4c4d4]/70'
   return 'text-red-200/65'
+})
+
+const summaryStatusClass = computed(() => {
+  if (isFrenzyRoll.value) {
+    return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-500'
+  }
+
+  return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-400'
 })
 </script>
 
@@ -256,6 +308,11 @@ const resultDescriptionClass = computed(() => {
   content: '';
   position: absolute;
   background: #dc2626;
+}
+.dice-corner-frenzy::before,
+.dice-corner-frenzy::after {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
 }
 .dice-corner::before { width: 10px; height: 1px; }
 .dice-corner::after { width: 1px; height: 10px; }

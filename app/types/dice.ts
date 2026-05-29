@@ -7,6 +7,9 @@ export interface DiceRollConfig {
   skill: string
   attributeValue?: number
   skillValue?: number
+  frenzyAutoSuccess?: boolean
+  frenzyDifficultyPenalty?: number
+  frenzyBaseDifficulty?: number
   modifier: number
   difficulty: number
   rollType: 'normal' | 'oculta' | 'resistida' | 'frenesi' | 'despertar'

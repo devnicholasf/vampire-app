@@ -56,7 +56,7 @@
             </div>
 
             <!-- Attribute + Skill (2 columns) -->
-            <div class="grid grid-cols-2 gap-4">
+            <div v-if="!isPlayerFrenzyMode" class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
                   Atributo
@@ -90,9 +90,42 @@
               </div>
             </div>
 
+            <!-- Frenzy Details (player-only automation) -->
+            <div v-else class="rounded-lg p-4 border space-y-3" style="background: rgba(212, 166, 71, 0.05); border-color: rgba(212, 166, 71, 0.2);">
+              <p class="text-[10px] text-[#d4a647] uppercase tracking-wider">Teste de Frenesi</p>
+              <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="rounded border p-2" style="border-color: #4a4a5a; background: #0d0d20;">
+                  <p class="text-[10px] text-[#6b6b7b] uppercase">Força de Vontade</p>
+                  <p class="text-xl font-bold text-white">{{ frenzyWillpowerCurrent }}</p>
+                </div>
+                <div class="rounded border p-2" style="border-color: #4a4a5a; background: #0d0d20;">
+                  <p class="text-[10px] text-[#6b6b7b] uppercase">Humanidade</p>
+                  <p class="text-xl font-bold text-white">{{ frenzyHumanity }}</p>
+                </div>
+                <div class="rounded border p-2" style="border-color: #4a4a5a; background: #0d0d20;">
+                  <p class="text-[10px] text-[#6b6b7b] uppercase">Bônus (1/3)</p>
+                  <p class="text-xl font-bold text-[#d4a647]">{{ frenzyHumanityBonus }}</p>
+                </div>
+              </div>
+
+              <div v-if="frenzyDifficultyPenalty > 0" class="rounded px-3 py-2 text-xs border bg-red-950/25 border-red-900/50 text-red-200">
+                Penalidade de clã aplicada: +{{ frenzyDifficultyPenalty }} na dificuldade
+                <span v-if="normalizedFrenzyClan">({{ normalizedFrenzyClan }})</span>.
+              </div>
+
+              <button
+                v-if="frenzyWillpowerCurrent > 0"
+                class="w-full px-3 py-2 rounded border text-xs font-semibold uppercase tracking-wider transition-all duration-200"
+                style="border-color: #d4a647; color: #d4a647; background: rgba(212, 166, 71, 0.06);"
+                @click="useWillpowerWithoutRoll"
+              >
+                Gastar 1 Força de Vontade (suprimir por 1 turno sem rolar)
+              </button>
+            </div>
+
             <!-- Modifier + Difficulty (2 columns) -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
+            <div :class="isPlayerFrenzyMode ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4'">
+              <div v-if="!isPlayerFrenzyMode">
                 <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
                   Modificador
                 </label>
@@ -109,7 +142,7 @@
 
               <div>
                 <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
-                  Dificuldade
+                  {{ isPlayerFrenzyMode ? 'Dificuldade Base' : 'Dificuldade' }}
                 </label>
                 <input
                   v-model.number="rollConfig.difficulty"
@@ -120,11 +153,15 @@
                   style="border-color: #4a4a5a;"
                   placeholder="2"
                 />
+                <p v-if="isPlayerFrenzyMode" class="mt-1 text-[10px] text-[#9b9bbb]">
+                  Dificuldade final: {{ finalDifficultyForDisplay }}
+                  <span v-if="frenzyDifficultyPenalty > 0"> (base {{ rollConfig.difficulty }} + penalidade {{ frenzyDifficultyPenalty }})</span>
+                </p>
               </div>
             </div>
 
             <!-- Hunger -->
-            <div>
+            <div v-if="!isPlayerFrenzyMode">
               <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
                 Fome Atual
               </label>
@@ -229,6 +266,10 @@ const props = defineProps<{
   attributeValues?: Record<string, number>
   skillValues?: Record<string, number>
   autoCalculatePool?: boolean
+  enablePlayerAutoRules?: boolean
+  frenzyWillpowerCurrent?: number
+  frenzyHumanity?: number
+  frenzyClan?: string
 }>()
 
 const emit = defineEmits<{
@@ -247,6 +288,42 @@ const rollConfig = ref<DiceRollConfig>({
 
 const isRolling = ref(false)
 
+const isPlayerFrenzyMode = computed(() => {
+  return (props.enablePlayerAutoRules ?? false) && rollConfig.value.rollType === 'frenesi'
+})
+
+const frenzyWillpowerCurrent = computed(() => {
+  return Math.max(0, Number(props.frenzyWillpowerCurrent ?? 0))
+})
+
+const frenzyHumanity = computed(() => {
+  return Math.max(0, Number(props.frenzyHumanity ?? 0))
+})
+
+const frenzyHumanityBonus = computed(() => {
+  return Math.floor(frenzyHumanity.value / 3)
+})
+
+const normalizedFrenzyClan = computed(() => {
+  return String(props.frenzyClan || '').trim()
+})
+
+const frenzyDifficultyPenalty = computed(() => {
+  const clan = normalizedFrenzyClan.value.toLowerCase()
+  if (clan === 'brujah') return 2
+  if (clan === 'gangrel') return 1
+  return 0
+})
+
+const finalDifficultyForDisplay = computed(() => {
+  const baseDifficulty = Math.max(1, Number(rollConfig.value.difficulty || 1))
+  return baseDifficulty + frenzyDifficultyPenalty.value
+})
+
+const effectiveModifier = computed(() => {
+  return isPlayerFrenzyMode.value ? 0 : rollConfig.value.modifier
+})
+
 const getValueFromMap = (map: Record<string, number> | undefined, key: string): number => {
   if (!map || !key) return 0
   return Number(map[key] ?? 0)
@@ -260,23 +337,37 @@ watch(() => props.currentHunger, (newHunger) => {
 })
 
 const calculatedPool = computed(() => {
+  if (isPlayerFrenzyMode.value) {
+    return Math.max(0, frenzyWillpowerCurrent.value + frenzyHumanityBonus.value)
+  }
+
   const shouldAutoCalculate = props.autoCalculatePool ?? false
   const base = shouldAutoCalculate
     ? getValueFromMap(props.attributeValues, rollConfig.value.attribute) + getValueFromMap(props.skillValues, rollConfig.value.skill)
     : 5
 
-  return Math.max(0, base + rollConfig.value.modifier)
+  return Math.max(0, base + effectiveModifier.value)
 })
 
 const normalDiceCount = computed(() => {
+  if (isPlayerFrenzyMode.value) {
+    return calculatedPool.value
+  }
   return Math.max(0, calculatedPool.value - rollConfig.value.hunger)
 })
 
 const hungerDiceCount = computed(() => {
+  if (isPlayerFrenzyMode.value) {
+    return 0
+  }
   return Math.min(rollConfig.value.hunger, calculatedPool.value)
 })
 
 const canRoll = computed(() => {
+  if (isPlayerFrenzyMode.value) {
+    return calculatedPool.value >= 1 && !isRolling.value
+  }
+
   return (
     rollConfig.value.attribute &&
     rollConfig.value.skill &&
@@ -321,14 +412,33 @@ const executeRoll = async () => {
     // Pequeno delay para efeito dramático
     await new Promise(resolve => setTimeout(resolve, 300))
 
-    const resolvedAttributeValue = getValueFromMap(props.attributeValues, rollConfig.value.attribute)
-    const resolvedSkillValue = getValueFromMap(props.skillValues, rollConfig.value.skill)
+    const resolvedAttributeValue = isPlayerFrenzyMode.value
+      ? frenzyWillpowerCurrent.value
+      : getValueFromMap(props.attributeValues, rollConfig.value.attribute)
+    const resolvedSkillValue = isPlayerFrenzyMode.value
+      ? frenzyHumanityBonus.value
+      : getValueFromMap(props.skillValues, rollConfig.value.skill)
+
+    const normalizedConfig: DiceRollConfig = isPlayerFrenzyMode.value
+      ? {
+          ...rollConfig.value,
+          attribute: 'Força de Vontade',
+          skill: 'Humanidade (Bônus)',
+          modifier: 0,
+          hunger: 0,
+          difficulty: finalDifficultyForDisplay.value,
+          frenzyBaseDifficulty: rollConfig.value.difficulty,
+          frenzyDifficultyPenalty: frenzyDifficultyPenalty.value,
+          attributeValue: resolvedAttributeValue,
+          skillValue: resolvedSkillValue
+        }
+      : {
+          ...rollConfig.value,
+          attributeValue: resolvedAttributeValue,
+          skillValue: resolvedSkillValue
+        }
     
-    emit('roll', {
-      ...rollConfig.value,
-      attributeValue: resolvedAttributeValue,
-      skillValue: resolvedSkillValue
-    })
+    emit('roll', normalizedConfig)
     
     // Reset form após rolagem
     setTimeout(() => {
@@ -345,6 +455,28 @@ const executeRoll = async () => {
   } finally {
     isRolling.value = false
   }
+}
+
+const useWillpowerWithoutRoll = () => {
+  if (!isPlayerFrenzyMode.value || frenzyWillpowerCurrent.value <= 0) return
+
+  const config: DiceRollConfig = {
+    ...rollConfig.value,
+    rollType: 'frenesi',
+    attribute: 'Força de Vontade (Gasta)',
+    skill: 'Supressão Automática',
+    modifier: 0,
+    hunger: 0,
+    difficulty: finalDifficultyForDisplay.value,
+    frenzyBaseDifficulty: rollConfig.value.difficulty,
+    frenzyDifficultyPenalty: frenzyDifficultyPenalty.value,
+    frenzyAutoSuccess: true,
+    attributeValue: 0,
+    skillValue: 0
+  }
+
+  emit('roll', config)
+  close()
 }
 </script>
 

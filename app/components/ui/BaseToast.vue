@@ -101,7 +101,7 @@ const toastClasses = computed(() => {
     success: 'bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-400',
     error: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400', 
     warning: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400',
-    info: 'bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400'
+    info: 'bg-gradient-to-br from-sky-50 to-blue-100 border-2 border-blue-400'
   }
 
   return variants[props.variant]
@@ -112,7 +112,7 @@ const iconBgClasses = computed(() => {
     success: 'bg-green-500 bg-opacity-20',
     error: 'bg-red-500 bg-opacity-20',
     warning: 'bg-red-500 bg-opacity-20',
-    info: 'bg-red-500 bg-opacity-20'
+    info: 'bg-blue-500 bg-opacity-20'
   }
   return variants[props.variant]
 })
@@ -122,7 +122,7 @@ const closeButtonClasses = computed(() => {
     success: 'text-green-600 hover:bg-green-200',
     error: 'text-red-600 hover:bg-red-200',
     warning: 'text-red-600 hover:bg-red-200',
-    info: 'text-red-600 hover:bg-red-200'
+    info: 'text-blue-600 hover:bg-blue-200'
   }
   return variants[props.variant]
 })
@@ -132,7 +132,7 @@ const titleClasses = computed(() => {
     success: 'text-green-900',
     error: 'text-red-900',
     warning: 'text-red-900', 
-    info: 'text-red-900'
+    info: 'text-blue-900'
   }
   return variants[props.variant]
 })
@@ -142,7 +142,7 @@ const messageClasses = computed(() => {
     success: 'text-green-800',
     error: 'text-red-800',
     warning: 'text-red-800',
-    info: 'text-red-800'
+    info: 'text-blue-800'
   }
   return variants[props.variant]
 })
@@ -152,7 +152,7 @@ const progressBarClasses = computed(() => {
     success: 'bg-green-600',
     error: 'bg-red-600',
     warning: 'bg-red-600',
-    info: 'bg-red-600'
+    info: 'bg-blue-600'
   }
   return variants[props.variant]
 })

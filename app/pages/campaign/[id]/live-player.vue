@@ -240,6 +240,10 @@
         :attribute-values="attributeValuesForDice"
         :skill-values="skillValuesForDice"
         :auto-calculate-pool="true"
+        :enable-player-auto-rules="true"
+        :frenzy-willpower-current="frenzyWillpowerCurrent"
+        :frenzy-humanity="frenzyHumanity"
+        :frenzy-clan="frenzyClan"
         @roll="handleDiceRoll"
       />
 
@@ -414,6 +418,18 @@ const skillValuesForDice = computed<Record<string, number>>(() => {
     'Intuição': Number(skills.awareness ?? 0),
     'Performance': Number(skills.performance ?? 0)
   }
+})
+
+const frenzyWillpowerCurrent = computed(() => {
+  return Math.max(0, Number(myCharacter.value?.sheet?.willpower ?? 0))
+})
+
+const frenzyHumanity = computed(() => {
+  return Math.max(0, Number(myCharacter.value?.sheet?.humanity ?? 0))
+})
+
+const frenzyClan = computed(() => {
+  return String(myCharacter.value?.sheet?.clan || '')
 })
 
 const syncHungerFromSheet = () => {
@@ -737,6 +753,38 @@ const handleDiceRoll = async (config: DiceRollConfig) => {
   isDiceRolling = true
   
   try {
+    if (config.frenzyAutoSuccess) {
+      const currentWillpower = Number(myCharacter.value?.sheet?.willpower ?? 0)
+      if (currentWillpower <= 0) {
+        toastMessage.value = 'Sem Força de Vontade disponível para suprimir Frenesi automaticamente.'
+        toastVariant.value = 'warning'
+        showToast.value = true
+        setTimeout(() => { showToast.value = false }, 4000)
+        return
+      }
+
+      const updatedSheet = {
+        ...(myCharacter.value?.sheet || {}),
+        willpower: Math.max(0, currentWillpower - 1)
+      }
+
+      if (user.value?.id) {
+        await savePlayerSheet(campaignId, user.value.id, updatedSheet)
+      }
+
+      if (myCharacter.value) {
+        myCharacter.value = {
+          ...myCharacter.value,
+          sheet: updatedSheet
+        }
+      }
+
+      toastMessage.value = 'Você gastou 1 ponto de Força de Vontade e suprimiu o Frenesi neste turno, sem realizar o teste.'
+      toastVariant.value = 'info'
+      showToast.value = true
+      setTimeout(() => { showToast.value = false }, 4500)
+    }
+
     const fallbackName = user.value?.username || user.value?.email?.split('@')[0] || 'Jogador'
     const characterName = playerCharacterName.value || fallbackName
     await rollDice(campaignId, config, characterName)

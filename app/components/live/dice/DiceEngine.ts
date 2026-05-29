@@ -193,6 +193,7 @@ export function performRoll(config: DiceRollConfig): {
   
   // 🎯 PASSO 8: Gerar descrição
   const description = generateDescription({
+    rollType: config.rollType,
     totalSuccesses,
     isCritical,
     isMessyCritical,
@@ -416,13 +417,22 @@ export function testeEstatistico(config: {
  * Gera descrição narrativa do resultado
  */
 function generateDescription(params: {
+  rollType?: string
   totalSuccesses: number
   isCritical: boolean
   isMessyCritical: boolean
   isBestialFailure: boolean
   difficulty: number
 }): string {
-  const { totalSuccesses, isCritical, isMessyCritical, isBestialFailure, difficulty } = params
+  const { rollType, totalSuccesses, isCritical, isMessyCritical, isBestialFailure, difficulty } = params
+
+  if (rollType === 'frenesi') {
+    if (totalSuccesses >= difficulty) {
+      return '✓ Sucesso: você consegue suprimir a Besta por um turno, ganhando tempo para agir ou fugir da situação.'
+    }
+
+    return '✗ Falha: a Besta assume o controle. O Narrador assume o personagem e guiará o frenesi da forma mais destrutiva ou caótica possível.'
+  }
   
   if (isBestialFailure) {
     return '🩸 A Besta assume o controle. Falha total com consequências terríveis.'

@@ -38,6 +38,74 @@ export const useDice = () => {
     isRolling.value = true
 
     try {
+      if (config.rollType === 'frenesi' && config.frenzyAutoSuccess) {
+        const autoDescription = '✓ Sucesso automático de Frenesi: você gastou 1 ponto de Força de Vontade e suprimiu a Besta por 1 turno.'
+        const autoSuccesses = Math.max(1, config.difficulty)
+
+        const rollData = {
+          id: crypto.randomUUID(),
+          campaign_id: campaignId,
+          user_id: user.value.id,
+          character_id: config.characterId || null,
+          character_name: characterName,
+          roll_type: config.rollType,
+          attribute: config.attribute,
+          skill: config.skill,
+          pool_total: 0,
+          hunger: 0,
+          difficulty: config.difficulty,
+          modifier: 0,
+          dice_results: {
+            normal: [],
+            hunger: []
+          },
+          successes: autoSuccesses,
+          is_critical: false,
+          is_messy_critical: false,
+          is_bestial_failure: false,
+          description: autoDescription,
+          created_at: new Date().toISOString()
+        }
+
+        const { error } = await supabase
+          .from('dice_rolls')
+          .insert(rollData)
+
+        if (error) {
+          console.error('Erro ao salvar rolagem automática de frenesi:', error)
+          throw error
+        }
+
+        const result: RollResult = {
+          id: rollData.id,
+          campaignId: campaignId,
+          userId: user.value.id,
+          characterId: rollData.character_id || undefined,
+          characterName,
+          rollType: config.rollType,
+          attribute: config.attribute,
+          skill: config.skill,
+          poolTotal: 0,
+          hunger: 0,
+          difficulty: config.difficulty,
+          modifier: 0,
+          diceResults: {
+            normal: [],
+            hunger: []
+          },
+          successes: autoSuccesses,
+          totalSuccesses: autoSuccesses,
+          isCritical: false,
+          isMessyCritical: false,
+          isBestialFailure: false,
+          description: autoDescription,
+          createdAt: rollData.created_at
+        }
+
+        lastRollId.value = result.id
+        return result
+      }
+
       // Executar rolagem usando engine
       const rollResult = performRoll(config)
 
