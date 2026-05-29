@@ -85,6 +85,7 @@
     <!-- SESSÃO ATIVA — interface completa                      -->
     <!-- ═══════════════════════════════════════════════════════ -->
     <template v-else>
+      <div class="live-session-shell">
 
       <!-- Header -->
       <div style="background:#0a0a1a; border-bottom:1px solid #2d1515;" class="px-6 py-4 sticky top-0 z-30">
@@ -132,7 +133,7 @@
       </div>
 
       <!-- Layout principal -->
-      <div class="flex" style="height:calc(100vh - 65px);">
+      <div class="flex flex-1 min-h-0">
 
         <!-- ── Painel Esquerdo ── -->
         <div class="w-72 overflow-y-auto border-r border-[#2d1515] p-4 space-y-6 shrink-0" style="background:#0a0a1a;">
@@ -662,6 +663,7 @@
         </div>
 
       </div><!-- /flex layout -->
+      </div><!-- /live-session-shell -->
     </template>
 
     <!-- Modal de Rolagem de Dados -->
@@ -1785,6 +1787,15 @@ onBeforeUnmount(() => {
 .df-text-muted {
   color: #6b6b7b;
   font-size: 0.8rem;
+}
+
+/* Active live shell: lock page to viewport and let internal panes scroll. */
+.live-session-shell {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* ── Animations ── */

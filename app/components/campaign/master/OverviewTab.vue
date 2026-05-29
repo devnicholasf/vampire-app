@@ -37,6 +37,11 @@
 				{{ overview.name || campaign?.name || 'Sem nome' }}
 			</h2>
 
+			<!-- Campaign description (centered) -->
+			<p v-if="!editMode" class="mt-3 text-sm text-df-silver/90 text-left whitespace-pre-line max-w-2xl mx-auto leading-relaxed">
+				{{ overview.description || campaign?.description || 'Sem descrição da crônica.' }}
+			</p>
+
 			<!-- Bottom divider -->
 			<div class="flex items-center gap-4 w-full mt-4">
 				<div class="flex-1 h-px bg-gradient-to-r from-transparent via-red-900/60 to-red-900/60"/>
@@ -48,6 +53,15 @@
 				<div class="flex flex-col gap-1">
 					<label class="text-xs text-df-muted uppercase tracking-wider">Nome da Crônica</label>
 					<input v-model="overview.name" class="df-input text-sm text-center" placeholder="Ex: Crônica de Manaus..." />
+				</div>
+				<div class="flex flex-col gap-1 mt-3">
+					<label class="text-xs text-df-muted uppercase tracking-wider">Descrição da Crônica</label>
+					<textarea
+						v-model="overview.description"
+						class="df-input text-sm text-left whitespace-pre-wrap resize-none"
+						rows="3"
+						placeholder="Descreva o clima, a cidade e os conflitos centrais da sua crônica..."
+					/>
 				</div>
 			</div>
 		</div>
@@ -426,6 +440,7 @@ const toneOptions = [
 // ── Overview data ──
 interface OverviewData {
 	name: string
+	description: string
 	status: string
 	principles: string
 	tones: string[]
@@ -434,6 +449,7 @@ interface OverviewData {
 
 const overview = ref<OverviewData>({
 	name: '',
+	description: '',
 	status: '',
 	principles: '',
 	tones: [],
@@ -649,6 +665,7 @@ const loadOverview = async () => {
 			
 			overview.value = {
 				name: parsed.name || props.campaign?.name || '',
+				description: parsed.description || props.campaign?.description || '',
 				status: parsed.status || '',
 				principles: parsed.principles || '',
 				tones: (parsed.tones || []).filter((t: string) => validToneValues.includes(t)),
@@ -669,6 +686,7 @@ const loadOverview = async () => {
 				
 				overview.value = {
 					name: parsed.name || '',
+					description: parsed.description || props.campaign?.description || '',
 					status: parsed.status || '',
 					principles: parsed.principles || '',
 					tones: (parsed.tones || []).filter((t: string) => validToneValues.includes(t)),
@@ -687,11 +705,13 @@ const loadOverview = async () => {
 			} else {
 				// Default from campaign data
 				overview.value.name = props.campaign?.name || ''
+				overview.value.description = props.campaign?.description || ''
 			}
 		}
 	} catch (err) {
 		console.error('Erro ao carregar overview:', err)
 		overview.value.name = props.campaign?.name || ''
+		overview.value.description = props.campaign?.description || ''
 	}
 	savedSnapshot = JSON.stringify(overview.value)
 }
@@ -706,7 +726,10 @@ const saveOverview = async () => {
 		// Salvar no Supabase
 		const { error } = await supabase
 			.from('campaigns')
-			.update({ overview: overview.value })
+			.update({
+				overview: overview.value,
+				description: overview.value.description || ''
+			})
 			.eq('id', props.campaignId)
 
 		if (error) {
@@ -760,6 +783,9 @@ onMounted(async () => {
 watch(() => props.campaign, (val) => {
 	if (val && !overview.value.name) {
 		overview.value.name = val.name
+	}
+	if (val && !overview.value.description) {
+		overview.value.description = val.description || ''
 	}
 })
 </script>

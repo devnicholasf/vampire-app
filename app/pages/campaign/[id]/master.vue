@@ -183,12 +183,6 @@
           @update:count="updateEventsCount"
         />
 
-        <SettingsTab
-          v-if="currentTab === 'settings'"
-          :campaign="campaign"
-          :campaign-id="campaignId"
-        />
-
         <MediaTab
           v-if="currentTab === 'media'"
           :campaign-id="campaignId"
@@ -231,7 +225,6 @@ import ToastContainer from '~/components/ui/ToastContainer.vue'
 import PlayersTab from '~/components/campaign/master/PlayersTab.vue'
 import NPCsTab from '~/components/campaign/master/NPCsTab.vue'
 import PoliticsTab from '~/components/campaign/master/PoliticsTab.vue'
-import SettingsTab from '~/components/campaign/master/SettingsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
 import OverviewTab from '~/components/campaign/master/OverviewTab.vue'
 import EventsTab from '~/components/campaign/master/EventsTab.vue'
@@ -264,12 +257,6 @@ const IconPolitics: FunctionalComponent = () =>
     h('path', { d: 'M5 20V10l7-6 7 6v10' }),
     h('path', { d: 'M9 20v-6h6v6' }),
     h('path', { d: 'M3 10l9-7 9 7' })
-  ])
-
-const IconSettings: FunctionalComponent = () =>
-  h('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, [
-    h('circle', { cx: '12', cy: '12', r: '3' }),
-    h('path', { d: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z' })
   ])
 
 const IconMedia: FunctionalComponent = () =>
@@ -308,7 +295,7 @@ const campaign = ref<Campaign | null>(null)
 const error = ref<string | null>(null)
 const localLoading = ref(false)
 // Persist tab via URL hash
-const validTabs = ['overview', 'players', 'npcs', 'notes', 'events', 'settings', 'media']
+const validTabs = ['overview', 'players', 'npcs', 'notes', 'events', 'media']
 const hashTab = route.hash?.replace('#', '')
 const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'overview')
 
@@ -348,7 +335,6 @@ const tabs = ref([
   { id: 'notes', label: 'Política', iconComponent: IconPolitics },
   { id: 'events', label: 'Eventos', iconComponent: IconEvents },
   { id: 'media', label: 'Mídia', iconComponent: IconMedia },
-  { id: 'settings', label: 'Configurações', iconComponent: IconSettings },
 ])
 
 // ============================================

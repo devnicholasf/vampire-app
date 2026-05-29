@@ -558,13 +558,6 @@ onMounted(loadFiles)
 @keyframes spin           { to { transform: rotate(360deg); } }
 @keyframes progress-pulse { 0%,100% { opacity:1; } 50% { opacity:.6; } }
 
-/* ─── Título: sem cor local para igualar outras tabs ─── */
-.df-section-title {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #c0c0d0;
-}
-
 /* ─── Botão upload primário ─── */
 .df-btn-upload {
   display: inline-flex;
