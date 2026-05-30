@@ -496,12 +496,29 @@
                 v-model="eventDraft.type"
                 class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
               >
-                <option value="narrative">Narrativo</option>
-                <option value="social">Social</option>
+                <option value="embrace">Abraço</option>
+                <option value="feeding">Caçada</option>
                 <option value="combat">Combate</option>
                 <option value="discovery">Descoberta</option>
+                <option value="diablerie">Diablerie</option>
+                <option value="death">Morte</option>
+                <option value="narrative">Narrativo</option>
                 <option value="political">Político</option>
+                <option value="social">Social</option>
                 <option value="other">Outro</option>
+              </select>
+              <select
+                v-model="eventDraft.playerName"
+                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
+              >
+                <option value="">Direcionamento por personagem (opcional)</option>
+                <option
+                  v-for="player in eventTargetPlayers"
+                  :key="player.value"
+                  :value="player.value"
+                >
+                  {{ player.label }}
+                </option>
               </select>
               <button
                 class="w-full text-xs px-2 py-1.5 rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20 transition-colors"
@@ -687,6 +704,8 @@
         <p class="text-sm text-white mb-3">{{ eventDraft.title || 'Sem título' }}</p>
         <p class="text-xs text-[#6b6b7b] mb-1">Tipo</p>
         <p class="text-sm text-white mb-3">{{ eventDraft.type }}</p>
+        <p class="text-xs text-[#6b6b7b] mb-1">Personagem</p>
+        <p class="text-sm text-white mb-3">{{ eventDraft.playerName || 'Nenhum personagem específico' }}</p>
         <p v-if="eventDraft.description" class="text-xs text-[#c4c4d4] mb-4">{{ eventDraft.description }}</p>
 
         <div class="flex justify-end gap-2">
@@ -940,6 +959,7 @@ const eventDraft = ref({
   title: '',
   description: '',
   type: 'narrative',
+  playerName: '',
 })
 const showEventConfirmModal = ref(false)
 const showStopSessionConfirmModal = ref(false)
@@ -977,6 +997,19 @@ const availableNPCs = computed(() => {
 // Media computed
 const inSceneImages = computed(() => sceneMediaItems.value.filter(m => m.type === 'image'))
 const inSceneAudios = computed(() => sceneMediaItems.value.filter(m => m.type === 'audio'))
+const eventTargetPlayers = computed(() => {
+  const rawPlayers: any[] = campaign.value?.campaign_players ?? []
+  return rawPlayers
+    .filter((player: any) => player?.role !== 'master')
+    .map((player: any) => {
+      const characterName = String(player?.character_name || player?.sheet?.name || player?.name || '').trim()
+      return {
+        value: characterName,
+        label: characterName || 'Jogador sem nome',
+      }
+    })
+    .filter((player: { value: string }) => player.value.length > 0)
+})
 
 // Show only the 4 most recent events; older ones are kept in DB but hidden
 const visibleSessionTimeline = computed(() => sessionTimeline.value.slice(-4).reverse())
@@ -1492,7 +1525,7 @@ const confirmAndCreateEvent = async () => {
       type: eventDraft.value.type,
       created_by: user.value.id,
       npc_ids: [],
-      player_names: [],
+      player_names: eventDraft.value.playerName ? [eventDraft.value.playerName] : [],
       metadata: { source: 'live-manual' },
     }
 
@@ -1534,7 +1567,7 @@ const confirmAndCreateEvent = async () => {
 
     sessionTimeline.value = updatedTimeline
     showEventConfirmModal.value = false
-    eventDraft.value = { title: '', description: '', type: 'narrative' }
+    eventDraft.value = { title: '', description: '', type: 'narrative', playerName: '' }
   } catch (e) {
     console.error('LIVE: Erro ao criar evento narrativo:', e)
     alert('Não foi possível registrar o evento. Verifique se a migration de campaign_events já foi aplicada no banco.')

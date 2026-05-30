@@ -4,9 +4,42 @@
     <div class="flex items-start justify-between gap-2 mb-1">
       <p class="text-sm font-semibold text-white leading-tight">{{ title }}</p>
       <span
-        class="shrink-0 text-xs px-2 py-0.5 rounded-full border"
+        class="shrink-0 text-xs px-2 py-0.5 rounded-full border inline-flex items-center gap-1"
         :style="`color: ${typeColor}; border-color: ${typeColor}44; background: ${typeColor}11`"
-      >{{ typeLabel }}</span>
+      >
+        <span
+          class="inline-flex items-center justify-center w-4 h-4 rounded-full"
+          :style="`background:${typeColor}22; box-shadow: inset 0 0 0 1px ${typeColor}66;`"
+        >
+          <svg
+            class="w-2.5 h-2.5 shrink-0"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <rect v-if="typeIcon === 'book'" x="6" y="5" width="12" height="14" rx="2" />
+
+            <path v-else-if="typeIcon === 'sword'" d="M12 4l3 3-3 3-3-3 3-3zm-1.3 6.7h2.6V20h-2.6v-9.3z" />
+
+            <path v-else-if="typeIcon === 'users'" d="M8 13a3 3 0 110-6 3 3 0 010 6zm8 0a3 3 0 110-6 3 3 0 010 6zM5 19a3 3 0 013-3h0a3 3 0 013 3H5zm8 0a3 3 0 013-3h0a3 3 0 013 3h-6z" />
+
+            <path v-else-if="typeIcon === 'search'" d="M10.5 4a6.5 6.5 0 014.98 10.67l3.92 3.91-1.41 1.42-3.92-3.92A6.5 6.5 0 1110.5 4z" />
+
+            <path v-else-if="typeIcon === 'skull'" d="M12 4a7 7 0 00-7 7v2a3 3 0 003 3v3h8v-3a3 3 0 003-3v-2a7 7 0 00-7-7zm-2 8a1 1 0 110-2 1 1 0 010 2zm4 0a1 1 0 110-2 1 1 0 010 2z" />
+
+            <path v-else-if="typeIcon === 'droplet'" d="M12 3c3 4 6 7 6 10a6 6 0 11-12 0c0-3 3-6 6-10z" />
+
+            <path v-else-if="typeIcon === 'zap'" d="M13.5 3L5 13h5l-1.5 8L19 11h-5.5L13.5 3z" />
+
+            <path v-else-if="typeIcon === 'flag'" d="M6 4h2v16H6V4zm2 1h9l-2 3 2 3H8V5z" />
+
+            <path v-else-if="typeIcon === 'moon'" d="M16.8 15.8A7 7 0 018.2 7.2a8 8 0 108.6 8.6z" />
+
+            <circle v-else cx="12" cy="12" r="6" />
+          </svg>
+        </span>
+        <span>{{ typeLabelUpper }}</span>
+      </span>
     </div>
 
     <!-- Description -->
@@ -41,18 +74,18 @@
       </span>
     </div>
 
-    <!-- Involved characters -->
-    <div v-if="playerNames?.length || npcIds?.length" class="flex flex-wrap gap-1 mt-2">
-      <span
-        v-for="name in playerNames"
-        :key="name"
-        class="text-xs px-2 py-0.5 rounded-full bg-blue-900/20 text-blue-400 border border-blue-900/30"
-      >{{ name }}</span>
-      <span
-        v-for="id in npcIds"
-        :key="id"
-        class="text-xs px-2 py-0.5 rounded-full bg-purple-900/20 text-purple-400 border border-purple-900/30"
-      >NPC: {{ id.slice(0, 8) }}…</span>
+    <!-- Involved characters avatars -->
+    <div v-if="playerAvatars?.length" class="mt-2 flex justify-end">
+      <div class="flex items-center -space-x-2">
+        <img
+          v-for="(avatarUrl, idx) in playerAvatars"
+          :key="`${avatarUrl}-${idx}`"
+          :src="avatarUrl"
+          :alt="`Avatar do personagem ${idx + 1}`"
+          class="w-7 h-7 rounded-full object-cover border border-[#0a0a1a] shadow-sm"
+          loading="lazy"
+        >
+      </div>
     </div>
   </div>
 </template>
@@ -69,7 +102,7 @@ const props = defineProps<{
   location?: string | null
   ingameDate?: string | null
   isSecret?: boolean
-  playerNames?: string[]
+  playerAvatars?: string[]
   npcIds?: string[]
 }>()
 
@@ -79,6 +112,12 @@ const typeColor = computed(() =>
 
 const typeLabel = computed(() =>
   EVENT_TYPE_CONFIG[props.type as EventType]?.label ?? props.type
+)
+
+const typeLabelUpper = computed(() => typeLabel.value.toUpperCase())
+
+const typeIcon = computed(() =>
+  EVENT_TYPE_CONFIG[props.type as EventType]?.icon ?? 'circle'
 )
 
 const formattedDate = computed(() => {

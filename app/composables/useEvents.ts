@@ -50,10 +50,10 @@ export const EVENT_TYPE_CONFIG: Record<EventType, { label: string; color: string
   social:     { label: 'Social',      color: '#3b82f6', icon: 'users' },
   discovery:  { label: 'Descoberta',  color: '#d4a647', icon: 'search' },
   death:      { label: 'Morte',       color: '#6b21a8', icon: 'skull' },
-  embrace:    { label: 'Abraço',      color: '#7f1d1d', icon: 'droplet' },
-  diablerie:  { label: 'Diablerie',   color: '#450a0a', icon: 'zap' },
+  embrace:    { label: 'Abraço',      color: '#db2777', icon: 'droplet' },
+  diablerie:  { label: 'Diablerie',   color: '#b91c1c', icon: 'zap' },
   political:  { label: 'Político',    color: '#d97706', icon: 'flag' },
-  feeding:    { label: 'Caçada',      color: '#991b1b', icon: 'moon' },
+  feeding:    { label: 'Caçada',      color: '#16a34a', icon: 'moon' },
   other:      { label: 'Outro',       color: '#4a4a5a', icon: 'circle' },
 }
 

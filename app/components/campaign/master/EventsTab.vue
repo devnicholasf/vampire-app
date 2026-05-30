@@ -76,7 +76,7 @@
         </div>
 
         <!-- Empty state -->
-        <div v-if="!loading && visibleEvents.length === 0" class="text-center py-10 space-y-4">
+        <div v-if="visibleEvents.length === 0" class="text-center py-10 space-y-4">
           <svg class="w-16 h-16 mx-auto text-df-muted/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
           </svg>
@@ -93,11 +93,6 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
             Iniciar Jogo ao Vivo
           </a>
-        </div>
-
-        <!-- Skeleton loader -->
-        <div v-else-if="loading" class="space-y-3">
-          <div v-for="i in 4" :key="i" class="h-8 rounded bg-white/5 animate-pulse"/>
         </div>
 
         <!-- Stats grid -->
@@ -146,6 +141,7 @@
             <button
               class="filter-pill"
               :class="filterType === null ? 'filter-pill--active' : ''"
+              :style="getFilterPillStyle(null)"
               @click="filterType = null"
             >Todos</button>
             <button
@@ -153,13 +149,14 @@
               :key="type"
               class="filter-pill"
               :class="filterType === type ? 'filter-pill--active' : ''"
+              :style="getFilterPillStyle(type as EventType)"
               @click="filterType = filterType === type ? null : (type as EventType)"
             >{{ cfg.label }}</button>
           </div>
         </div>
 
         <!-- Skeleton loader -->
-        <div v-if="!ready || loading" class="space-y-4">
+        <div v-if="!ready" class="space-y-4">
           <div v-for="i in 3" :key="i" class="ml-9 space-y-2">
             <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
             <div class="h-14 rounded bg-white/5 animate-pulse"/>
@@ -167,14 +164,14 @@
         </div>
 
         <!-- Empty -->
-        <div v-else-if="filteredTimeline.length === 0" class="py-8 text-center text-df-muted text-sm">
+        <div v-else-if="displayedTimeline.length === 0" class="py-8 text-center text-df-muted text-sm">
           Nenhum evento nesta categoria.
         </div>
 
         <!-- Timeline list -->
         <ol v-else class="relative border-l border-red-900/40 space-y-6 ml-3">
           <li
-            v-for="(event, index) in filteredTimeline"
+            v-for="(event, index) in displayedTimeline"
             :key="event.id"
             class="ml-6"
           >
@@ -207,11 +204,23 @@
               :location="event.location"
               :ingame-date="event.ingameDate"
               :is-secret="event.isSecret"
-              :player-names="event.playerNames"
+              :player-avatars="resolveEventAvatars(event.playerNames)"
               :npc-ids="event.npcIds"
             />
           </li>
         </ol>
+
+        <div
+          v-if="filteredTimeline.length > displayedTimeline.length"
+          class="mt-5 flex justify-center"
+        >
+          <button
+            class="filter-pill"
+            @click="loadOlderTimelineEvents"
+          >
+            Carregar eventos anteriores
+          </button>
+        </div>
       </div>
     </div>
 
@@ -248,7 +257,7 @@
           <!-- Events for selected character -->
           <div v-if="selectedCharacter">
             <!-- Skeleton loader -->
-            <div v-if="!ready || loading" class="space-y-4">
+            <div v-if="!ready" class="space-y-4">
               <div v-for="i in 2" :key="i" class="ml-9 space-y-2">
                 <div class="h-4 w-32 rounded bg-white/5 animate-pulse"/>
                 <div class="h-14 rounded bg-white/5 animate-pulse"/>
@@ -274,7 +283,7 @@
                   :location="event.location"
                   :ingame-date="event.ingameDate"
                   :is-secret="event.isSecret"
-                  :player-names="event.playerNames"
+                  :player-avatars="resolveEventAvatars(event.playerNames)"
                   :npc-ids="event.npcIds"
                 />
               </li>
@@ -301,7 +310,7 @@ import EventCard from '~/components/campaign/master/EventCard.vue'
 // ── Props ──────────────────────────────────────────────────
 const props = defineProps<{
   campaignId: string
-  players: { id: string; name: string; characterName?: string }[]
+  players: { id: string; name: string; characterName?: string; avatar?: string }[]
 }>()
 
 const emit = defineEmits<{
@@ -332,12 +341,18 @@ watch(visibleEvents, (newEvents) => {
 const ready             = ref(false)
 const filterType        = ref<EventType | null>(null)
 const selectedCharacter = ref<string | null>(null)
+const TIMELINE_PAGE_SIZE = 6
+const timelineVisibleCount = ref(TIMELINE_PAGE_SIZE)
 
 // ── Computed ───────────────────────────────────────────────
 const filteredTimeline = computed(() =>
   filterType.value
     ? visibleEvents.value.filter(e => e.type === filterType.value)
     : visibleEvents.value
+)
+
+const displayedTimeline = computed(() =>
+  filteredTimeline.value.slice(0, timelineVisibleCount.value)
 )
 
 const eventsForCharacter = computed(() => {
@@ -351,6 +366,24 @@ const eventsForCharacter = computed(() => {
   )
 })
 
+const playerAvatarByName = computed(() => {
+  const map = new Map<string, string>()
+
+  const add = (rawName?: string, rawAvatar?: string) => {
+    const name = String(rawName || '').trim().toLowerCase()
+    const avatar = String(rawAvatar || '').trim()
+    if (!name || !avatar) return
+    map.set(name, avatar)
+  }
+
+  for (const player of props.players) {
+    add(player.name, player.avatar)
+    add(player.characterName, player.avatar)
+  }
+
+  return map
+})
+
 // ── Helpers ────────────────────────────────────────────────
 const eventColor  = (type: EventType) => EVENT_TYPE_CONFIG[type]?.color ?? '#4a4a5a'
 const eventLabel  = (type: EventType) => EVENT_TYPE_CONFIG[type]?.label ?? type
@@ -360,6 +393,43 @@ const formatDate = (d: Date) =>
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   }).format(d)
+
+const resolveEventAvatars = (playerNames: string[] = []) => {
+  const unique = new Set<string>()
+  for (const name of playerNames) {
+    const key = String(name || '').trim().toLowerCase()
+    if (!key) continue
+    const avatar = playerAvatarByName.value.get(key)
+    if (avatar) unique.add(avatar)
+  }
+  return Array.from(unique)
+}
+
+const loadOlderTimelineEvents = () => {
+  timelineVisibleCount.value += TIMELINE_PAGE_SIZE
+}
+
+const getFilterPillStyle = (type: EventType | null): Record<string, string> => {
+  if (type === null) {
+    if (filterType.value !== null) return {}
+    return {
+      borderColor: '#d4a647',
+      color: '#f3e6bf',
+      background: 'rgba(212,166,71,0.2)',
+      boxShadow: 'inset 0 0 0 1px rgba(212,166,71,0.35)'
+    }
+  }
+
+  if (filterType.value !== type) return {}
+
+  const color = EVENT_TYPE_CONFIG[type]?.color ?? '#4a4a5a'
+  return {
+    borderColor: color,
+    color,
+    background: `${color}22`,
+    boxShadow: `inset 0 0 0 1px ${color}66`
+  }
+}
 
 // ── Auto-select first player ───────────────────────────────
 watch(
@@ -371,6 +441,10 @@ watch(
   },
   { immediate: true }
 )
+
+watch(filterType, () => {
+  timelineVisibleCount.value = TIMELINE_PAGE_SIZE
+})
 
 // ── Refetch when browser tab regains focus ────────────────
 const handleVisibilityChange = () => {
@@ -482,9 +556,7 @@ onBeforeUnmount(() => {
   color: #d4a647;
 }
 .filter-pill--active {
-  border-color: #d4a647;
-  color: #d4a647;
-  background: rgba(212,166,71,0.1);
+  font-weight: 600;
 }
 
 /* ── Timeline dot animations ── */
@@ -511,20 +583,25 @@ onBeforeUnmount(() => {
   padding: 0.375rem 1rem;
   border-radius: 0.375rem;
   border: 1px solid #4a4a5a;
-  color: #6b6b7b;
+  color: #c4c4d4;
   background: transparent;
   cursor: pointer;
   transition: all 0.15s;
 }
 .char-tab:hover {
   border-color: #d4a647;
-  color: #d4a647;
+  color: #f3e6bf;
+  background: rgba(212, 166, 71, 0.12);
 }
 .char-tab--active {
   border-color: #d4a647;
   color: #0a0a1a;
   background: #d4a647;
   font-weight: 600;
+}
+.char-tab--active:hover {
+  color: #0a0a1a;
+  background: #e0b956;
 }
 
 /* ── Spinner ── */

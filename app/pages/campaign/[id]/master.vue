@@ -391,7 +391,9 @@ const refreshCampaignData = async () => {
         inviteCode: campaignData.invite_code,
         players: (campaignData.campaign_players || []).map((player: any) => ({
           id: player.user_id,
-          name: player.character_name,
+          name: player.character_name || player.sheet?.name || `User ${String(player.user_id).slice(0, 8)}`,
+          characterName: player.character_name || player.sheet?.name || '',
+          avatar: player.sheet?.avatar || '',
           email: `User: ${player.user_id.substring(0, 8)}...`,
           role: player.role,
           joinedAt: new Date(player.joined_at)
@@ -454,7 +456,9 @@ onMounted(async () => {
         inviteCode: campaignData.invite_code,
         players: (campaignData.campaign_players || []).map((player: any) => ({
           id: player.user_id,
-          name: player.character_name,
+          name: player.character_name || player.sheet?.name || `User ${String(player.user_id).slice(0, 8)}`,
+          characterName: player.character_name || player.sheet?.name || '',
+          avatar: player.sheet?.avatar || '',
           email: `User: ${player.user_id.substring(0, 8)}...`,
           role: player.role,
           joinedAt: new Date(player.joined_at)
