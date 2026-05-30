@@ -1,13 +1,18 @@
 <template>
   <div>
     <NuxtLayout name="auth">
-      <div class="space-y-8 relative">
+      <div class="space-y-6 relative">
       <!-- Header com branding -->
-      <div class="text-center space-y-4">
-        <h1 class="text-2xl font-bold text-red-500 font-cinzel mb-2">
-          VAMPIRE: THE MASQUERADE Campaign Manager
+      <div class="text-center space-y-2">
+        <h1 class="mx-auto mb-5 flex w-full flex-col items-center space-y-3 font-cinzel font-bold leading-none text-center">
+          <span class="block text-2xl tracking-[0.08em] text-red-500">
+            Night Chronicles
+          </span>
+          <span class="mx-auto block w-full max-w-none whitespace-nowrap text-center text-[14px] font-bold uppercase tracking-[0.02em] text-white">
+            Campaign Manager for Vampire: The Masquerade
+          </span>
         </h1>
-        <h2 class="text-xl font-semibold text-text-secondary mb-2">
+        <h2 class="text-xl font-semibold text-text-secondary">
           Bem-vindo de volta
         </h2>
         <p class="text-text-muted">
@@ -112,33 +117,38 @@
 
     <template #footer>
       <div class="text-center space-y-8">
-        <!-- Links de termos -->
         <div class="flex items-center justify-center space-x-6 text-xs">
-          <NuxtLink 
-            to="/terms" 
+          <NuxtLink
+            to="/terms"
             class="text-text-muted hover:text-secondary transition-colors duration-200"
           >
             Termos de Uso
           </NuxtLink>
           <span class="text-text-muted">•</span>
-          <NuxtLink 
-            to="/privacy" 
+          <NuxtLink
+            to="/privacy"
             class="text-text-muted hover:text-secondary transition-colors duration-200"
           >
             Privacidade
           </NuxtLink>
+          <span class="text-text-muted">•</span>
+          <NuxtLink
+            to="/creditos-direitos-autorais"
+            class="text-text-muted hover:text-secondary transition-colors duration-200"
+          >
+            Créditos & Direitos Autorais
+          </NuxtLink>
         </div>
-        
-        <!-- Copyright no final da página -->
+
         <div class="border-t border-border-primary/30 pt-8 mt-16">
           <p class="text-xs text-text-muted/80 mb-2">
-            Vampire: The Masquerade © 2025 World of Darkness Entertainment
+            Vampire: The Masquerade e World of Darkness sao marcas registradas de seus respectivos proprietarios.
           </p>
           <p class="text-xs text-text-muted/60 mb-1">
-            Created by fan for fans.
+            Projeto independente criado por fãs.
           </p>
           <p class="text-xs text-text-muted/50">
-            Not affiliated with Paradox Interactive or World of Darkness Entertainment.
+            Nao e afiliado, patrocinado ou endossado por Paradox Interactive ou World of Darkness Entertainment.
           </p>
         </div>
       </div>

@@ -1,60 +1,65 @@
 <template>
-  <div class="min-h-screen bg-gradient-atmospheric flex items-center justify-center p-6">
-    <div class="max-w-4xl mx-auto">
-      <div class="bg-surface-card/80 backdrop-blur-xl border border-border-primary rounded-2xl p-8 shadow-card-vampire">
-        
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <h1 class="text-4xl font-bold text-red-500 mb-4">
-            🔒 Política de Privacidade
-          </h1>
-          <p class="text-text-secondary text-lg">
-            Como protegemos seus segredos nas trevas
-          </p>
-        </div>
+  <div class="min-h-screen bg-gradient-atmospheric px-6 py-10 md:py-14">
+    <div class="mx-auto w-full max-w-5xl">
+      <div class="rounded-2xl border border-border-primary bg-surface-card/80 p-6 shadow-card-vampire backdrop-blur-xl md:p-10">
+        <header class="mb-8 border-b border-border-primary/40 pb-6 md:mb-10">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-red-400/80"></p>
+          <h1 class="mt-2 text-3xl font-bold text-red-500 md:text-4xl">Política de Privacidade</h1>
+          <p class="mt-3 text-sm text-text-secondary md:text-base">Como tratamos e protegemos as informações dentro da plataforma:</p>
+        </header>
 
-        <!-- Conteúdo Temporário -->
-        <div class="space-y-6 text-center">
-          <div class="text-6xl">🕵️‍♂️</div>
-          
-          <h2 class="text-2xl font-semibold text-text-primary">
-            FUNCIONOU TAMBÉM! 🎉
-          </h2>
-          
-          <p class="text-text-secondary text-lg">
-            Esta é a página de <strong>Política de Privacidade</strong>
-          </p>
-          
-          <div class="bg-purple-900/20 border border-purple-400 rounded-lg p-4">
-            <p class="text-purple-300">
-              🔐 Conteúdo temporário - será substituído em breve
-            </p>
-          </div>
-          
-          <div class="text-text-muted space-y-2">
-            <p>Seus dados estão seguros como segredos da Camarilla 🤫</p>
-            <p>Nenhum Giovanni irá mexer nas suas informações 💀</p>
-            <p class="mt-4">🌙 A privacidade é eterna, como os Kindred... 🩸</p>
-          </div>
-        </div>
+        <section class="space-y-5">
+          <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Dados coletados</h2>
+            <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
+              Coletamos apenas os dados necessários para o funcionamento da plataforma, incluindo autenticação, campanhas, personagens, NPCs e conteúdos criados pelo usuário.
+            </blockquote>
+          </article>
 
-        <!-- Botão Voltar -->
-        <div class="text-center mt-8">
-          <button
-            @click="$router.back()"
-            class="px-6 py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors duration-200 font-semibold"
+          <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Finalidade</h2>
+            <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
+              Os dados são utilizados exclusivamente para autenticação, armazenamento de campanhas e funcionamento dos recursos da plataforma.
+            </blockquote>
+          </article>
+
+          <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Compartilhamento</h2>
+            <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
+              Não vendemos, alugamos ou compartilhamos dados pessoais com terceiros para fins comerciais.
+            </blockquote>
+          </article>
+
+          <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Segurança</h2>
+            <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
+              Utilizamos serviços de terceiros confiáveis para armazenamento e autenticação, incluindo Supabase, adotando medidas razoáveis para proteção das informações.
+            </blockquote>
+          </article>
+
+          <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Exclusão</h2>
+            <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
+              O usuário poderá solicitar a exclusão de sua conta e dos dados associados, respeitadas eventuais obrigações legais aplicáveis.
+            </blockquote>
+          </article>
+        </section>
+
+        <footer class="mt-8 border-t border-border-primary/40 pt-6 text-center md:mt-10">
+          <NuxtLink
+            to="/login"
+            class="inline-flex items-center justify-center rounded-lg border border-border-primary bg-surface px-5 py-2.5 text-sm font-semibold text-text-secondary transition-colors duration-200 hover:border-red-400 hover:text-text-primary"
           >
-            ← Retornar às sombras
-          </button>
-        </div>
-
+            Voltar para login
+          </NuxtLink>
+        </footer>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  title: 'Privacidade - Teste'
+useSeoMeta({
+  title: 'Política de Privacidade'
 })
 </script>

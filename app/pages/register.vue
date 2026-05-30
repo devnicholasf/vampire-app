@@ -36,7 +36,7 @@
       </div>
 
       <!-- Formulário -->
-      <form @submit.prevent="handleRegister" class="space-y-4" novalidate>>
+      <form @submit.prevent="handleRegister" class="space-y-4" novalidate>
         <!-- Nome de Usuário -->
         <BaseInput
           v-model="form.username"
@@ -128,6 +128,7 @@
         >
           {{ loading ? 'Criando conta...' : 'Criar Conta' }}
         </BaseButton>
+
       </form>
 
       <!-- Divider -->

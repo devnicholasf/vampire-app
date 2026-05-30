@@ -17,7 +17,7 @@
       <!-- Footer -->
       <div class="text-center mt-6 text-text-muted text-xs">
         <slot name="footer">
-          <p>Vampire: The Masquerade &copy; {{ new Date().getFullYear() }} World of Darkness Entertainment</p>
+          <p>Vampire: The Masquerade e World of Darkness sao marcas registradas de seus respectivos proprietarios.</p>
         </slot>
       </div>
     </div>

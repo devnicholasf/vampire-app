@@ -5,7 +5,7 @@
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/login', '/register', '/terms', '/privacy', '/forgot-password']
+  const publicRoutes = ['/login', '/register', '/terms', '/privacy', '/creditos-direitos-autorais', '/forgot-password']
   
   // Verificar autenticação usando composable (apenas no cliente)
   if (process.client) {

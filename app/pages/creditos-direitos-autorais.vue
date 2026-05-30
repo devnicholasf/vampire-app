@@ -4,50 +4,57 @@
       <div class="rounded-2xl border border-border-primary bg-surface-card/80 p-6 shadow-card-vampire backdrop-blur-xl md:p-10">
         <header class="mb-8 border-b border-border-primary/40 pb-6 md:mb-10">
           <p class="text-xs font-semibold uppercase tracking-[0.2em] text-red-400/80"></p>
-          <h1 class="mt-2 text-3xl font-bold text-red-500 md:text-4xl">Termos de Uso</h1>
-          <p class="mt-3 text-sm text-text-secondary md:text-base">Informações importantes sobre o uso do sistema:</p>
+          <h1 class="mt-2 text-3xl font-bold text-red-500 md:text-4xl">Créditos & Direitos Autorais</h1>
+          <p class="mt-3 text-sm text-text-secondary md:text-base">Informações sobre marcas, autoria e direitos relacionados à plataforma.</p>
         </header>
 
         <section class="space-y-5">
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Natureza do serviço</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">World of Darkness</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              Este sistema é uma ferramenta de gerenciamento de campanhas de RPG criada por fãs para auxiliar narradores e jogadores.
+              Vampire: The Masquerade, World of Darkness e demais marcas relacionadas pertencem aos seus respectivos proprietários.
             </blockquote>
           </article>
 
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Conteúdo da World of Darkness</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Projeto Independente</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              Vampiro: A Máscara, World of Darkness e demais marcas relacionadas pertencem aos seus respectivos proprietários.
+              Esta aplicação é um projeto criado por fãs para auxiliar campanhas de RPG e não possui afiliação oficial com World of Darkness, Paradox Interactive ou Renegade Game Studios.
             </blockquote>
           </article>
 
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Não afiliação</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Desenvolvimento</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              Este projeto não possui afiliação, patrocínio ou aprovação oficial da Paradox Interactive, World of Darkness ou Renegade Game Studios.
+              Sistema desenvolvido por Nicholas Freitas para gerenciamento de campanhas de Vampire: The Masquerade V5.
             </blockquote>
           </article>
 
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Responsabilidade do usuário</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Tecnologias Utilizadas</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              O usuário é responsável pelo conteúdo criado, armazenado e compartilhado dentro da plataforma.
+              Nuxt.js, Vue.js, TypeScript, Supabase e demais tecnologias que compõem a plataforma.
             </blockquote>
           </article>
 
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Encerramento de contas</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Recursos Visuais</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              Contas ou conteúdos que violem estes termos poderão ser removidos pela administração.
+              Ícones, fontes e recursos visuais utilizados permanecem sob os direitos de seus respectivos autores e proprietários.
             </blockquote>
           </article>
 
           <article class="rounded-xl border border-border-primary/50 bg-surface/40 p-5 md:p-6">
-            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Atualizações dos Termos</h2>
+            <h2 class="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-red-300">Conteúdo dos Usuários</h2>
             <blockquote class="border-l-2 border-red-500/70 pl-4 text-sm leading-7 text-text-primary md:text-base">
-              Estes termos poderão ser atualizados para refletir melhorias e alterações na plataforma.
+              Personagens, campanhas, histórias, imagens e demais conteúdos enviados à plataforma permanecem de propriedade de seus respectivos criadores.
+            </blockquote>
+          </article>
+
+          <article class="rounded-xl border p-5 md:p-6" style="border-color:#C9A34A; background:rgba(255, 255, 255, 0.08);">
+            <h2 class="mb-4 text-center text-sm font-semibold uppercase tracking-[0.12em]" style="color:#C9A34A;">Agradecimentos</h2>
+            <blockquote class="text-center text-sm leading-7 text-text-primary md:text-base">
+              A todos os narradores e jogadores que mantêm viva a comunidade de World of Darkness através de suas histórias, crônicas e personagens.
             </blockquote>
           </article>
         </section>
@@ -67,6 +74,6 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Termos de Uso'
+  title: 'Créditos & Direitos Autorais'
 })
 </script>
