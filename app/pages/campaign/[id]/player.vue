@@ -382,26 +382,72 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Main Content -->
           <div class="lg:col-span-2 space-y-6">
-            <!-- Session Notes -->
+            <!-- My Events -->
             <div class="df-card">
               <h2 class="df-section-title text-lg flex items-center gap-2 mb-4">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                Minhas Notas das Sessões
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Meus Eventos
               </h2>
 
-              <div v-if="sessionNotes.length > 0" class="space-y-4">
-                <div v-for="note in sessionNotes" :key="note.id" class="df-inner-card hover:border-[var(--df-accent-red)] transition-colors">
-                  <div class="flex justify-between items-start mb-2">
-                    <h3 class="font-semibold df-text-silver">{{ note.title }}</h3>
-                    <span class="text-xs df-text-muted">{{ formatDate(note.date) }}</span>
-                  </div>
-                  <p class="df-text-muted text-sm">{{ note.content }}</p>
+              <div v-if="myEvents.length > 0">
+                <ol class="relative border-l border-red-900/40 space-y-6 ml-3">
+                  <li
+                    v-for="(event, index) in displayedMyEvents"
+                    :key="event.id"
+                    class="ml-6"
+                  >
+                    <span
+                      class="absolute flex items-center justify-center rounded-full ring-2 ring-[var(--df-bg-card)]"
+                      :class="index === 0 ? '-left-[14px] w-7 h-7' : '-left-[11px] w-[22px] h-[22px]'"
+                      :style="`background: ${getEventTypeColor(event.type)}18; border: 1px solid ${getEventTypeColor(event.type)}50;`"
+                    >
+                      <span
+                        v-if="index === 0"
+                        class="player-event-dot-ripple absolute inset-0 rounded-full"
+                        :style="`background:${getEventTypeColor(event.type)};`"
+                      />
+                      <span
+                        class="rounded-full relative z-10 player-event-dot-core"
+                        :class="index === 0 ? 'w-[11px] h-[11px]' : 'w-2 h-2'"
+                        :style="`background:${getEventTypeColor(event.type)};`"
+                      />
+                    </span>
+
+                    <div class="df-inner-card hover:border-[var(--df-border-silver)] transition-colors">
+                      <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-semibold df-text-silver">{{ event.title }}</h3>
+                        <span
+                          class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-semibold tracking-wide"
+                          :style="`color:${getEventTypeColor(event.type)}; border-color:${getEventTypeColor(event.type)}55; background:${getEventTypeColor(event.type)}14;`"
+                        >
+                          {{ getEventTypeLabel(event.type) }}
+                        </span>
+                      </div>
+
+                      <p v-if="event.description" class="df-text-muted text-sm mb-2">
+                        {{ event.description }}
+                      </p>
+
+                      <p class="text-xs df-text-muted flex items-center gap-1">
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {{ formatEventDate(event.occurredAt) }}
+                      </p>
+                    </div>
+                  </li>
+                </ol>
+
+                <div v-if="myEvents.length > displayedMyEvents.length" class="mt-5 flex justify-center">
+                  <button class="df-btn-outline" @click="loadMoreMyEvents">
+                    Carregar mais eventos
+                  </button>
                 </div>
               </div>
 
               <div v-else class="text-center py-8">
-                <svg class="w-12 h-12 text-red-900 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <p class="df-text-muted">Nenhuma nota de sessão ainda</p>
+                <svg class="w-12 h-12 text-red-900 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <p class="df-text-muted">Nenhum evento pessoal registrado ainda</p>
               </div>
             </div>
           </div>
@@ -452,10 +498,27 @@
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Editar Personagem
                 </button>
-                <button @click="viewRules" class="df-btn-outline w-full justify-start">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                  Ver Regras
-                </button>
+              </div>
+            </div>
+
+            <div class="df-card">
+              <div class="df-card-corner df-card-corner-tl"></div>
+              <div class="df-card-corner df-card-corner-tr"></div>
+              <div class="df-card-corner df-card-corner-bl"></div>
+              <div class="df-card-corner df-card-corner-br"></div>
+
+              <h3 class="df-section-title text-base flex items-center gap-2 mb-4">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
+                Perdição do Clã
+              </h3>
+
+              <div class="df-inner-card min-h-[220px] px-5 py-5 flex items-start">
+                <p v-if="clanBanePenalty" class="text-[15px] leading-8 italic text-[var(--df-text-silver)]">
+                  {{ clanBanePenalty }}
+                </p>
+                <p v-else class="text-sm italic text-[var(--df-text-muted)]">
+                  Nenhuma perdição de clã disponível para este personagem.
+                </p>
               </div>
             </div>
           </div>
@@ -482,6 +545,8 @@ import { useRoute, navigateTo, useSeoMeta, definePageMeta } from '#imports'
 import { useAuth } from '~/composables/useAuth'
 import { useCampaign } from '~/composables/useCampaign'
 import { useToast } from '~/composables/useToast'
+import { EVENT_TYPE_CONFIG, type EventType } from '~/composables/useEvents'
+import { clanBanes } from '~/config/clanBanes'
 
 // ============================================
 // Explicit component imports
@@ -514,11 +579,12 @@ interface Character {
   }
 }
 
-interface SessionNote {
+interface PlayerEvent {
   id: string
   title: string
-  content: string
-  date: Date
+  description: string | null
+  type: string
+  occurredAt: Date
 }
 
 // ============================================
@@ -551,9 +617,12 @@ const {
 // ============================================
 const loading = ref(true)
 let liveStateChannel: ReturnType<typeof supabaseClient.channel> | null = null
+let playerEventsChannel: ReturnType<typeof supabaseClient.channel> | null = null
 const campaign = ref<Campaign | null>(null)
 const myCharacter = ref<any>(null)
-const sessionNotes = ref<SessionNote[]>([])
+const myEvents = ref<PlayerEvent[]>([])
+const MY_EVENTS_PAGE_SIZE = 3
+const myEventsVisibleCount = ref(MY_EVENTS_PAGE_SIZE)
 const showCharacterSheet = ref(false)
 const sheetKey = ref(0)
 
@@ -565,6 +634,99 @@ const toastVariant = ref<'success' | 'error' | 'warning' | 'info'>('success')
 // ============================================
 // Methods
 // ============================================
+const normalizePlayerName = (value: string | null | undefined) =>
+  String(value || '').trim().toLowerCase()
+
+const getCurrentCharacterNames = () => {
+  const names = new Set<string>()
+  const primaryName = normalizePlayerName(myCharacter.value?.character_name || myCharacter.value?.name)
+  const sheetName = normalizePlayerName(myCharacter.value?.sheet?.name)
+
+  if (primaryName) names.add(primaryName)
+  if (sheetName) names.add(sheetName)
+
+  return names
+}
+
+const loadMyEvents = async () => {
+  try {
+    const characterNames = getCurrentCharacterNames()
+    if (characterNames.size === 0) {
+      myEvents.value = []
+      myEventsVisibleCount.value = MY_EVENTS_PAGE_SIZE
+      return
+    }
+
+    const { data, error } = await supabaseClient
+      .from('campaign_events')
+      .select('id, title, description, type, occurred_at, player_names')
+      .eq('campaign_id', campaignId)
+      .order('occurred_at', { ascending: false })
+
+    if (error) throw error
+
+    const filtered = (data || []).filter((row: any) => {
+      const playerNames: string[] = Array.isArray(row.player_names) ? row.player_names : []
+      return playerNames.some((name) => characterNames.has(normalizePlayerName(name)))
+    })
+
+    myEvents.value = filtered.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description ?? null,
+      type: String(row.type || 'other'),
+      occurredAt: new Date(row.occurred_at),
+    }))
+    myEventsVisibleCount.value = MY_EVENTS_PAGE_SIZE
+  } catch (error) {
+    console.error('Erro ao carregar eventos do jogador:', error)
+    myEvents.value = []
+    myEventsVisibleCount.value = MY_EVENTS_PAGE_SIZE
+  }
+}
+
+const subscribeToMyEvents = () => {
+  if (playerEventsChannel) {
+    supabaseClient.removeChannel(playerEventsChannel)
+    playerEventsChannel = null
+  }
+
+  playerEventsChannel = supabaseClient
+    .channel(`player_events:${campaignId}:${user.value?.id || 'anon'}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'campaign_events', filter: `campaign_id=eq.${campaignId}` },
+      async () => {
+        await loadMyEvents()
+      }
+    )
+    .subscribe()
+}
+
+const getEventTypeColor = (type: string) =>
+  EVENT_TYPE_CONFIG[type as EventType]?.color ?? '#6b6b80'
+
+const getEventTypeLabel = (type: string) =>
+  (EVENT_TYPE_CONFIG[type as EventType]?.label ?? type).toUpperCase()
+
+const formatEventDate = (date: Date) => {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date)
+}
+
+const displayedMyEvents = computed(() =>
+  myEvents.value.slice(0, myEventsVisibleCount.value)
+)
+
+const loadMoreMyEvents = () => {
+  myEventsVisibleCount.value += MY_EVENTS_PAGE_SIZE
+}
+
 const loadCampaignData = async () => {
   try {
     loading.value = true
@@ -603,7 +765,7 @@ const loadCampaignData = async () => {
       })
     }
 
-    sessionNotes.value = []
+    await loadMyEvents()
 
     loading.value = false
   } catch (error) {
@@ -673,10 +835,6 @@ const editCharacter = () => {
 
 const hideToast = () => {
   showToast.value = false
-}
-
-const viewRules = () => {
-  console.log('View rules')
 }
 
 const calculateAttributeSum = (attributes: any) => {
@@ -754,6 +912,26 @@ const convictionPillarPairs = computed(() => {
   return [] as string[]
 })
 
+const clanBanePenalty = computed(() => {
+  const clan = String(myCharacter.value?.sheet?.clan || '').trim()
+  if (!clan) return ''
+
+  const baneText = clanBanes[clan]
+  if (!baneText) return ''
+
+  const penaltyMatch = baneText.match(/Penalidade:\s*([\s\S]+)/i)
+  if (penaltyMatch?.[1]) {
+    return penaltyMatch[1].trim()
+  }
+
+  const disadvantageMatch = baneText.match(/Desvantagem:\s*([\s\S]+)/i)
+  if (disadvantageMatch?.[1]) {
+    return disadvantageMatch[1].trim()
+  }
+
+  return ''
+})
+
 const avatarInput = ref<HTMLInputElement | null>(null)
 
 const triggerAvatarUpload = () => {
@@ -819,10 +997,12 @@ onMounted(async () => {
 
   // Subscribe to realtime updates so the button reacts when master starts/stops
   liveStateChannel = subscribeToLiveGame(campaignId)
+  subscribeToMyEvents()
 })
 
 onBeforeUnmount(() => {
   if (liveStateChannel) supabaseClient.removeChannel(liveStateChannel)
+  if (playerEventsChannel) supabaseClient.removeChannel(playerEventsChannel)
 })
 
 // ============================================
@@ -1076,6 +1256,27 @@ useSeoMeta({
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── Player Events Timeline Dot Animations ─── */
+@keyframes player-event-dot-core-breathe {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.75; }
+}
+
+@keyframes player-event-dot-ripple-expand {
+  0% { transform: scale(0.45); opacity: 0.55; }
+  70% { opacity: 0.12; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+.player-event-dot-core {
+  animation: player-event-dot-core-breathe 3s ease-in-out infinite;
+}
+
+.player-event-dot-ripple {
+  opacity: 0;
+  animation: player-event-dot-ripple-expand 2.4s ease-out infinite;
 }
 
 /* ─── Scrollbar ─── */
