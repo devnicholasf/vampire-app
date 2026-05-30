@@ -77,14 +77,22 @@
     <!-- Involved characters avatars -->
     <div v-if="playerAvatars?.length" class="mt-2 flex justify-end">
       <div class="flex items-center -space-x-2">
-        <img
-          v-for="(avatarUrl, idx) in playerAvatars"
-          :key="`${avatarUrl}-${idx}`"
-          :src="avatarUrl"
-          :alt="`Avatar do personagem ${idx + 1}`"
-          class="w-7 h-7 rounded-full object-cover border border-[#0a0a1a] shadow-sm"
-          loading="lazy"
+        <div
+          v-for="(avatar, idx) in playerAvatars"
+          :key="`${avatar.url}-${idx}`"
+          class="relative group"
         >
+          <img
+            :src="avatar.url"
+            :alt="`Avatar de ${avatar.name || `personagem ${idx + 1}`}`"
+            class="w-7 h-7 rounded-full object-cover border border-[#0a0a1a] shadow-sm cursor-pointer"
+            loading="lazy"
+          >
+          <!-- Custom tooltip -->
+          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-df-card border border-df-border-red/50 text-df-gold text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none font-cinzel">
+            {{ avatar.name }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -102,7 +110,7 @@ const props = defineProps<{
   location?: string | null
   ingameDate?: string | null
   isSecret?: boolean
-  playerAvatars?: string[]
+  playerAvatars?: Array<{ url: string; name: string }>
   npcIds?: string[]
 }>()
 

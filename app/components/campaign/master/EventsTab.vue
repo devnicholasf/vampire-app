@@ -395,14 +395,17 @@ const formatDate = (d: Date) =>
   }).format(d)
 
 const resolveEventAvatars = (playerNames: string[] = []) => {
-  const unique = new Set<string>()
-  for (const name of playerNames) {
-    const key = String(name || '').trim().toLowerCase()
+  const unique = new Map<string, { url: string; name: string }>()
+  for (const rawName of playerNames) {
+    const name = String(rawName || '').trim()
+    const key = name.toLowerCase()
     if (!key) continue
     const avatar = playerAvatarByName.value.get(key)
-    if (avatar) unique.add(avatar)
+    if (avatar && !unique.has(avatar)) {
+      unique.set(avatar, { url: avatar, name })
+    }
   }
-  return Array.from(unique)
+  return Array.from(unique.values())
 }
 
 const loadOlderTimelineEvents = () => {
