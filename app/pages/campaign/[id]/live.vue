@@ -588,9 +588,6 @@
         <!-- ── Área Central — Preview do Jogador ── -->
         <div class="flex-1 overflow-y-auto flex flex-col items-center gap-8 px-8 py-8" style="background:#060610">
 
-          <!-- Label de contexto -->
-          <p class="text-[10px] uppercase tracking-widest text-[#4a4a5a] self-start">Preview — Visão dos Jogadores</p>
-
           <!-- Cena Atual -->
           <div v-if="currentSceneName" class="text-center">
             <p class="text-[11px] uppercase tracking-[0.25em] text-[#6b6b7b] mb-1">Cena</p>
