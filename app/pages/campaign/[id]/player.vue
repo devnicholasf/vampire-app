@@ -115,28 +115,28 @@
               <div v-if="myCharacter.sheet" class="md:col-span-2">
                 <div class="grid grid-cols-3 gap-4 mb-6">
                   <div class="df-stat-card">
-                    <p class="text-3xl font-bold text-red-400 mb-1">
+                    <p class="text-3xl font-bold text-amber-500 mb-1">
                       {{ calculateAttributeSum(myCharacter.sheet.attributes?.physical) }}
                     </p>
-                    <p class="text-xs df-text-muted uppercase flex items-center justify-center gap-1">
+                    <p class="text-xs text-white uppercase flex items-center justify-center gap-1">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/></svg>
                       Físico
                     </p>
                   </div>
                   <div class="df-stat-card">
-                    <p class="text-3xl font-bold text-red-400 mb-1">
+                    <p class="text-3xl font-bold text-amber-500 mb-1">
                       {{ calculateAttributeSum(myCharacter.sheet.attributes?.social) }}
                     </p>
-                    <p class="text-xs df-text-muted uppercase flex items-center justify-center gap-1">
+                    <p class="text-xs text-white uppercase flex items-center justify-center gap-1">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/></svg>
                       Social
                     </p>
                   </div>
                   <div class="df-stat-card">
-                    <p class="text-3xl font-bold text-red-400 mb-1">
+                    <p class="text-3xl font-bold text-amber-500 mb-1">
                       {{ calculateAttributeSum(myCharacter.sheet.attributes?.mental) }}
                     </p>
-                    <p class="text-xs df-text-muted uppercase flex items-center justify-center gap-1">
+                    <p class="text-xs text-white uppercase flex items-center justify-center gap-1">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                       Mental
                     </p>
@@ -205,13 +205,13 @@
               <div class="df-inner-card">
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-sm font-semibold df-text-silver flex items-center gap-2">
-                    <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
+                    <svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
                     Fome Atual
                   </span>
-                  <span class="text-2xl font-bold text-red-400">{{ myCharacter.sheet.hunger || 1 }} / 5</span>
+                  <span class="text-2xl font-bold text-red-600">{{ myCharacter.sheet.hunger || 1 }} / 5</span>
                 </div>
                 <div class="flex gap-1">
-                  <div v-for="i in 5" :key="i" class="flex-1 h-3 rounded-sm transition-all" :class="i <= (myCharacter.sheet.hunger || 1) ? 'bg-gradient-to-r from-red-700 to-red-500' : 'bg-[var(--df-bg-input)]'"></div>
+                  <div v-for="i in 5" :key="i" class="flex-1 h-3 rounded-sm transition-all" :class="i <= (myCharacter.sheet.hunger || 1) ? 'bg-red-600' : 'bg-[var(--df-bg-input)]'"></div>
                 </div>
               </div>
 
@@ -219,13 +219,27 @@
               <div class="df-inner-card">
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-sm font-semibold df-text-silver flex items-center gap-2">
-                    <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                    <svg class="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                     Humanidade
                   </span>
-                  <span class="text-2xl font-bold text-red-400">{{ myCharacter.sheet.humanity || 7 }} / 10</span>
+                  <span class="text-2xl font-bold text-amber-600">{{ myCharacter.sheet.humanity || 7 }} / 10</span>
                 </div>
                 <div class="w-full bg-[var(--df-bg-input)] rounded-full h-3">
-                  <div class="bg-gradient-to-r from-red-800 to-red-500 h-3 rounded-full transition-all" :style="{ width: `${((myCharacter.sheet.humanity || 7) / 10) * 100}%` }"></div>
+                  <div class="bg-amber-600 h-3 rounded-full transition-all" :style="{ width: `${((myCharacter.sheet.humanity || 7) / 10) * 100}%` }"></div>
+                </div>
+              </div>
+
+              <!-- Vitality -->
+              <div class="df-inner-card">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold df-text-silver flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-700" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 4 10 4 14a8 8 0 0016 0c0-4-4-8-8-12z"/></svg>
+                    Vitalidade
+                  </span>
+                  <span class="text-2xl font-bold text-red-700">{{ myCharacter.sheet.vitality || 1 }} / 10</span>
+                </div>
+                <div class="w-full bg-[var(--df-bg-input)] rounded-full h-3">
+                  <div class="bg-red-700 h-3 rounded-full transition-all" :style="{ width: `${((myCharacter.sheet.vitality || 1) / 10) * 100}%` }"></div>
                 </div>
               </div>
 
@@ -233,13 +247,13 @@
               <div class="df-inner-card">
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-sm font-semibold df-text-silver flex items-center gap-2">
-                    <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <svg class="w-4 h-4 text-violet-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     Força de Vontade
                   </span>
-                  <span class="text-2xl font-bold text-red-400">{{ myCharacter.sheet.willpower || 3 }} / 10</span>
+                  <span class="text-2xl font-bold text-violet-600">{{ myCharacter.sheet.willpower || 3 }} / 10</span>
                 </div>
                 <div class="w-full bg-[var(--df-bg-input)] rounded-full h-3">
-                  <div class="bg-gradient-to-r from-red-800 to-red-500 h-3 rounded-full transition-all" :style="{ width: `${((myCharacter.sheet.willpower || 3) / 10) * 100}%` }"></div>
+                  <div class="bg-violet-600 h-3 rounded-full transition-all" :style="{ width: `${((myCharacter.sheet.willpower || 3) / 10) * 100}%` }"></div>
                 </div>
               </div>
 
@@ -317,6 +331,26 @@
                 <p v-else class="df-text-muted text-sm italic">Nenhuma disciplina ativa</p>
               </div>
 
+              <!-- Convictions & Pillars -->
+              <div class="df-inner-card">
+                <p class="text-sm font-semibold df-text-silver mb-3 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-4.35-9-7.5A5.5 5.5 0 0112 6a5.5 5.5 0 019 7.5C18.5 16.65 12 21 12 21z"/></svg>
+                  Pilares & Convicções
+                </p>
+
+                <ul v-if="convictionPillarPairs.length > 0" class="space-y-2">
+                  <li
+                    v-for="(item, idx) in convictionPillarPairs"
+                    :key="`conviction-${idx}`"
+                    class="text-sm text-[var(--df-text-gold)] leading-relaxed"
+                  >
+                    • {{ item }}
+                  </li>
+                </ul>
+
+                <p v-else class="df-text-muted text-sm italic">Nenhuma convicção/pilar definido na ficha.</p>
+              </div>
+
               <!-- Strengths/Weaknesses -->
               <div class="df-inner-card">
                 <p class="text-sm font-semibold df-text-silver mb-3 flex items-center gap-2">
@@ -352,7 +386,7 @@
             <div class="df-card">
               <h2 class="df-section-title text-lg flex items-center gap-2 mb-4">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                Notas das Sessões
+                Minhas Notas das Sessões
               </h2>
 
               <div v-if="sessionNotes.length > 0" class="space-y-4">
@@ -418,7 +452,7 @@
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   Editar Personagem
                 </button>
-                <button @click="viewRules" class="df-btn-ghost w-full justify-start">
+                <button @click="viewRules" class="df-btn-outline w-full justify-start">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
                   Ver Regras
                 </button>
@@ -693,6 +727,32 @@ const getWeakestAttribute = () => {
   if (min === social) return 'Social'
   return 'Mental'
 }
+
+const convictionPillarPairs = computed(() => {
+  const raw = myCharacter.value?.sheet?.touchstonesConvictions
+
+  if (!raw) return [] as string[]
+
+  if (Array.isArray(raw)) {
+    return raw
+      .map((entry: any) => {
+        const conviction = String(entry?.conviction || '').trim()
+        const pillar = String(entry?.pillar || '').trim()
+        if (!conviction && !pillar) return ''
+        if (!pillar) return conviction
+        if (!conviction) return pillar
+        return `${conviction} (${pillar})`
+      })
+      .filter((entry: string) => entry.length > 0)
+  }
+
+  if (typeof raw === 'string') {
+    const legacy = raw.trim()
+    return legacy ? [legacy] : []
+  }
+
+  return [] as string[]
+})
 
 const avatarInput = ref<HTMLInputElement | null>(null)
 

@@ -49,7 +49,7 @@
                 class="w-full px-3 py-2 rounded border bg-[#0d0d20] text-white text-sm focus:outline-none focus:border-[#d4a647] transition-colors"
                 style="border-color: #4a4a5a;"
               >
-                <option v-for="type in ROLL_TYPES" :key="type.value" :value="type.value">
+                <option v-for="type in rollTypesToShow" :key="type.value" :value="type.value">
                   {{ type.label }} — {{ type.description }}
                 </option>
               </select>
@@ -192,21 +192,21 @@
               class="rounded-lg p-4 border"
               style="background: rgba(212, 166, 71, 0.05); border-color: rgba(212, 166, 71, 0.2);"
             >
-              <p class="text-[10px] text-[#d4a647] uppercase tracking-wider mb-3">Parada de Dados</p>
+              <p class="text-xs md:text-sm font-semibold text-[#d4a647] uppercase tracking-wider mb-3">Teste de Dados</p>
               <div class="flex items-center gap-2 mb-2">
                 <div class="text-center">
-                  <p class="text-2xl font-bold text-white">{{ calculatedPool }}</p>
+                  <p class="text-[2.15rem] leading-none font-extrabold text-white">{{ calculatedPool }}</p>
                   <p class="text-[10px] text-[#6b6b7b]">Total</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 text-xs text-[#9b9bbb]">
-                <svg class="w-3 h-3 text-[#d4a647]" viewBox="0 0 24 24" fill="currentColor">
+              <div class="flex items-center gap-2 text-xs text-white">
+                <svg class="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="12" r="10"/>
                 </svg>
                 <span>{{ normalDiceCount }} {{ normalDiceCount === 1 ? 'dado normal' : 'dados normais' }}</span>
               </div>
-              <div v-if="hungerDiceCount > 0" class="flex items-center gap-2 text-xs text-red-400 mt-1">
-                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+              <div v-if="hungerDiceCount > 0" class="flex items-center gap-2 text-xs text-red-500 mt-1">
+                <svg class="w-3 h-3 text-red-500" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="12" r="10"/>
                 </svg>
                 <span>{{ hungerDiceCount }} {{ hungerDiceCount === 1 ? 'dado de fome' : 'dados de fome' }} (substitui {{ hungerDiceCount === 1 ? 'normal' : 'normais' }})</span>
@@ -292,6 +292,11 @@ const isPlayerFrenzyMode = computed(() => {
   return (props.enablePlayerAutoRules ?? false) && rollConfig.value.rollType === 'frenesi'
 })
 
+const rollTypesToShow = computed(() => {
+  if (props.enablePlayerAutoRules) return ROLL_TYPES
+  return ROLL_TYPES.filter(type => type.value === 'normal')
+})
+
 const frenzyWillpowerCurrent = computed(() => {
   return Math.max(0, Number(props.frenzyWillpowerCurrent ?? 0))
 })
@@ -335,6 +340,12 @@ watch(() => props.currentHunger, (newHunger) => {
     rollConfig.value.hunger = newHunger
   }
 })
+
+watch(() => props.enablePlayerAutoRules, (enabled) => {
+  if (!enabled && rollConfig.value.rollType !== 'normal') {
+    rollConfig.value.rollType = 'normal'
+  }
+}, { immediate: true })
 
 const calculatedPool = computed(() => {
   if (isPlayerFrenzyMode.value) {

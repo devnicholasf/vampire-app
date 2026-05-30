@@ -29,7 +29,7 @@
         <div>
           <p class="text-xs uppercase tracking-[0.3em] text-red-800 mb-2">Vampiro: A Máscara V5</p>
           <h1 class="text-3xl font-bold text-white mb-1">{{ campaign?.name || 'Carregando...' }}</h1>
-          <p class="text-sm text-[#6b6b7b]">Sala de Jogo — Visão do Mestre</p>
+          <p class="text-sm text-[#9b9bbb]">Sala de Jogo — Mestre</p>
         </div>
 
         <!-- Card de status -->
@@ -43,11 +43,11 @@
               <span class="w-2.5 h-2.5 rounded-full bg-[#4a4a5a] shrink-0"/>
               <p class="text-sm font-medium text-[#4a4a5a] uppercase tracking-wider">Sessão Inativa</p>
             </div>
-            <p class="text-sm text-[#6b6b7b]">
+            <p class="text-sm text-white">
               A sessão de Jogo ao Vivo ainda não foi iniciada.<br>
               Quando você iniciar, os jogadores poderão entrar na sala.
             </p>
-            <p class="text-xs text-[#4a4a5a] pt-1">
+            <p class="text-xs text-sky-400 pt-1">
               Inicie a sessão para liberar a entrada dos jogadores.
             </p>
           </div>
