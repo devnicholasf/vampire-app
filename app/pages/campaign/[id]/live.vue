@@ -507,19 +507,46 @@
                 <option value="social">Social</option>
                 <option value="other">Outro</option>
               </select>
-              <select
-                v-model="eventDraft.playerName"
-                class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none"
-              >
-                <option value="">Direcionamento por personagem (opcional)</option>
-                <option
-                  v-for="player in eventTargetPlayers"
-                  :key="player.value"
-                  :value="player.value"
+              <div class="relative">
+                <button
+                  type="button"
+                  class="w-full rounded border border-[#4a4a5a]/50 px-2 py-1.5 text-xs text-white bg-[#0d0d20] focus:outline-none flex items-center justify-between"
+                  @click="showEventPlayersDropdown = !showEventPlayersDropdown"
                 >
-                  {{ player.label }}
-                </option>
-              </select>
+                  <span>
+                    Personagens Envolvidos
+                    <span v-if="selectedEventPlayerNames.length > 0">({{ selectedEventPlayerNames.length }})</span>
+                  </span>
+                  <svg class="w-3 h-3 transition-transform" :class="showEventPlayersDropdown ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+
+                <div
+                  v-if="showEventPlayersDropdown"
+                  class="mt-1 rounded border border-[#4a4a5a]/50 bg-[#0d0d20] p-2 space-y-1 max-h-40 overflow-y-auto"
+                >
+                  <label
+                    v-for="player in eventTargetPlayers"
+                    :key="player.value"
+                    class="flex items-center gap-2 text-xs text-[#c4c4d4] cursor-pointer hover:text-white"
+                  >
+                    <input
+                      type="checkbox"
+                      class="rounded border-[#4a4a5a]/50 bg-[#0d0d20]"
+                      :checked="eventDraft.playerNames.includes(player.value)"
+                      @change="toggleEventPlayer(player.value)"
+                    >
+                    <span>{{ player.label }}</span>
+                  </label>
+                </div>
+              </div>
+
+              <p class="text-[10px] text-[#d4a647] min-h-[14px]">
+                <template v-if="selectedEventPlayerNames.length > 0">
+                  Selecionados: {{ selectedEventPlayerNames.join(' • ') }}
+                </template>
+              </p>
               <button
                 class="w-full text-xs px-2 py-1.5 rounded border border-red-800 text-red-300 hover:text-white hover:bg-red-900/20 transition-colors"
                 :disabled="creatingEvent"
@@ -704,8 +731,10 @@
         <p class="text-sm text-white mb-3">{{ eventDraft.title || 'Sem título' }}</p>
         <p class="text-xs text-[#6b6b7b] mb-1">Tipo</p>
         <p class="text-sm text-white mb-3">{{ eventDraft.type }}</p>
-        <p class="text-xs text-[#6b6b7b] mb-1">Personagem</p>
-        <p class="text-sm text-white mb-3">{{ eventDraft.playerName || 'Nenhum personagem específico' }}</p>
+        <p class="text-xs text-[#6b6b7b] mb-1">Personagens Envolvidos</p>
+        <p class="text-sm text-white mb-3">
+          {{ selectedEventPlayerNames.length > 0 ? selectedEventPlayerNames.join(' • ') : 'Nenhum personagem específico' }}
+        </p>
         <p v-if="eventDraft.description" class="text-xs text-[#c4c4d4] mb-4">{{ eventDraft.description }}</p>
 
         <div class="flex justify-end gap-2">
@@ -959,8 +988,9 @@ const eventDraft = ref({
   title: '',
   description: '',
   type: 'narrative',
-  playerName: '',
+  playerNames: [] as string[],
 })
+const showEventPlayersDropdown = ref(false)
 const showEventConfirmModal = ref(false)
 const showStopSessionConfirmModal = ref(false)
 const showDeleteEventModal = ref(false)
@@ -999,6 +1029,7 @@ const inSceneImages = computed(() => sceneMediaItems.value.filter(m => m.type ==
 const inSceneAudios = computed(() => sceneMediaItems.value.filter(m => m.type === 'audio'))
 const eventTargetPlayers = computed(() => {
   const rawPlayers: any[] = campaign.value?.campaign_players ?? []
+  const seen = new Set<string>()
   return rawPlayers
     .filter((player: any) => player?.role !== 'master')
     .map((player: any) => {
@@ -1008,8 +1039,20 @@ const eventTargetPlayers = computed(() => {
         label: characterName || 'Jogador sem nome',
       }
     })
-    .filter((player: { value: string }) => player.value.length > 0)
+    .filter((player: { value: string }) => {
+      if (player.value.length === 0) return false
+      const key = player.value.toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
 })
+
+const selectedEventPlayerNames = computed(() =>
+  eventTargetPlayers.value
+    .filter((player) => eventDraft.value.playerNames.includes(player.value))
+    .map((player) => player.label)
+)
 
 // Show only the 4 most recent events; older ones are kept in DB but hidden
 const visibleSessionTimeline = computed(() => sessionTimeline.value.slice(-4).reverse())
@@ -1510,6 +1553,15 @@ const openEventConfirmation = () => {
   showEventConfirmModal.value = true
 }
 
+const toggleEventPlayer = (playerName: string) => {
+  const current = eventDraft.value.playerNames
+  if (current.includes(playerName)) {
+    eventDraft.value.playerNames = current.filter((name) => name !== playerName)
+    return
+  }
+  eventDraft.value.playerNames = [...current, playerName]
+}
+
 const confirmAndCreateEvent = async () => {
   if (!user.value?.id) {
     alert('Usuário não autenticado para registrar evento.')
@@ -1525,7 +1577,7 @@ const confirmAndCreateEvent = async () => {
       type: eventDraft.value.type,
       created_by: user.value.id,
       npc_ids: [],
-      player_names: eventDraft.value.playerName ? [eventDraft.value.playerName] : [],
+      player_names: eventDraft.value.playerNames,
       metadata: { source: 'live-manual' },
     }
 
@@ -1567,7 +1619,8 @@ const confirmAndCreateEvent = async () => {
 
     sessionTimeline.value = updatedTimeline
     showEventConfirmModal.value = false
-    eventDraft.value = { title: '', description: '', type: 'narrative', playerName: '' }
+    showEventPlayersDropdown.value = false
+    eventDraft.value = { title: '', description: '', type: 'narrative', playerNames: [] }
   } catch (e) {
     console.error('LIVE: Erro ao criar evento narrativo:', e)
     alert('Não foi possível registrar o evento. Verifique se a migration de campaign_events já foi aplicada no banco.')

@@ -177,7 +177,8 @@
         />
 
         <EventsTab
-          v-if="currentTab === 'events'"
+          v-if="eventsTabInitialized"
+          v-show="currentTab === 'events'"
           :campaign-id="campaignId"
           :players="(campaign as any)?.players ?? []"
           @update:count="updateEventsCount"
@@ -298,9 +299,13 @@ const localLoading = ref(false)
 const validTabs = ['overview', 'players', 'npcs', 'notes', 'events', 'media']
 const hashTab = route.hash?.replace('#', '')
 const currentTab = ref(validTabs.includes(hashTab || '') ? hashTab! : 'overview')
+const eventsTabInitialized = ref(currentTab.value === 'events')
 
 watch(currentTab, (tab) => {
   router.replace({ hash: `#${tab}` })
+  if (tab === 'events') {
+    eventsTabInitialized.value = true
+  }
 })
 
 // Tab refs for accessing child data
