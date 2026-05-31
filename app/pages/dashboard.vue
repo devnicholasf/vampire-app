@@ -14,7 +14,7 @@
           </div>
           <div>
             <h1 class="df-brand-title">VAMPIRE: THE MASQUERADE</h1>
-            <p class="text-[10px] tracking-widest uppercase df-text-muted">Campaign Manager</p>
+            <p class="text-[10px] tracking-widest uppercase text-white">Campaign Manager</p>
           </div>
         </div>
 
@@ -322,7 +322,8 @@
 // Vue imports
 // ============================================
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, navigateTo } from 'nuxt/app'
+import { useRouter, navigateTo, useRuntimeConfig } from 'nuxt/app'
+import { createClient } from '@supabase/supabase-js'
 import type { Campaign } from '~/types'
 
 // ============================================
@@ -339,6 +340,8 @@ import ToastContainer from '~/components/ui/ToastContainer.vue'
 const { user, logout } = useAuth()
 const { campaigns, loading: campaignLoading, loadCampaigns, createCampaign, deleteCampaign, removePlayerFromCampaign } = useCampaign()
 const toast = useToast()
+const config = useRuntimeConfig()
+const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
 // ============================================
 // Page Meta
@@ -373,11 +376,14 @@ onMounted(async () => {
   // Carregar campanhas do usuário
   if (user.value) {
     await loadCampaigns()
+    await loadCampaignSessionStatus()
   }
 })
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
+const lastSessionAtByCampaign = ref<Record<string, string>>({})
+const liveStatusByCampaign = ref<Record<string, boolean>>({})
 const newCampaign = ref<CreateCampaignData>({
   name: '',
   description: ''
@@ -394,40 +400,91 @@ const formatDate = (date: string | Date) => {
   })
 }
 
+const loadCampaignSessionStatus = async () => {
+  try {
+    const ids = (campaigns.value || []).map((c: any) => c.id).filter(Boolean)
+    lastSessionAtByCampaign.value = {}
+    liveStatusByCampaign.value = {}
+
+    if (ids.length === 0) return
+
+    const { data, error: liveStateError } = await supabase
+      .from('live_game_state')
+      .select('campaign_id, created_at, updated_at, is_live')
+      .in('campaign_id', ids)
+
+    if (liveStateError) {
+      console.error('Dashboard: erro ao carregar status de sessão:', liveStateError)
+      return
+    }
+
+    const sessionMap: Record<string, string> = {}
+    const liveMap: Record<string, boolean> = {}
+
+    for (const row of data || []) {
+      const campaignId = String((row as any).campaign_id || '')
+      if (!campaignId) continue
+
+      const updatedAt = String((row as any).updated_at || '').trim()
+      const createdAt = String((row as any).created_at || '').trim()
+      const lastAt = updatedAt || createdAt
+
+      if (lastAt) {
+        sessionMap[campaignId] = lastAt
+      }
+
+      liveMap[campaignId] = Boolean((row as any).is_live)
+    }
+
+    lastSessionAtByCampaign.value = sessionMap
+    liveStatusByCampaign.value = liveMap
+  } catch (err) {
+    console.error('Dashboard: falha ao montar status de sessão:', err)
+  }
+}
+
 // Calcular tempo decorrido desde a última sessão
 const getLastSessionText = (campaign: any) => {
-  // TODO: Futuramente, buscar sessões reais da tabela campaign_sessions
-  // e mostrar quando foi a última sessão de jogo ao vivo
-  // Por enquanto, mostra informações baseadas na criação da campanha
-  
+  const campaignId = String(campaign?.id || '')
+  if (!campaignId) return 'Nenhuma sessão realizada'
+
+  if (liveStatusByCampaign.value[campaignId]) {
+    return 'Sessão ao vivo em andamento'
+  }
+
+  const lastSessionRaw = lastSessionAtByCampaign.value[campaignId]
+  if (!lastSessionRaw) {
+    return 'Nenhuma sessão realizada'
+  }
+
+  const lastSessionDate = new Date(lastSessionRaw)
+  if (Number.isNaN(lastSessionDate.getTime())) {
+    return 'Nenhuma sessão realizada'
+  }
+
   const now = new Date()
-  const campaignAge = now.getTime() - new Date(campaign.createdAt).getTime()
-  const minutesOld = Math.floor(campaignAge / (1000 * 60))
-  const hoursOld = Math.floor(campaignAge / (1000 * 60 * 60))
-  const daysOld = Math.floor(campaignAge / (1000 * 60 * 60 * 24))
-  
-  // Se a campanha foi criada há menos de 5 minutos, mostrar que é nova
-  if (minutesOld < 5) {
-    return 'Campanha recém-criada ✨'
+  const diffMs = now.getTime() - lastSessionDate.getTime()
+  const minutesOld = Math.floor(diffMs / (1000 * 60))
+  const hoursOld = Math.floor(diffMs / (1000 * 60 * 60))
+  const daysOld = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (minutesOld < 1) {
+    return 'Sessão encerrada há instantes'
   }
-  
-  // Se foi criada há menos de 1 hora, mostrar em minutos
+
   if (minutesOld < 60) {
-    return `Criada há ${minutesOld} minuto${minutesOld !== 1 ? 's' : ''}`
+    return `Última sessão há ${minutesOld} minuto${minutesOld !== 1 ? 's' : ''}`
   }
-  
-  // Se foi criada hoje, mostrar em horas
+
   if (hoursOld < 24) {
-    return `Criada há ${hoursOld} hora${hoursOld !== 1 ? 's' : ''}`
+    return `Última sessão há ${hoursOld} hora${hoursOld !== 1 ? 's' : ''}`
   }
-  
-  // Se foi criada há poucos dias, mostrar em dias
+
   if (daysOld <= 30) {
-    return `Criada há ${daysOld} dia${daysOld !== 1 ? 's' : ''}`
+    return `Última sessão há ${daysOld} dia${daysOld !== 1 ? 's' : ''}`
   }
-  
-  // Para campanhas muito antigas sem sessões
-  return 'Nenhuma sessão realizada'
+
+  return `Última sessão em ${formatDate(lastSessionDate)}`
 }
 
 // Navegar para página de entrar em campanha
@@ -554,6 +611,7 @@ const confirmDeleteCampaign = async () => {
   
   try {
     await deleteCampaign(campaignToDelete.value.id)
+    await loadCampaignSessionStatus()
     
     toast.success(
       'Campanha deletada!', 
@@ -606,6 +664,7 @@ const confirmLeaveCampaign = async () => {
     
     // Recarregar lista de campanhas
     await loadCampaigns()
+    await loadCampaignSessionStatus()
     
   } catch (error: any) {
     console.error('Erro ao sair da campanha:', error)

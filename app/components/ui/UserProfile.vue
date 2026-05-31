@@ -4,11 +4,17 @@
     <BaseButton
       variant="ghost"
       size="sm"
-      @click="showProfileModal = true"
+      @click="openModal"
       class="flex items-center gap-2 text-text-primary hover:text-red-400 transition-colors"
     >
-      <div class="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
-        <span class="text-sm font-bold text-red-400">
+      <div class="w-8 h-8 bg-red-500/20 rounded-full overflow-hidden flex items-center justify-center border border-border-red/30">
+        <img
+          v-if="profileAvatarUrl"
+          :src="profileAvatarUrl"
+          alt="Avatar do perfil"
+          class="w-full h-full object-cover"
+        >
+        <span v-else class="text-sm font-bold text-red-400">
           {{ userInitials }}
         </span>
       </div>
@@ -22,11 +28,14 @@
         class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 px-4"
         @click.self="closeModal"
       >
-        <div class="bg-surface border border-border rounded-vampire p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-surface border border-border rounded-vampire p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-bold text-red-400 flex items-center gap-2">
-              <span>👤</span>
+            <h2 class="text-xl font-bold text-df-red font-cinzel flex items-center gap-2">
+              <svg class="w-5 h-5 text-df-red" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+              </svg>
               Perfil do Usuário
             </h2>
             <BaseButton
@@ -40,41 +49,105 @@
           </div>
 
           <!-- Form -->
-          <form @submit.prevent="handleSaveProfile" class="space-y-4">
-            <!-- Nome -->
-            <div>
-              <label class="block text-text-secondary text-sm font-medium mb-2">
-                Nome de Exibição
-              </label>
-              <input
-                v-model="profileForm.name"
-                type="text"
-                :placeholder="displayName"
-                class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
-              />
-              <p class="text-xs text-text-muted mt-1">
-                Valor atual: {{ displayName }}
-              </p>
+          <form @submit.prevent="handleSaveProfile" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Avatar -->
+              <div class="md:col-span-1 flex flex-col items-center justify-start gap-3 pt-1">
+                <div class="w-24 h-24 rounded-full border border-border overflow-hidden bg-surface-dark flex items-center justify-center">
+                  <img
+                    v-if="avatarPreviewUrl"
+                    :src="avatarPreviewUrl"
+                    alt="Preview da foto de perfil"
+                    class="w-full h-full object-cover"
+                  >
+                  <span v-else class="text-lg font-bold text-red-400">
+                    {{ userInitials }}
+                  </span>
+                </div>
+                <label
+                  for="profile-avatar-input"
+                  class="text-xs font-semibold text-df-gold hover:text-df-red transition-colors cursor-pointer"
+                >
+                  Alterar Foto
+                </label>
+                <input
+                  id="profile-avatar-input"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleAvatarChange"
+                >
+              </div>
+
+              <!-- Dados -->
+              <div class="md:col-span-2 space-y-4">
+                <!-- Nome -->
+                <div>
+                  <label class="block text-text-secondary text-sm font-medium mb-2">
+                    Nome de Exibição
+                  </label>
+                  <input
+                    v-model="profileForm.name"
+                    type="text"
+                    :placeholder="displayName"
+                    class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <label class="block text-text-secondary text-sm font-medium mb-2">
+                    Email
+                  </label>
+                  <input
+                    v-model="profileForm.email"
+                    type="email"
+                    :placeholder="user?.email || 'Email atual'"
+                    class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-df-gold hover:text-df-red transition-colors"
+                  @click="togglePasswordFields"
+                >
+                  Alterar senha da conta
+                </button>
+
+                <div v-if="showPasswordFields" class="space-y-3 border border-border rounded-vampire p-3 bg-surface-dark/40">
+                  <div>
+                    <label class="block text-text-secondary text-sm font-medium mb-2">
+                      Senha Atual
+                    </label>
+                    <input
+                      v-model="passwordForm.currentPassword"
+                      type="password"
+                      autocomplete="current-password"
+                      class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-text-secondary text-sm font-medium mb-2">
+                      Nova Senha
+                    </label>
+                    <input
+                      v-model="passwordForm.newPassword"
+                      type="password"
+                      autocomplete="new-password"
+                      class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Email -->
-            <div>
-              <label class="block text-text-secondary text-sm font-medium mb-2">
-                Email
-              </label>
-              <input
-                v-model="profileForm.email"
-                type="email"
-                :placeholder="user?.email || 'Email atual'"
-                class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
-              />
-              <p class="text-xs text-text-muted mt-1">
-                Valor atual: {{ user?.email || 'Email não informado' }}
-              </p>
-            </div>
+            <p v-if="formError" class="text-xs text-red-400">
+              {{ formError }}
+            </p>
 
             <!-- Buttons -->
-            <div class="flex gap-3 pt-4">
+            <div class="flex gap-3 pt-1">
               <BaseButton
                 type="button"
                 variant="ghost"
@@ -153,6 +226,7 @@ interface UserData {
   email: string
   username?: string
   name?: string
+  avatar?: string | null
 }
 
 interface Props {
@@ -164,21 +238,33 @@ const emit = defineEmits<{
   'profile-updated': [user: UserData]
 }>()
 
-const { updateUserProfile } = useAuth()
+const { updateUserProfile, updateUserPassword, uploadProfileAvatar } = useAuth()
 
 // State
 const showProfileModal = ref(false)
 const showConfirmationModal = ref(false)
 const loading = ref(false)
+const showPasswordFields = ref(false)
+const formError = ref('')
+const avatarPreviewUrl = ref('')
+const selectedAvatarFile = ref<File | null>(null)
 const profileForm = ref({
   name: '',
   email: ''
+})
+const passwordForm = ref({
+  currentPassword: '',
+  newPassword: ''
 })
 
 // Computed
 const displayName = computed(() => {
   if (!props.user) return 'Usuário'
   return props.user.username || props.user.name || 'Usuário'
+})
+
+const profileAvatarUrl = computed(() => {
+  return String(props.user?.avatar || '').trim()
 })
 
 const userInitials = computed(() => {
@@ -203,7 +289,12 @@ const openModal = () => {
       name: props.user.username || props.user.name || '',
       email: props.user.email || ''
     }
+    avatarPreviewUrl.value = props.user.avatar || ''
   }
+  selectedAvatarFile.value = null
+  passwordForm.value = { currentPassword: '', newPassword: '' }
+  showPasswordFields.value = false
+  formError.value = ''
   showProfileModal.value = true
 }
 
@@ -214,6 +305,7 @@ watch(() => props.user, (newUser) => {
       name: newUser.username || newUser.name || '',
       email: newUser.email || ''
     }
+    avatarPreviewUrl.value = newUser.avatar || avatarPreviewUrl.value
   }
 }, { immediate: true })
 
@@ -226,11 +318,40 @@ watch(showProfileModal, (isOpen) => {
         name: props.user.username || props.user.name || '',
         email: props.user.email || ''
       }
+      avatarPreviewUrl.value = props.user.avatar || avatarPreviewUrl.value
     })
   }
 })
 
+const togglePasswordFields = () => {
+  showPasswordFields.value = !showPasswordFields.value
+  if (!showPasswordFields.value) {
+    passwordForm.value = { currentPassword: '', newPassword: '' }
+  }
+}
+
+const handleAvatarChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    formError.value = 'Selecione um arquivo de imagem válido.'
+    return
+  }
+
+  selectedAvatarFile.value = file
+  formError.value = ''
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    avatarPreviewUrl.value = String(reader.result || '')
+  }
+  reader.readAsDataURL(file)
+}
+
 const closeModal = () => {
+  selectedAvatarFile.value = null
   showProfileModal.value = false
 }
 
@@ -240,7 +361,20 @@ const closeConfirmationModal = () => {
 
 const handleSaveProfile = async () => {
   if (!props.user) return
-  
+  formError.value = ''
+
+  if (showPasswordFields.value) {
+    if (!passwordForm.value.currentPassword || !passwordForm.value.newPassword) {
+      formError.value = 'Preencha a senha atual e a nova senha para continuar.'
+      return
+    }
+
+    if (passwordForm.value.newPassword.length < 6) {
+      formError.value = 'A nova senha deve ter pelo menos 6 caracteres.'
+      return
+    }
+  }
+
   // Mostrar modal de confirmação
   showConfirmationModal.value = true
 }
@@ -251,11 +385,26 @@ const confirmSaveProfile = async () => {
   loading.value = true
   
   try {
+    formError.value = ''
+
+    let avatarToSave: string | null | undefined = props.user?.avatar ?? null
+    if (selectedAvatarFile.value) {
+      avatarToSave = await uploadProfileAvatar(selectedAvatarFile.value)
+    }
+
     // Chamar composable para atualizar no Supabase
     const updatedUser = await updateUserProfile({
       username: profileForm.value.name,
-      email: profileForm.value.email
+      email: profileForm.value.email,
+      avatar: avatarToSave
     })
+
+    if (showPasswordFields.value) {
+      await updateUserPassword(
+        passwordForm.value.currentPassword,
+        passwordForm.value.newPassword
+      )
+    }
     
     // Emit updated user data
     emit('profile-updated', updatedUser)
@@ -264,9 +413,9 @@ const confirmSaveProfile = async () => {
     closeConfirmationModal()
     closeModal()
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao salvar perfil:', error)
-    // TODO: Mostrar notificação de erro
+    formError.value = error?.message || 'Não foi possível salvar as alterações.'
   } finally {
     loading.value = false
   }

@@ -268,7 +268,7 @@ export const useAuth = () => {
   // ============================================
   // Atualizar perfil do usuário no Supabase
   // ============================================
-  const updateUserProfile = async (profileData: { username?: string, email?: string }) => {
+  const updateUserProfile = async (profileData: { username?: string, email?: string, avatar?: string | null }) => {
     loading.value = true
     error.value = null
 
@@ -282,12 +282,18 @@ export const useAuth = () => {
       }
 
       // Atualizar metadata do usuário
+      const metadata: Record<string, any> = {
+        username: profileData.username,
+        display_name: profileData.username
+      }
+
+      if (profileData.avatar !== undefined) {
+        metadata.avatar = profileData.avatar
+      }
+
       const { data, error: updateError } = await supabase.auth.updateUser({
         email: profileData.email,
-        data: {
-          username: profileData.username,
-          display_name: profileData.username
-        }
+        data: metadata
       })
 
       if (updateError) {
@@ -322,6 +328,107 @@ export const useAuth = () => {
     }
   }
 
+  // ============================================
+  // Upload de avatar do perfil no Storage
+  // ============================================
+  const uploadProfileAvatar = async (file: File) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      if (!supabase) {
+        throw new Error('Supabase não está disponível')
+      }
+
+      if (!user.value?.id) {
+        throw new Error('Usuário não está logado')
+      }
+
+      if (!file) {
+        throw new Error('Arquivo de imagem não informado')
+      }
+
+      const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const safeExt = fileExt.replace(/[^a-z0-9]/g, '') || 'jpg'
+      const filePath = `profile-avatars/${user.value.id}/${Date.now()}.${safeExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('campaign-media')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type || 'image/jpeg'
+        })
+
+      if (uploadError) {
+        throw new Error('Não foi possível enviar a imagem para o Storage')
+      }
+
+      const { data } = supabase.storage
+        .from('campaign-media')
+        .getPublicUrl(filePath)
+
+      if (!data?.publicUrl) {
+        throw new Error('Não foi possível obter a URL pública do avatar')
+      }
+
+      return data.publicUrl
+    } catch (e: any) {
+      error.value = e.message || 'Erro ao enviar avatar'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // ============================================
+  // Atualizar senha da conta (requer senha atual)
+  // ============================================
+  const updateUserPassword = async (currentPassword: string, newPassword: string) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      if (!supabase) {
+        throw new Error('Supabase não está disponível')
+      }
+
+      if (!user.value?.email) {
+        throw new Error('Usuário não está logado')
+      }
+
+      if (!currentPassword || !newPassword) {
+        throw new Error('Preencha senha atual e nova senha')
+      }
+
+      // Reautenticar antes de atualizar a senha
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.value.email,
+        password: currentPassword
+      })
+
+      if (signInError) {
+        throw new Error('Senha atual incorreta')
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (updateError) {
+        error.value = translateAuthError(updateError)
+        throw new Error(error.value)
+      }
+
+      return true
+    } catch (e: any) {
+      error.value = e.message || 'Erro ao atualizar senha'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Restaurar sessão automaticamente no cliente
   onMounted(() => {
     if (process.client && !user.value) {
@@ -342,6 +449,8 @@ export const useAuth = () => {
     logout,
     restoreSession,
     updateUser,
-    updateUserProfile
+    updateUserProfile,
+    uploadProfileAvatar,
+    updateUserPassword
   }
 }
