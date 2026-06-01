@@ -43,7 +43,7 @@
             <p class="text-sm font-semibold text-white">{{ result.characterName }}</p>
             <div class="flex items-center gap-1.5">
               <p class="text-[10px] text-[#6b6b7b] uppercase tracking-wider">{{ formatRollType }}</p>
-              <span v-if="isMaskedHiddenRoll" class="inline-flex items-center gap-1 rounded-full border border-red-900/60 bg-red-950/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-red-300">
+              <span v-if="isMaskedHiddenRoll" class="inline-flex items-center gap-1 rounded-full border border-sky-900/60 bg-sky-950/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-sky-300">
                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
                   <line x1="1" y1="1" x2="23" y2="23"/>
@@ -67,7 +67,7 @@
           {{ result.modifier > 0 ? '+' : '' }}{{ result.modifier }}
         </span>
       </div>
-      <div v-else class="rounded border border-red-900/40 bg-red-950/10 px-3 py-2 text-xs text-red-200/90">
+      <div v-else class="rounded border border-sky-900/40 bg-sky-950/10 px-3 py-2 text-xs text-sky-200/90">
         {{ result.characterName }} fez um teste secreto. Os detalhes desta rolagem estao ocultos para voce.
       </div>
 
@@ -86,8 +86,8 @@
           <span class="text-white font-semibold">{{ result.difficulty }}</span>
         </div>
       </div>
-      <div v-else class="flex items-center gap-2 rounded border border-[#2d1515] bg-black/20 px-3 py-2 text-xs text-[#9b9bbb]">
-        <svg class="w-4 h-4 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div v-else class="flex items-center gap-2 rounded border border-sky-900/35 bg-sky-950/10 px-3 py-2 text-xs text-sky-100/80">
+        <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
           <line x1="1" y1="1" x2="23" y2="23"/>
         </svg>
@@ -140,11 +140,11 @@
       <!-- Successes Summary -->
       <div class="flex items-center justify-between pt-2 border-t border-[#2d1515]">
         <template v-if="isMaskedHiddenRoll">
-          <div class="text-xs text-[#6b6b7b]">
+          <div class="text-xs text-sky-100/70">
             <span>Resultado:</span>
-            <span class="ml-2 text-red-300 font-bold uppercase tracking-wider">Oculto</span>
+            <span class="ml-2 text-sky-300 font-bold uppercase tracking-wider">Oculto</span>
           </div>
-          <div class="text-xs font-semibold text-red-300">Teste Secreto</div>
+          <div class="text-xs font-semibold text-sky-300">Teste Secreto</div>
         </template>
         <template v-else>
         <div class="text-xs text-[#6b6b7b]">
@@ -289,7 +289,7 @@ const resultTitle = computed(() => {
 
 const resultBannerClass = computed(() => {
   if (isMaskedHiddenRoll.value) {
-    return 'bg-red-950/25 border border-red-900/50'
+    return 'bg-sky-950/25 border border-sky-900/50'
   }
 
   if (isFrenzyRoll.value) {
@@ -306,7 +306,7 @@ const resultBannerClass = computed(() => {
 })
 
 const resultTextClass = computed(() => {
-  if (isMaskedHiddenRoll.value) return 'text-red-300'
+  if (isMaskedHiddenRoll.value) return 'text-sky-300'
 
   if (isFrenzyRoll.value) {
     return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-500'
@@ -320,7 +320,7 @@ const resultTextClass = computed(() => {
 })
 
 const resultDescriptionClass = computed(() => {
-  if (isMaskedHiddenRoll.value) return 'text-red-100/80'
+  if (isMaskedHiddenRoll.value) return 'text-sky-100/80'
 
   if (isFrenzyRoll.value) {
     return props.result.successes >= props.result.difficulty ? 'text-[#c4c4d4]/70' : 'text-red-200/90'
@@ -464,7 +464,7 @@ const summaryStatusClass = computed(() => {
 }
 
 .dice-hidden {
-  @apply bg-red-950/20 border border-red-900/40 text-red-200/70;
+  @apply bg-sky-950/20 border border-sky-900/40 text-sky-200/70;
   box-shadow:
     0 4px 10px rgba(0, 0, 0, 0.35),
     inset 0 1px 2px rgba(255, 255, 255, 0.06);
