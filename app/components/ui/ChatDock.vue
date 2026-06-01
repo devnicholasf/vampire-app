@@ -48,7 +48,7 @@
                 </svg>
               </button>
               <button
-                @click.stop="isVisible = false"
+                @click.stop="handleUserClose"
                 class="w-6 h-6 flex items-center justify-center text-text-muted hover:text-df-red hover:bg-df-red/10 rounded transition-colors"
                 title="Fechar"
               >
@@ -323,6 +323,10 @@ import { useToast } from '../../composables/useToast'
 import type { ChatConversation } from '../../types/index'
 import BaseModal from './BaseModal.vue'
 
+const emit = defineEmits<{
+  (e: 'closed-by-user'): void
+}>()
+
 interface OpenConv {
   friendId: string
   name: string
@@ -438,6 +442,11 @@ const open = async (): Promise<void> => {
 
 const close = (): void => {
   isVisible.value = false
+}
+
+const handleUserClose = (): void => {
+  isVisible.value = false
+  emit('closed-by-user')
 }
 
 const openMinimized = async (): Promise<void> => {
