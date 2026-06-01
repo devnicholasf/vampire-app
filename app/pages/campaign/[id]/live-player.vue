@@ -527,29 +527,49 @@ const loadPlayerCharacterName = async () => {
 
 const applyState = (data: any) => {
   if (!data) return
-  currentScene.value    = data.current_scene ?? ''
-  liveNpcs.value        = data.current_npcs ?? []
-  currentImageUrl.value = data.current_image_url ?? ''
-  showTerritoryMap.value = data.show_territory_map ?? false
+
+  // Realtime updates can be partial (e.g. only active_players).
+  // Do not wipe UI state when a field is absent in payload.
+  if (Object.prototype.hasOwnProperty.call(data, 'current_scene')) {
+    currentScene.value = data.current_scene ?? ''
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'current_npcs')) {
+    liveNpcs.value = Array.isArray(data.current_npcs) ? data.current_npcs : []
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'current_image_url')) {
+    currentImageUrl.value = data.current_image_url ?? ''
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'show_territory_map')) {
+    showTerritoryMap.value = data.show_territory_map ?? false
+  }
 
   // Sincroniza jogadores ativos (para CoterieAvatars)
   if (Array.isArray(data.active_players)) {
     setActivePlayers(data.active_players)
   }
   
-  const newAudio        = data.current_audio_url ?? ''
-  if (newAudio !== currentAudioUrl.value) {
-    currentAudioUrl.value = newAudio
+  if (Object.prototype.hasOwnProperty.call(data, 'current_audio_url')) {
+    const newAudio = data.current_audio_url ?? ''
+    if (newAudio !== currentAudioUrl.value) {
+      currentAudioUrl.value = newAudio
+    }
   }
   
   // Sincronizar estado do áudio
-  const isPlaying = data.current_audio_playing ?? false
-  const audioTime = data.current_audio_time ?? 0
-  const audioVolume = data.current_audio_volume ?? 2
-  
-  currentAudioPlaying.value = isPlaying
-  currentAudioTime.value = audioTime
-  currentAudioVolume.value = audioVolume
+  if (Object.prototype.hasOwnProperty.call(data, 'current_audio_playing')) {
+    currentAudioPlaying.value = data.current_audio_playing ?? false
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'current_audio_time')) {
+    currentAudioTime.value = data.current_audio_time ?? 0
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, 'current_audio_volume')) {
+    currentAudioVolume.value = data.current_audio_volume ?? 2
+  }
   
   // Aplicar estado ao player
   syncAudioPlayer()
