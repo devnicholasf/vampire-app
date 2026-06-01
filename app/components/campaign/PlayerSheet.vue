@@ -152,7 +152,7 @@
                     :disabled="!canEdit"
                     :class="[
                       'df-dot df-dot-md',
-                      n <= (sheetData.attributes.physical as any)[attr.key]
+                      n <= getAttributeValue('physical', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
                       !canEdit && 'cursor-not-allowed opacity-60'
@@ -183,7 +183,7 @@
                     :disabled="!canEdit"
                     :class="[
                       'df-dot df-dot-md',
-                      n <= (sheetData.attributes.social as any)[attr.key]
+                      n <= getAttributeValue('social', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
                       !canEdit && 'cursor-not-allowed opacity-60'
@@ -214,7 +214,7 @@
                     :disabled="!canEdit"
                     :class="[
                       'df-dot df-dot-md',
-                      n <= (sheetData.attributes.mental as any)[attr.key]
+                      n <= getAttributeValue('mental', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
                       !canEdit && 'cursor-not-allowed opacity-60'
@@ -1807,6 +1807,42 @@ const virtues = [
   { key: 'courage', name: 'Coragem' }
 ]
 
+const normalizeSheetAttributes = (attributes: any) => {
+  const physical = attributes?.physical || {}
+  const social = attributes?.social || {}
+  const mental = attributes?.mental || {}
+
+  const resolveAttributeValue = (primary: any, legacy: any) => {
+    const primaryValue = Number(primary)
+    if (Number.isFinite(primaryValue) && primaryValue >= 1) return primaryValue
+
+    const legacyValue = Number(legacy)
+    if (Number.isFinite(legacyValue) && legacyValue >= 1) return legacyValue
+
+    return 1
+  }
+
+  return {
+    physical: {
+      strength: Number(physical.strength ?? 1),
+      dexterity: Number(physical.dexterity ?? 1),
+      stamina: Number(physical.stamina ?? 1)
+    },
+    social: {
+      charisma: Number(social.charisma ?? 1),
+      manipulation: Number(social.manipulation ?? 1),
+      // Compatibilidade com fichas antigas que usavam "appearance".
+      composure: resolveAttributeValue(social.composure, social.appearance)
+    },
+    mental: {
+      intelligence: Number(mental.intelligence ?? 1),
+      wits: Number(mental.wits ?? 1),
+      // Compatibilidade com fichas antigas que usavam "perception".
+      resolve: resolveAttributeValue(mental.resolve, mental.perception)
+    }
+  }
+}
+
 // Sheet data structure
 const sheetData = ref({
   name: props.player.character_name || props.player.characterName || '',
@@ -1841,11 +1877,7 @@ const sheetData = ref({
   distinguishingFeatures: props.player.sheet?.distinguishingFeatures || '',
   history: props.player.sheet?.history || '',
   
-  attributes: props.player.sheet?.attributes || {
-    physical: { strength: 1, dexterity: 1, stamina: 1 },
-    social: { charisma: 1, manipulation: 1, composure: 1 },
-    mental: { intelligence: 1, wits: 1, resolve: 1 }
-  },
+  attributes: normalizeSheetAttributes(props.player.sheet?.attributes),
   skills: props.player.sheet?.skills || {
     talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
     skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
@@ -2069,8 +2101,40 @@ onBeforeUnmount(() => {
 // Methods
 const setAttributeValue = (category: string, attribute: string, value: number) => {
   if (!props.canEdit) return
-  ;(sheetData.value.attributes as any)[category][attribute] = value
+  const normalizedValue = Math.min(5, Math.max(1, Number(value) || 1))
+  ;(sheetData.value.attributes as any)[category][attribute] = normalizedValue
+
+  // Mantem compatibilidade para dados legados que ainda leem as chaves antigas.
+  if (category === 'social' && attribute === 'composure') {
+    ;(sheetData.value.attributes as any)[category].appearance = normalizedValue
+  }
+  if (category === 'mental' && attribute === 'resolve') {
+    ;(sheetData.value.attributes as any)[category].perception = normalizedValue
+  }
+
   hasUnsavedChanges.value = true
+}
+
+const getAttributeValue = (category: 'physical' | 'social' | 'mental', attribute: string): number => {
+  const categoryData = (sheetData.value.attributes as any)?.[category] || {}
+  const currentValue = Number(categoryData?.[attribute])
+
+  if (category === 'social' && attribute === 'composure') {
+    const legacyValue = Number(categoryData?.appearance)
+    if (Number.isFinite(currentValue) && currentValue >= 1) return currentValue
+    if (Number.isFinite(legacyValue) && legacyValue >= 1) return legacyValue
+    return 1
+  }
+
+  if (category === 'mental' && attribute === 'resolve') {
+    const legacyValue = Number(categoryData?.perception)
+    if (Number.isFinite(currentValue) && currentValue >= 1) return currentValue
+    if (Number.isFinite(legacyValue) && legacyValue >= 1) return legacyValue
+    return 1
+  }
+
+  if (Number.isFinite(currentValue) && currentValue >= 1) return currentValue
+  return 1
 }
 
 const setSkillValue = (category: string, skill: string, value: number) => {

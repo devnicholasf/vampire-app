@@ -353,8 +353,8 @@ export const useCampaign = () => {
         history: '',
         attributes: {
           physical: { strength: 1, dexterity: 1, stamina: 1 },
-          social: { charisma: 1, manipulation: 1, appearance: 1 },
-          mental: { perception: 1, intelligence: 1, wits: 1 }
+          social: { charisma: 1, manipulation: 1, composure: 1 },
+          mental: { intelligence: 1, wits: 1, resolve: 1 }
         },
         skills: {
           talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
@@ -691,8 +691,8 @@ export const useCampaign = () => {
           xpSpent: 0,
           attributes: {
             physical: { strength: 1, dexterity: 1, stamina: 1 },
-            social: { charisma: 1, manipulation: 1, appearance: 1 },
-            mental: { perception: 1, intelligence: 1, wits: 1 }
+            social: { charisma: 1, manipulation: 1, composure: 1 },
+            mental: { intelligence: 1, wits: 1, resolve: 1 }
           },
           skills: {
             talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },

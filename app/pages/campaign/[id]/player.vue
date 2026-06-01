@@ -842,6 +842,33 @@ const hideToast = () => {
 
 const calculateAttributeSum = (attributes: any) => {
   if (!attributes) return 0
+
+  const resolveCanonicalValue = (primary: any, legacy: any) => {
+    const primaryValue = Number(primary)
+    if (Number.isFinite(primaryValue) && primaryValue >= 1) return primaryValue
+
+    const legacyValue = Number(legacy)
+    if (Number.isFinite(legacyValue) && legacyValue >= 1) return legacyValue
+
+    return 0
+  }
+
+  const socialTotal =
+    Number(attributes.charisma ?? 0) +
+    Number(attributes.manipulation ?? 0) +
+    resolveCanonicalValue(attributes.composure, attributes.appearance)
+  if ('charisma' in attributes || 'manipulation' in attributes || 'composure' in attributes || 'appearance' in attributes) {
+    return socialTotal
+  }
+
+  const mentalTotal =
+    Number(attributes.intelligence ?? 0) +
+    Number(attributes.wits ?? 0) +
+    resolveCanonicalValue(attributes.resolve, attributes.perception)
+  if ('intelligence' in attributes || 'wits' in attributes || 'resolve' in attributes || 'perception' in attributes) {
+    return mentalTotal
+  }
+
   return Object.values(attributes).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0)
 }
 
