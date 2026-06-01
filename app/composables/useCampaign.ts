@@ -68,27 +68,42 @@ export const useCampaign = () => {
     try {
       console.log('Carregando campanhas para usuário:', user.value.id)
       
-      // Buscar campanhas onde é mestre
-      const { data: masterCampaigns, error: masterError } = await supabase
-        .from('campaigns')
-        .select('*')
-        .eq('master_id', user.value.id)
-        .order('created_at', { ascending: false })
+      const campaignFields = `
+        id,
+        name,
+        description,
+        master_id,
+        invite_code,
+        created_at,
+        updated_at
+      `
+
+      // Buscar campanhas de mestre e jogador em paralelo para reduzir latencia.
+      const [masterResult, playerResult] = await Promise.all([
+        supabase
+          .from('campaigns')
+          .select(campaignFields)
+          .eq('master_id', user.value.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('campaigns')
+          .select(`
+            ${campaignFields},
+            campaign_players!inner(user_id)
+          `)
+          .eq('campaign_players.user_id', user.value.id)
+          .order('created_at', { ascending: false })
+      ])
+
+      const masterCampaigns = masterResult.data
+      const masterError = masterResult.error
+      const playerCampaigns = playerResult.data
+      const playerError = playerResult.error
 
       if (masterError) {
         console.error('Erro ao buscar campanhas como mestre:', masterError)
         throw new Error(`Erro ao carregar campanhas: ${masterError.message}`)
       }
-
-      // Buscar campanhas onde é jogador
-      const { data: playerCampaigns, error: playerError } = await supabase
-        .from('campaigns')
-        .select(`
-          *,
-          campaign_players!inner(user_id)
-        `)
-        .eq('campaign_players.user_id', user.value.id)
-        .order('created_at', { ascending: false })
 
       if (playerError) {
         console.error('Erro ao buscar campanhas como jogador:', playerError)

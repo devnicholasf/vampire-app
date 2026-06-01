@@ -321,7 +321,7 @@
 // ============================================
 // Vue imports
 // ============================================
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, navigateTo, useRuntimeConfig } from 'nuxt/app'
 import { createClient } from '@supabase/supabase-js'
 import type { Campaign } from '~/types'
@@ -374,20 +374,34 @@ onMounted(async () => {
   console.log('Usuário:', user.value)
   
   // Carregar campanhas do usuário
-  if (user.value) {
-    await loadCampaigns()
-    await loadCampaignSessionStatus()
-  }
+  await ensureDashboardCampaignsLoaded()
 })
 
 const showCreateModal = ref(false)
 const createLoading = ref(false)
 const lastSessionAtByCampaign = ref<Record<string, string>>({})
 const liveStatusByCampaign = ref<Record<string, boolean>>({})
+const hasLoadedInitialCampaigns = ref(false)
 const newCampaign = ref<CreateCampaignData>({
   name: '',
   description: ''
 })
+
+const ensureDashboardCampaignsLoaded = async () => {
+  if (!user.value?.id || hasLoadedInitialCampaigns.value) return
+
+  await loadCampaigns()
+  await loadCampaignSessionStatus()
+  hasLoadedInitialCampaigns.value = true
+}
+
+watch(
+  () => user.value?.id,
+  async () => {
+    await ensureDashboardCampaignsLoaded()
+  },
+  { immediate: true }
+)
 
 
 
