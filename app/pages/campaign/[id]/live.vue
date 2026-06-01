@@ -1020,6 +1020,18 @@ const sessionTimeline = ref<any[]>([])
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let presenceCleanupInterval: ReturnType<typeof setInterval> | null = null
 
+const normalizeNpcSheet = (rawSheet: any) => {
+  if (!rawSheet) return null
+  if (typeof rawSheet === 'string') {
+    try {
+      return JSON.parse(rawSheet)
+    } catch {
+      return null
+    }
+  }
+  return rawSheet
+}
+
 // ============================================
 // Computed
 // ============================================
@@ -1030,9 +1042,12 @@ const npcOptionsForDice = computed(() =>
 const selectedNpcForDice = computed(() =>
   inGameNPCs.value.find((npc: any) => String(npc.id) === selectedNpcForDiceId.value) ?? null
 )
+const selectedNpcSheetForDice = computed(() =>
+  normalizeNpcSheet(selectedNpcForDice.value?.sheet ?? selectedNpcForDice.value?.sheet_data ?? null) || {}
+)
 
 const attributeValuesForDice = computed<Record<string, number>>(() => {
-  const attrs = selectedNpcForDice.value?.sheet?.attributes || {}
+  const attrs = selectedNpcSheetForDice.value?.attributes || {}
   const physical = attrs.physical || {}
   const social = attrs.social || {}
   const mental = attrs.mental || {}
@@ -1051,11 +1066,11 @@ const attributeValuesForDice = computed<Record<string, number>>(() => {
 })
 
 const skillValuesForDice = computed<Record<string, number>>(() => {
-  const sheetSkills = selectedNpcForDice.value?.sheet?.skills || {}
+  const sheetSkills = selectedNpcSheetForDice.value?.skills || {}
   const talents = sheetSkills.talents || {}
   const skills = sheetSkills.skills || {}
   const knowledges = sheetSkills.knowledges || {}
-  const virtues = selectedNpcForDice.value?.sheet?.virtues || {}
+  const virtues = selectedNpcSheetForDice.value?.virtues || {}
 
   return {
     'Persuasão': Number(skills.persuasion ?? 0),
@@ -1225,6 +1240,7 @@ const loadNPCs = async () => {
 
     allNPCs.value = (npcRows ?? []).map((npc: any) => ({
       ...npc,
+      sheet: normalizeNpcSheet(npc.sheet_data ?? npc.sheet ?? null),
       photo: npc.photo_url ?? null,
       description: npc.bio ?? null,
       inGame: liveNpcIds.includes(npc.id),

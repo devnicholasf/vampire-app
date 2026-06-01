@@ -669,6 +669,9 @@ const goBack = async () => {
   if (isLeavingPage.value) return
   isLeavingPage.value = true
 
+  // Interrompe heartbeat/listeners antes do leave para evitar reentrada fantasma.
+  stopPresenceTracking()
+
   try {
     await leaveGame(campaignId)
   } catch (error) {
@@ -720,24 +723,43 @@ const hideToast = () => {
   showToast.value = false
 }
 
+const stopPresenceTracking = () => {
+  if (presenceHeartbeatInterval) {
+    clearInterval(presenceHeartbeatInterval)
+    presenceHeartbeatInterval = null
+  }
+
+  if (process.client) {
+    window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }
+}
+
 const startPresenceHeartbeat = () => {
   if (!process.client) return
   if (presenceHeartbeatInterval) {
     clearInterval(presenceHeartbeatInterval)
   }
 
-  // Heartbeat curto para evitar online fantasma por aba fechada/crash.
+  // Heartbeat curto para evitar online fantasma; conta online apenas com aba visivel.
   presenceHeartbeatInterval = setInterval(() => {
-    if (!isGameLive.value || !user.value) return
+    if (isLeavingPage.value || !isGameLive.value || !user.value) return
+    if (document.visibilityState !== 'visible') return
     touchGamePresence(campaignId)
   }, 25000)
 }
 
 const handleVisibilityChange = () => {
   if (!process.client) return
-  if (document.visibilityState === 'visible' && isGameLive.value && user.value) {
+  if (isLeavingPage.value || !isGameLive.value || !user.value) return
+
+  if (document.visibilityState === 'visible') {
     touchGamePresence(campaignId)
+    return
   }
+
+  // Se a aba live ficar oculta, remove da presença para não manter "online" fantasma.
+  void leaveGame(campaignId)
 }
 
 // Remove player from active list when closing page/logging out
@@ -837,26 +859,23 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(async () => {
-  // Remover jogador da lista ao sair da página
-  if (user.value) {
-    await leaveGame(campaignId)
-  }
-  
-  // Desinscrever do sistema de dados
-  unsubscribeFromRolls()
-  
-  if (process.client) {
-    window.removeEventListener('beforeunload', handleBeforeUnload)
-    document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }
+  // Sempre parar heartbeat/listeners antes do await.
+  stopPresenceTracking()
 
-  if (presenceHeartbeatInterval) {
-    clearInterval(presenceHeartbeatInterval)
-    presenceHeartbeatInterval = null
+  try {
+    // Remover jogador da lista ao sair da página
+    if (user.value && !isLeavingPage.value) {
+      await leaveGame(campaignId)
+    }
+  } catch (error) {
+    console.error('Erro ao sair da partida ao vivo no unmount:', error)
+  } finally {
+    // Desinscrever/canais sempre, mesmo com erro no leave.
+    unsubscribeFromRolls()
+
+    if (realtimeChannel) supabase.removeChannel(realtimeChannel)
+    if (playerSheetChannel) supabase.removeChannel(playerSheetChannel)
   }
-  
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel)
-  if (playerSheetChannel) supabase.removeChannel(playerSheetChannel)
 })
 </script>
 
