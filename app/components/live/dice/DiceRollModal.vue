@@ -55,6 +55,23 @@
               </select>
             </div>
 
+            <!-- NPC selector (master mode) -->
+            <div v-if="npcOptions.length > 0">
+              <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
+                NPC
+              </label>
+              <select
+                v-model="selectedNpcModel"
+                class="w-full px-3 py-2 rounded border bg-[#0d0d20] text-white text-sm focus:outline-none focus:border-[#d4a647] transition-colors"
+                style="border-color: #4a4a5a;"
+              >
+                <option value="">Selecione um NPC...</option>
+                <option v-for="npc in npcOptions" :key="npc.id" :value="npc.id">
+                  {{ npc.name }}
+                </option>
+              </select>
+            </div>
+
             <!-- Attribute + Skill (2 columns) -->
             <div v-if="!isPlayerFrenzyMode" class="grid grid-cols-2 gap-4">
               <div>
@@ -161,7 +178,7 @@
             </div>
 
             <!-- Hunger -->
-            <div v-if="!isPlayerFrenzyMode">
+            <div v-if="!isPlayerFrenzyMode && showHunger">
               <label class="block text-xs font-semibold text-[#d4a647] uppercase tracking-wider mb-2">
                 Fome Atual
               </label>
@@ -263,6 +280,9 @@ import type { DiceRollConfig } from '~/types/dice'
 const props = defineProps<{
   modelValue: boolean
   currentHunger?: number
+  showHunger?: boolean
+  npcOptions?: Array<{ id: string; name: string }>
+  selectedNpcId?: string
   attributeValues?: Record<string, number>
   skillValues?: Record<string, number>
   autoCalculatePool?: boolean
@@ -274,6 +294,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
+  'update:selectedNpcId': [value: string]
   'roll': [config: DiceRollConfig]
 }>()
 
@@ -287,6 +308,14 @@ const rollConfig = ref<DiceRollConfig>({
 })
 
 const isRolling = ref(false)
+
+const showHunger = computed(() => props.showHunger ?? true)
+const npcOptions = computed(() => props.npcOptions ?? [])
+
+const selectedNpcModel = computed({
+  get: () => props.selectedNpcId || '',
+  set: (value: string) => emit('update:selectedNpcId', value)
+})
 
 const isPlayerFrenzyMode = computed(() => {
   return (props.enablePlayerAutoRules ?? false) && rollConfig.value.rollType === 'frenesi'
@@ -325,6 +354,12 @@ const finalDifficultyForDisplay = computed(() => {
   return baseDifficulty + frenzyDifficultyPenalty.value
 })
 
+const effectiveHunger = computed(() => {
+  if (isPlayerFrenzyMode.value) return 0
+  if (!showHunger.value) return 0
+  return Math.max(0, Number(rollConfig.value.hunger || 0))
+})
+
 const effectiveModifier = computed(() => {
   return isPlayerFrenzyMode.value ? 0 : rollConfig.value.modifier
 })
@@ -336,10 +371,16 @@ const getValueFromMap = (map: Record<string, number> | undefined, key: string): 
 
 // Atualizar hunger quando prop mudar
 watch(() => props.currentHunger, (newHunger) => {
-  if (newHunger !== undefined) {
+  if (showHunger.value && newHunger !== undefined) {
     rollConfig.value.hunger = newHunger
   }
 })
+
+watch(showHunger, (enabled) => {
+  if (!enabled) {
+    rollConfig.value.hunger = 0
+  }
+}, { immediate: true })
 
 watch(() => props.enablePlayerAutoRules, (enabled) => {
   if (!enabled && rollConfig.value.rollType !== 'normal') {
@@ -364,14 +405,14 @@ const normalDiceCount = computed(() => {
   if (isPlayerFrenzyMode.value) {
     return calculatedPool.value
   }
-  return Math.max(0, calculatedPool.value - rollConfig.value.hunger)
+  return Math.max(0, calculatedPool.value - effectiveHunger.value)
 })
 
 const hungerDiceCount = computed(() => {
   if (isPlayerFrenzyMode.value) {
     return 0
   }
-  return Math.min(rollConfig.value.hunger, calculatedPool.value)
+  return Math.min(effectiveHunger.value, calculatedPool.value)
 })
 
 const canRoll = computed(() => {
@@ -445,6 +486,7 @@ const executeRoll = async () => {
         }
       : {
           ...rollConfig.value,
+          hunger: effectiveHunger.value,
           attributeValue: resolvedAttributeValue,
           skillValue: resolvedSkillValue
         }
@@ -459,7 +501,7 @@ const executeRoll = async () => {
         modifier: 0,
         difficulty: 2,
         rollType: 'normal',
-        hunger: props.currentHunger || 0
+        hunger: showHunger.value ? (props.currentHunger || 0) : 0
       }
       close()
     }, 500)

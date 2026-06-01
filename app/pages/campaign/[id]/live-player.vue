@@ -303,7 +303,7 @@ const campaignId = route.params.id as string
 const config     = useRuntimeConfig()
 const supabase   = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
-const { isGameLive, fetchLiveGameState, joinGame, leaveGame, activePlayers, setActivePlayers } = useLiveGame()
+const { isGameLive, fetchLiveGameState, joinGame, leaveGame, touchGamePresence, reconcileStalePresence, activePlayers, setActivePlayers } = useLiveGame()
 const { user } = useAuth()
 const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = useDice()
 const { savePlayerSheet } = useCampaign()
@@ -330,6 +330,7 @@ const showDiceRollModal = ref(false)
 const currentHunger     = ref(1)
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let playerSheetChannel: ReturnType<typeof supabase.channel> | null = null
+let presenceHeartbeatInterval: ReturnType<typeof setInterval> | null = null
 let isDiceRolling = false
 const isLeavingPage    = ref(false)
 const coteriePlayers   = ref<CoteriePlayer[]>([])
@@ -719,34 +720,32 @@ const hideToast = () => {
   showToast.value = false
 }
 
+const startPresenceHeartbeat = () => {
+  if (!process.client) return
+  if (presenceHeartbeatInterval) {
+    clearInterval(presenceHeartbeatInterval)
+  }
+
+  // Heartbeat curto para evitar online fantasma por aba fechada/crash.
+  presenceHeartbeatInterval = setInterval(() => {
+    if (!isGameLive.value || !user.value) return
+    touchGamePresence(campaignId)
+  }, 25000)
+}
+
+const handleVisibilityChange = () => {
+  if (!process.client) return
+  if (document.visibilityState === 'visible' && isGameLive.value && user.value) {
+    touchGamePresence(campaignId)
+  }
+}
+
 // Remove player from active list when closing page/logging out
 const handleBeforeUnload = () => {
   if (!user.value) return
-  
-  // Chamada síncrona para remover jogador da lista de ativos
-  const leaveGameSync = async () => {
-    try {
-      const { data: state } = await supabase
-        .from('live_game_state')
-        .select('active_players')
-        .eq('campaign_id', campaignId)
-        .maybeSingle()
-      
-      if (state) {
-        const currentPlayers = state.active_players || []
-        const updatedPlayers = currentPlayers.filter((id: string) => id !== user.value!.id)
-        
-        await supabase
-          .from('live_game_state')
-          .update({ active_players: updatedPlayers })
-          .eq('campaign_id', campaignId)
-      }
-    } catch (e) {
-      console.error('Erro ao sair do jogo:', e)
-    }
-  }
-  
-  leaveGameSync()
+
+  // Best-effort: RPC leave com fallback no composable.
+  void leaveGame(campaignId)
 }
 
 // ── Lifecycle ──────────────────────────────────────
@@ -808,7 +807,10 @@ onMounted(async () => {
   // Adicionar jogador à lista de ativos quando entrar na sessão
   if (isGameLive.value && user.value) {
     try {
+      await reconcileStalePresence(campaignId)
       await joinGame(campaignId)
+      await touchGamePresence(campaignId)
+      startPresenceHeartbeat()
     } catch (e) {
       console.error('Erro ao entrar no jogo:', e)
     }
@@ -828,6 +830,7 @@ onMounted(async () => {
   // Adicionar listener para fechar página
   if (process.client) {
     window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
   }
   
   pageLoading.value = false
@@ -844,6 +847,12 @@ onBeforeUnmount(async () => {
   
   if (process.client) {
     window.removeEventListener('beforeunload', handleBeforeUnload)
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }
+
+  if (presenceHeartbeatInterval) {
+    clearInterval(presenceHeartbeatInterval)
+    presenceHeartbeatInterval = null
   }
   
   if (realtimeChannel) supabase.removeChannel(realtimeChannel)

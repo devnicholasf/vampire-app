@@ -711,7 +711,13 @@
     <!-- Modal de Rolagem de Dados -->
     <DiceRollModal 
       v-model="showDiceRollModal"
-      :current-hunger="currentHunger"
+      v-model:selected-npc-id="selectedNpcForDiceId"
+      :current-hunger="0"
+      :show-hunger="false"
+      :npc-options="npcOptionsForDice"
+      :attribute-values="attributeValuesForDice"
+      :skill-values="skillValuesForDice"
+      :auto-calculate-pool="true"
       @roll="handleDiceRoll"
     />
 
@@ -904,6 +910,7 @@ const {
   updateSceneMedia,
   addNPCToGame,
   removeNPCFromGame,
+  reconcileStalePresence,
   setActivePlayers,
 } = useLiveGame()
 
@@ -913,6 +920,7 @@ const { rolls, rollDice, loadRolls, subscribeToRolls, unsubscribeFromRolls } = u
 // Sistema de dados - Estados
 const showDiceRollModal = ref(false)
 const currentHunger = ref(2) // TODO: Pegar da ficha do mestre
+const selectedNpcForDiceId = ref('')
 
 // Converter rolls readonly para array normal (compatibilidade com componente)
 const diceRolls = computed(() => [...rolls.value] as any[])
@@ -1010,11 +1018,72 @@ const sessionTimeline = ref<any[]>([])
 
 // Realtime subscription handle
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+let presenceCleanupInterval: ReturnType<typeof setInterval> | null = null
 
 // ============================================
 // Computed
 // ============================================
 const inGameNPCs = computed(() => allNPCs.value.filter(n => n.inGame))
+const npcOptionsForDice = computed(() =>
+  inGameNPCs.value.map((npc: any) => ({ id: String(npc.id), name: String(npc.name || 'NPC') }))
+)
+const selectedNpcForDice = computed(() =>
+  inGameNPCs.value.find((npc: any) => String(npc.id) === selectedNpcForDiceId.value) ?? null
+)
+
+const attributeValuesForDice = computed<Record<string, number>>(() => {
+  const attrs = selectedNpcForDice.value?.sheet?.attributes || {}
+  const physical = attrs.physical || {}
+  const social = attrs.social || {}
+  const mental = attrs.mental || {}
+
+  return {
+    'Força': Number(physical.strength ?? 0),
+    'Destreza': Number(physical.dexterity ?? 0),
+    'Vigor': Number(physical.stamina ?? 0),
+    'Carisma': Number(social.charisma ?? 0),
+    'Manipulação': Number(social.manipulation ?? 0),
+    'Aparência': Number(social.composure ?? 0),
+    'Percepção': Number(mental.resolve ?? 0),
+    'Inteligência': Number(mental.intelligence ?? 0),
+    'Raciocínio': Number(mental.wits ?? 0)
+  }
+})
+
+const skillValuesForDice = computed<Record<string, number>>(() => {
+  const sheetSkills = selectedNpcForDice.value?.sheet?.skills || {}
+  const talents = sheetSkills.talents || {}
+  const skills = sheetSkills.skills || {}
+  const knowledges = sheetSkills.knowledges || {}
+  const virtues = selectedNpcForDice.value?.sheet?.virtues || {}
+
+  return {
+    'Persuasão': Number(skills.persuasion ?? 0),
+    'Briga': Number(talents.brawl ?? 0),
+    'Etiqueta': Number(skills.etiquette ?? 0),
+    'Intimidação': Number(skills.intimidation ?? 0),
+    'Investigação': Number(knowledges.investigation ?? 0),
+    'Armas de Fogo': Number(talents.firearms ?? 0),
+    'Liderança': Number(skills.leadership ?? 0),
+    'Subterfúgio': Number(skills.subterfuge ?? 0),
+    'Armas Brancas': Number(talents.melee ?? 0),
+    'Atletismo': Number(talents.athletics ?? 0),
+    'Furtividade': Number(talents.stealth ?? 0),
+    'Sobrevivência': Number(talents.survival ?? 0),
+    'Condução': Number(talents.drive ?? 0),
+    'Acadêmico': Number(knowledges.academics ?? 0),
+    'Ciências': Number(knowledges.science ?? 0),
+    'Finanças': Number(knowledges.finance ?? 0),
+    'Medicina': Number(knowledges.medicine ?? 0),
+    'Ocultismo': Number(knowledges.occult ?? 0),
+    'Tecnologia': Number(knowledges.technology ?? 0),
+    'Consciência': Number(virtues.conscience ?? 0),
+    'Manha': Number(skills.streetwise ?? 0),
+    'Empatia': Number(skills.animalKen ?? 0),
+    'Intuição': Number(skills.awareness ?? 0),
+    'Performance': Number(skills.performance ?? 0)
+  }
+})
 const visibleNPCs = computed(() => inGameNPCs.value.filter(n => n.visibleToPlayers))
 const spotlightNPC = computed(() => inGameNPCs.value.find((n: any) => n.isSpotlight) ?? null)
 const availableNPCs = computed(() => {
@@ -1700,8 +1769,15 @@ const confirmDeleteEvent = async () => {
 // ============================================
 const handleDiceRoll = async (config: DiceRollConfig) => {
   try {
-    const characterName = campaign.value?.master_name || 'Mestre'
-    await rollDice(campaignId, config, characterName)
+    const selectedNpc = selectedNpcForDice.value
+    const characterName = selectedNpc?.name || campaign.value?.master_name || 'Mestre'
+    const normalizedConfig: DiceRollConfig = {
+      ...config,
+      hunger: 0,
+      characterId: selectedNpc ? String(selectedNpc.id) : undefined,
+    }
+
+    await rollDice(campaignId, normalizedConfig, characterName)
     showDiceRollModal.value = false
     toast.success('Rolagem realizada!', 'Os dados foram lançados.')
   } catch (e: any) {
@@ -1795,6 +1871,8 @@ const handleBeforeUnload = (event: BeforeUnloadEvent) => {
 onMounted(async () => {
   await Promise.all([loadCampaignData(), loadNPCs(), loadMediaFiles()])
 
+  await reconcileStalePresence(campaignId)
+
   // Restore state if master refreshed mid-session
   const state = await fetchLiveGameState(campaignId)
   if (state) {
@@ -1811,6 +1889,12 @@ onMounted(async () => {
   }
 
   startRealtime()
+
+  if (process.client) {
+    presenceCleanupInterval = setInterval(() => {
+      reconcileStalePresence(campaignId)
+    }, 30000)
+  }
   
   // Carregar e sincronizar rolagens de dados
   await loadRolls(campaignId)
@@ -1821,6 +1905,10 @@ onMounted(async () => {
 })
 
 watch(inGameNPCs, (newInGameNpcs) => {
+  if (!newInGameNpcs.some((npc: any) => String(npc.id) === selectedNpcForDiceId.value)) {
+    selectedNpcForDiceId.value = ''
+  }
+
   if (selectedNPC.value && !newInGameNpcs.some((npc: any) => npc.id === selectedNPC.value.id)) {
     selectedNPC.value = null
   }
@@ -1851,6 +1939,11 @@ onBeforeUnmount(() => {
   // Limpar canal realtime
   if (realtimeChannel) {
     supabase.removeChannel(realtimeChannel)
+  }
+
+  if (presenceCleanupInterval) {
+    clearInterval(presenceCleanupInterval)
+    presenceCleanupInterval = null
   }
   
   // Desinscrever do canal de dados

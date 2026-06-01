@@ -511,20 +511,27 @@ export const useLiveGame = () => {
 
       console.warn('join_live_game_presence RPC indisponível, usando fallback legacy:', rpcError)
 
-      // Sempre lê do banco — evita estado local desatualizado ou nulo
-      const { data: state, error: fetchErr } = await supabase
-        .from('live_game_state')
-        .select('active_players')
-        .eq('campaign_id', campaignId)
-        .maybeSingle()
+      // Fallback com retry: evita condição de corrida quando 2 jogadores entram ao mesmo tempo.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { data: state, error: fetchErr } = await supabase
+          .from('live_game_state')
+          .select('active_players')
+          .eq('campaign_id', campaignId)
+          .maybeSingle()
 
-      if (fetchErr) throw fetchErr
-      if (!state) return // Sessão não existe no banco
+        if (fetchErr) throw fetchErr
+        if (!state) return
 
-      const currentPlayers: string[] = state.active_players || []
+        const currentPlayers = ((state.active_players || []) as string[])
+          .map((id) => String(id))
+        const alreadyJoined = currentPlayers.includes(user.value.id)
 
-      if (!currentPlayers.includes(user.value.id)) {
-        const updatedPlayers = [...currentPlayers, user.value.id]
+        if (alreadyJoined) {
+          setActivePlayers(currentPlayers)
+          return
+        }
+
+        const updatedPlayers = Array.from(new Set([...currentPlayers, user.value.id]))
 
         const { error: updateError } = await supabase
           .from('live_game_state')
@@ -533,11 +540,25 @@ export const useLiveGame = () => {
 
         if (updateError) throw updateError
 
-        // Atualiza estado local imediatamente (sem esperar realtime)
-        setActivePlayers(updatedPlayers)
-      } else {
-        // Jogador já está na lista — garante que o estado local está correto
-        setActivePlayers(currentPlayers)
+        const { data: verifyState, error: verifyErr } = await supabase
+          .from('live_game_state')
+          .select('active_players')
+          .eq('campaign_id', campaignId)
+          .maybeSingle()
+
+        if (verifyErr) throw verifyErr
+        const verifiedPlayers = ((verifyState?.active_players || []) as string[])
+          .map((id) => String(id))
+        setActivePlayers(verifiedPlayers)
+
+        if (verifiedPlayers.includes(user.value.id)) {
+          return
+        }
+      }
+
+      // Se ainda assim falhar em corrida extrema, mantém consistência local mínima.
+      if (!activePlayers.value.includes(user.value.id)) {
+        setActivePlayers(Array.from(new Set([...activePlayers.value, user.value.id])))
       }
     } catch (err: any) {
       console.error('Erro ao entrar no jogo:', err)
@@ -561,7 +582,17 @@ export const useLiveGame = () => {
 
       console.warn('leave_live_game_presence RPC indisponível, usando fallback legacy:', rpcError)
 
-      const currentPlayers = liveGameState.value?.activePlayers || []
+      // Sempre lê do banco para não sobrescrever presença de outros jogadores com estado local stale.
+      const { data: state, error: fetchErr } = await supabase
+        .from('live_game_state')
+        .select('active_players')
+        .eq('campaign_id', campaignId)
+        .maybeSingle()
+
+      if (fetchErr) throw fetchErr
+
+      const currentPlayers = ((state?.active_players || []) as string[])
+        .map((id) => String(id))
       const updatedPlayers = currentPlayers.filter(playerId => playerId !== user.value!.id)
       
       const { error: updateError } = await supabase
@@ -577,6 +608,46 @@ export const useLiveGame = () => {
     } catch (err: any) {
       console.error('Erro ao sair do jogo:', err)
       throw err
+    }
+  }
+
+  const touchGamePresence = async (campaignId: string) => {
+    if (!user.value) return
+
+    try {
+      const { data: rpcPlayers, error: rpcError } = await supabase.rpc('touch_live_game_presence', {
+        campaign_id_param: campaignId,
+      })
+
+      if (!rpcError) {
+        setActivePlayers((rpcPlayers as string[]) || [])
+        return
+      }
+
+      // Fallback: se a RPC ainda nao existir no banco, reusa joinGame para manter presenca viva.
+      console.warn('touch_live_game_presence RPC indisponivel, usando fallback joinGame:', rpcError)
+      await joinGame(campaignId)
+    } catch (err) {
+      console.error('Erro ao atualizar heartbeat de presenca:', err)
+    }
+  }
+
+  const reconcileStalePresence = async (campaignId: string) => {
+    if (!user.value) return
+
+    try {
+      const { data: rpcPlayers, error: rpcError } = await supabase.rpc('cleanup_stale_live_game_presence', {
+        campaign_id_param: campaignId,
+      })
+
+      if (rpcError) {
+        console.warn('cleanup_stale_live_game_presence RPC indisponivel:', rpcError)
+        return
+      }
+
+      setActivePlayers((rpcPlayers as string[]) || [])
+    } catch (err) {
+      console.error('Erro ao reconciliar presenca stale:', err)
     }
   }
 
@@ -649,6 +720,8 @@ export const useLiveGame = () => {
     // Player Methods
     joinGame,
     leaveGame,
+    touchGamePresence,
+    reconcileStalePresence,
     setActivePlayers,
 
     // Real-time Methods

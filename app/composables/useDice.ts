@@ -9,6 +9,31 @@ import { useAuth } from '~/composables/useAuth'
 import type { DiceRollConfig, RollResult, RouseCheckResult } from '~/types/dice'
 import { performRoll, performRouseCheck } from '~/components/live/dice/DiceEngine'
 
+interface DiceRollPrivateDetailRow {
+  roll_id: string
+  campaign_id: string
+  user_id: string
+  character_id?: string | null
+  character_name: string
+  roll_type: string
+  attribute: string
+  skill: string
+  pool_total: number
+  hunger: number
+  difficulty: number
+  modifier: number
+  dice_results: {
+    normal?: number[]
+    hunger?: number[]
+  }
+  successes: number
+  is_critical: boolean
+  is_messy_critical: boolean
+  is_bestial_failure: boolean
+  description?: string | null
+  created_at: string
+}
+
 export const useDice = () => {
   const config = useRuntimeConfig()
   const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
@@ -21,6 +46,7 @@ export const useDice = () => {
 
   // Realtime channel
   let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
+  let privateRealtimeChannel: ReturnType<typeof supabase.channel> | null = null
 
   /**
    * Executa uma rolagem completa
@@ -98,11 +124,14 @@ export const useDice = () => {
           isCritical: false,
           isMessyCritical: false,
           isBestialFailure: false,
+          isHidden: false,
+          canViewHiddenDetails: true,
           description: autoDescription,
           createdAt: rollData.created_at
         }
 
         lastRollId.value = result.id
+        upsertRoll(result)
         return result
       }
 
@@ -110,33 +139,62 @@ export const useDice = () => {
       const rollResult = performRoll(config)
 
       // Preparar dados para salvar no banco
+      const rollId = crypto.randomUUID()
+      const isHiddenRoll = config.rollType === 'oculta'
       const rollData = {
-        id: crypto.randomUUID(),
+        id: rollId,
         campaign_id: campaignId,
         user_id: user.value.id,
         character_id: config.characterId || null,
         character_name: characterName,
         
         roll_type: config.rollType,
-        attribute: config.attribute,
-        skill: config.skill,
+        attribute: isHiddenRoll ? 'Oculto' : config.attribute,
+        skill: isHiddenRoll ? 'Teste secreto' : config.skill,
         
-        pool_total: calculatePoolSize(config),
-        hunger: config.hunger,
-        difficulty: config.difficulty,
-        modifier: config.modifier,
+        pool_total: isHiddenRoll ? 1 : calculatePoolSize(config),
+        hunger: isHiddenRoll ? 0 : config.hunger,
+        difficulty: isHiddenRoll ? 1 : config.difficulty,
+        modifier: isHiddenRoll ? 0 : config.modifier,
         
-        dice_results: rollResult.diceResults,
+        dice_results: isHiddenRoll ? { normal: [], hunger: [] } : rollResult.diceResults,
         
-        successes: rollResult.successes,
+        successes: isHiddenRoll ? 0 : rollResult.successes,
         
-        is_critical: rollResult.isCritical,
-        is_messy_critical: rollResult.isMessyCritical,
-        is_bestial_failure: rollResult.isBestialFailure,
+        is_critical: isHiddenRoll ? false : rollResult.isCritical,
+        is_messy_critical: isHiddenRoll ? false : rollResult.isMessyCritical,
+        is_bestial_failure: isHiddenRoll ? false : rollResult.isBestialFailure,
+        is_hidden: isHiddenRoll,
         
-        description: rollResult.description,
+        description: isHiddenRoll
+          ? `${characterName} fez uma rolagem oculta.`
+          : rollResult.description,
         created_at: new Date().toISOString()
       }
+
+      const privateRollData = isHiddenRoll
+        ? {
+            roll_id: rollId,
+            campaign_id: campaignId,
+            user_id: user.value.id,
+            character_id: config.characterId || null,
+            character_name: characterName,
+            roll_type: config.rollType,
+            attribute: config.attribute,
+            skill: config.skill,
+            pool_total: calculatePoolSize(config),
+            hunger: config.hunger,
+            difficulty: config.difficulty,
+            modifier: config.modifier,
+            dice_results: rollResult.diceResults,
+            successes: rollResult.successes,
+            is_critical: rollResult.isCritical,
+            is_messy_critical: rollResult.isMessyCritical,
+            is_bestial_failure: rollResult.isBestialFailure,
+            description: rollResult.description,
+            created_at: rollData.created_at
+          }
+        : null
 
       // Salvar no banco
       const { error } = await supabase
@@ -146,6 +204,17 @@ export const useDice = () => {
       if (error) {
         console.error('Erro ao salvar rolagem:', error)
         throw error
+      }
+
+      if (privateRollData) {
+        const { error: privateError } = await supabase
+          .from('dice_roll_private_details')
+          .insert(privateRollData)
+
+        if (privateError) {
+          console.error('Erro ao salvar detalhes privados da rolagem:', privateError)
+          throw privateError
+        }
       }
 
       // Criar objeto de resultado
@@ -173,12 +242,15 @@ export const useDice = () => {
         isCritical: rollResult.isCritical,
         isMessyCritical: rollResult.isMessyCritical,
         isBestialFailure: rollResult.isBestialFailure,
+        isHidden: isHiddenRoll,
+        canViewHiddenDetails: true,
         
         description: rollResult.description,
         createdAt: rollData.created_at
       }
 
       lastRollId.value = result.id
+      upsertRoll(result)
 
       return result
 
@@ -261,7 +333,20 @@ export const useDice = () => {
 
       if (error) throw error
 
-      rolls.value = (data || []).map(convertDbToRollResult)
+      const baseRolls = (data || []).map(convertDbToRollResult)
+      const hiddenRollIds = baseRolls.filter(roll => roll.isHidden).map(roll => roll.id)
+
+      if (hiddenRollIds.length === 0) {
+        rolls.value = baseRolls
+        return
+      }
+
+      const { data: privateDetails } = await supabase
+        .from('dice_roll_private_details')
+        .select('*')
+        .in('roll_id', hiddenRollIds)
+
+      rolls.value = mergePrivateDetails(baseRolls, privateDetails || [])
 
     } catch (error) {
       console.error('Erro ao carregar rolagens:', error)
@@ -297,16 +382,8 @@ export const useDice = () => {
         (payload) => {
           console.log('[useDice] Nova rolagem recebida via realtime:', payload.new)
           const newRoll = convertDbToRollResult(payload.new)
-          
-          // Adicionar ao início da lista
-          rolls.value = [newRoll, ...rolls.value]
-          
+          upsertRoll(newRoll)
           console.log('[useDice] Total de rolagens agora:', rolls.value.length)
-          
-          // Limitar a 100 rolagens em memória
-          if (rolls.value.length > 100) {
-            rolls.value = rolls.value.slice(0, 100)
-          }
         }
       )
       .subscribe((status) => {
@@ -317,6 +394,33 @@ export const useDice = () => {
           console.error('[useDice] ✗ Erro ao conectar no canal de rolagens')
         }
       })
+
+    if (privateRealtimeChannel) {
+      supabase.removeChannel(privateRealtimeChannel)
+    }
+
+    privateRealtimeChannel = supabase
+      .channel(`dice_roll_private_details:${campaignId}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: '' }
+        }
+      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dice_roll_private_details',
+          filter: `campaign_id=eq.${campaignId}`
+        },
+        (payload) => {
+          console.log('[useDice] Detalhes privados de rolagem recebidos via realtime:', payload.new)
+          const privateRoll = convertPrivateDbToRollResult(payload.new as DiceRollPrivateDetailRow)
+          upsertRoll(privateRoll)
+        }
+      )
+      .subscribe()
   }
 
   /**
@@ -326,6 +430,10 @@ export const useDice = () => {
     if (realtimeChannel) {
       supabase.removeChannel(realtimeChannel)
       realtimeChannel = null
+    }
+    if (privateRealtimeChannel) {
+      supabase.removeChannel(privateRealtimeChannel)
+      privateRealtimeChannel = null
     }
   }
 
@@ -374,10 +482,90 @@ export const useDice = () => {
       isCritical: dbRow.is_critical,
       isMessyCritical: dbRow.is_messy_critical,
       isBestialFailure: dbRow.is_bestial_failure,
+      isHidden: Boolean(dbRow.is_hidden),
+      canViewHiddenDetails: !Boolean(dbRow.is_hidden),
       
       description: dbRow.description,
       createdAt: dbRow.created_at
     }
+  }
+
+  function convertPrivateDbToRollResult(dbRow: DiceRollPrivateDetailRow): RollResult {
+    return {
+      id: dbRow.roll_id,
+      campaignId: dbRow.campaign_id,
+      userId: dbRow.user_id,
+      characterId: dbRow.character_id || undefined,
+      characterName: dbRow.character_name,
+      rollType: dbRow.roll_type,
+      attribute: dbRow.attribute,
+      skill: dbRow.skill,
+      poolTotal: dbRow.pool_total,
+      hunger: dbRow.hunger,
+      difficulty: dbRow.difficulty,
+      modifier: dbRow.modifier,
+      diceResults: {
+        normal: Array.isArray(dbRow.dice_results?.normal) ? dbRow.dice_results.normal : [],
+        hunger: Array.isArray(dbRow.dice_results?.hunger) ? dbRow.dice_results.hunger : []
+      },
+      successes: dbRow.successes,
+      totalSuccesses: dbRow.successes,
+      isCritical: dbRow.is_critical,
+      isMessyCritical: dbRow.is_messy_critical,
+      isBestialFailure: dbRow.is_bestial_failure,
+      isHidden: true,
+      canViewHiddenDetails: true,
+      description: dbRow.description || undefined,
+      createdAt: dbRow.created_at
+    }
+  }
+
+  function mergePrivateDetails(baseRolls: RollResult[], privateRows: DiceRollPrivateDetailRow[]) {
+    if (privateRows.length === 0) return baseRolls
+
+    const privateById = new Map(
+      privateRows.map((row) => [row.roll_id, convertPrivateDbToRollResult(row)])
+    )
+
+    return baseRolls.map((roll) => {
+      const privateRoll = privateById.get(roll.id)
+      if (!privateRoll) return roll
+      return {
+        ...roll,
+        ...privateRoll,
+        isHidden: true,
+        canViewHiddenDetails: true
+      }
+    })
+  }
+
+  function upsertRoll(incoming: RollResult) {
+    const existingIndex = rolls.value.findIndex(roll => roll.id === incoming.id)
+
+    if (existingIndex >= 0) {
+      const existingRoll = rolls.value[existingIndex]
+      const shouldKeepExistingHiddenDetails =
+        existingRoll.isHidden &&
+        existingRoll.canViewHiddenDetails &&
+        incoming.isHidden &&
+        !incoming.canViewHiddenDetails
+
+      if (shouldKeepExistingHiddenDetails) {
+        return
+      }
+
+      rolls.value[existingIndex] = {
+        ...existingRoll,
+        ...incoming,
+        diceResults: incoming.diceResults || existingRoll.diceResults
+      }
+    } else {
+      rolls.value = [incoming, ...rolls.value]
+    }
+
+    rolls.value = [...rolls.value]
+      .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+      .slice(0, 100)
   }
 
   return {

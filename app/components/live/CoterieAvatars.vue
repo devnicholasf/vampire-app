@@ -138,9 +138,13 @@ const props = withDefaults(
   { mode: 'horizontal' }
 )
 
+const activePlayersSet = computed(() => {
+  return new Set((props.activePlayers || []).map((id) => String(id).trim().toLowerCase()))
+})
+
 // ── Helpers ──────────────────────────────────────────────────────
 const isOnline = (player: CoteriePlayer): boolean =>
-  props.activePlayers.includes(player.user_id)
+  activePlayersSet.value.has(String(player.user_id || '').trim().toLowerCase())
 
 const displayName = (player: CoteriePlayer): string =>
   player.sheet?.name?.trim() ||

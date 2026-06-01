@@ -48,6 +48,8 @@ export interface RollResult {
   isCritical: boolean
   isMessyCritical: boolean
   isBestialFailure: boolean
+  isHidden: boolean
+  canViewHiddenDetails: boolean
   
   description?: string
   createdAt: string
@@ -100,7 +102,7 @@ export const VTM_SKILLS = [
 
 export const ROLL_TYPES = [
   { value: 'normal', label: 'Normal', description: 'Rolagem padrão visível a todos' },
-  { value: 'oculta', label: 'Oculta', description: 'Apenas o Mestre vê o resultado' },
+  { value: 'oculta', label: 'Oculta', description: 'Mestre e autor veem o resultado; mesa vê apenas o aviso' },
   { value: 'resistida', label: 'Resistida', description: 'Contra outro personagem' },
   { value: 'frenesi', label: 'Frenesi', description: 'Teste de controle da Besta' },
   { value: 'despertar', label: 'Teste de Despertar', description: 'Rouse Check' }
