@@ -525,6 +525,8 @@
         </div>
       </div>
     </main>
+
+    <DirectMessages />
   </div>
 </template>
 
@@ -553,6 +555,7 @@ import { clanBanes } from '~/config/clanBanes'
 // ============================================
 import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
+import DirectMessages from '~/components/ui/DirectMessages.vue'
 import { useLiveGame } from '~/composables/useLiveGame'
 import { createClient } from '@supabase/supabase-js'
 

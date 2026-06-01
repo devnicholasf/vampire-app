@@ -193,6 +193,8 @@
 
     <!-- Toast Container -->
     <ToastContainer />
+
+    <DirectMessages />
   </div>
 </template>
 
@@ -229,6 +231,7 @@ import PoliticsTab from '~/components/campaign/master/PoliticsTab.vue'
 import MediaTab from '~/components/campaign/master/MediaTab.vue'
 import OverviewTab from '~/components/campaign/master/OverviewTab.vue'
 import EventsTab from '~/components/campaign/master/EventsTab.vue'
+import DirectMessages from '~/components/ui/DirectMessages.vue'
 
 // ============================================
 // SVG Icon Components for Tabs

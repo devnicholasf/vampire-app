@@ -843,6 +843,8 @@
     </div>
 
   </div>
+
+  <DirectMessages />
 </template>
 
 <script setup lang="ts">
@@ -867,6 +869,7 @@ import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
 import CoterieAvatars from '~/components/live/CoterieAvatars.vue'
+import DirectMessages from '~/components/ui/DirectMessages.vue'
 import type { DiceRollConfig } from '~/types/dice'
 import type { CoteriePlayer } from '~/components/live/CoterieAvatars.vue'
 

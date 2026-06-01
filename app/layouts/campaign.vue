@@ -137,6 +137,8 @@
       <slot />
     </main>
 
+    <DirectMessages />
+
     <!-- Campaign Status Bar (Bottom) -->
     <div 
       v-if="showStatusBar"
@@ -188,6 +190,7 @@
 // ============================================
 import BaseButton from '~/components/ui/BaseButton.vue'
 import BaseBadge from '~/components/ui/BaseBadge.vue'
+import DirectMessages from '~/components/ui/DirectMessages.vue'
 
 const route = useRoute()
 

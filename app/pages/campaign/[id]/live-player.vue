@@ -270,6 +270,8 @@
     </template>
 
   </div>
+
+  <DirectMessages />
 </template>
 
 <script setup lang="ts">
@@ -282,6 +284,7 @@ import { useAuth } from '~/composables/useAuth'
 import { createClient } from '@supabase/supabase-js'
 import PlayerSheet from '~/components/campaign/PlayerSheet.vue'
 import BaseToast from '~/components/ui/BaseToast.vue'
+import DirectMessages from '~/components/ui/DirectMessages.vue'
 import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'

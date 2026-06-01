@@ -37,6 +37,7 @@ const incomingFriendRequests = ref<FriendRequestItem[]>([])
 const outgoingFriendRequests = ref<FriendRequestItem[]>([])
 const userSearchResults = ref<FriendUser[]>([])
 const unreadByFriend = ref<Record<string, number>>({})
+const myFriendCode = ref('')
 
 const globalLoading = ref(false)
 const initialized = ref(false)
@@ -100,6 +101,30 @@ export const useChat = () => {
     if (error) {
       console.error('CHAT: erro ao sincronizar perfil público:', error)
     }
+  }
+
+  const loadMyFriendCode = async () => {
+    if (!currentUserId.value) {
+      myFriendCode.value = ''
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('friend_code')
+      .eq('user_id', currentUserId.value)
+      .maybeSingle()
+
+    if (error) {
+      console.error('CHAT: erro ao carregar friend_code:', error)
+      return
+    }
+
+    myFriendCode.value = String(data?.friend_code || '')
+  }
+
+  const normalizeFriendCode = (code: string): string => {
+    return String(code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
   }
 
   const getProfilesByIds = async (ids: string[]) => {
@@ -440,6 +465,64 @@ export const useChat = () => {
     await loadFriendRequests()
   }
 
+  const sendFriendRequestByCode = async (code: string) => {
+    if (!currentUserId.value) return
+
+    const normalizedCode = normalizeFriendCode(code)
+    if (!normalizedCode || normalizedCode.length < 6) {
+      throw new Error('Código inválido')
+    }
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('user_id')
+      .eq('friend_code', normalizedCode)
+      .maybeSingle()
+
+    if (error) {
+      throw new Error('Não foi possível buscar usuário por código')
+    }
+
+    const targetUserId = String(data?.user_id || '')
+    if (!targetUserId) {
+      throw new Error('Código não encontrado')
+    }
+
+    if (targetUserId === currentUserId.value) {
+      throw new Error('Você não pode adicionar a si mesmo')
+    }
+
+    await sendFriendRequest(targetUserId)
+  }
+
+  const removeFriend = async (targetUserId: string) => {
+    if (!currentUserId.value || !targetUserId || targetUserId === currentUserId.value) return
+
+    const me = currentUserId.value
+
+    const { error } = await supabase
+      .from('friend_requests')
+      .delete()
+      .eq('status', 'accepted')
+      .or(`and(requester_id.eq.${me},receiver_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},receiver_id.eq.${me})`)
+
+    if (error) {
+      throw new Error('Não foi possível remover este amigo')
+    }
+
+    if (selectedFriendId.value === targetUserId) {
+      selectedFriendId.value = null
+      activeConversation.value = null
+      messages.value = []
+    }
+
+    await Promise.all([
+      loadFriendRequests(),
+      loadFriends(),
+      loadConversationSummaries(),
+    ])
+  }
+
   const respondToFriendRequest = async (requestId: string, accept: boolean) => {
     if (!currentUserId.value || !requestId) return
 
@@ -554,10 +637,12 @@ export const useChat = () => {
         messages.value = []
         activeConversation.value = null
         selectedFriendId.value = null
+        myFriendCode.value = ''
         return
       }
 
       await ensureMyProfile()
+      await loadMyFriendCode()
 
       await Promise.all([
         loadFriendRequests(),
@@ -579,6 +664,7 @@ export const useChat = () => {
     incomingFriendRequests: readonly(incomingFriendRequests),
     outgoingFriendRequests: readonly(outgoingFriendRequests),
     userSearchResults: readonly(userSearchResults),
+    myFriendCode: readonly(myFriendCode),
     isLoading: readonly(isLoading),
     currentUserId,
     initialized: readonly(initialized),
@@ -596,6 +682,8 @@ export const useChat = () => {
     removeConversation,
     searchUsers,
     sendFriendRequest,
+    sendFriendRequestByCode,
+    removeFriend,
     respondToFriendRequest,
     loadFriendRequests,
     loadFriends,

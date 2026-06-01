@@ -18,7 +18,7 @@
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
       
       <div
-        :class="modalClasses"
+        :class="[modalClasses, panelClass]"
         class="inline-block align-bottom bg-surface-card rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle"
       >
         <!-- Header -->
@@ -71,6 +71,7 @@ interface Props {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full'
   closable?: boolean
   closeOnBackdrop?: boolean
+  panelClass?: string
 }
 
 interface Emits {
@@ -81,8 +82,11 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   closable: true,
-  closeOnBackdrop: true
+  closeOnBackdrop: true,
+  panelClass: ''
 })
+
+const panelClass = computed(() => props.panelClass)
 
 const emit = defineEmits<Emits>()
 
