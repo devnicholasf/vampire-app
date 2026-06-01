@@ -198,11 +198,30 @@ export const useAuth = () => {
     // Reset active live sessions for this user before signing out
     try {
       if (user.value?.id) {
+        const currentUserId = user.value.id
+
+        // Remove heartbeat presence explicitly to avoid ghost online state.
+        // If presence table/RPC is unavailable, flow continues with legacy cleanup.
+        const { data: presenceRows } = await supabase
+          .from('live_game_presence')
+          .select('campaign_id')
+          .eq('user_id', currentUserId)
+
+        if (presenceRows && presenceRows.length > 0) {
+          await Promise.allSettled(
+            presenceRows.map((row: any) =>
+              supabase.rpc('leave_live_game_presence', {
+                campaign_id_param: row.campaign_id,
+              })
+            )
+          )
+        }
+
         const { data: liveStates } = await supabase
           .from('live_game_state')
           .select('campaign_id, current_npcs, active_players')
           .eq('is_live', true)
-          .contains('active_players', [user.value.id])
+          .contains('active_players', [currentUserId])
 
         if (liveStates && liveStates.length > 0) {
           const campaignIds = liveStates.map((state: any) => state.campaign_id)
@@ -210,7 +229,7 @@ export const useAuth = () => {
             .from('campaigns')
             .select('id')
             .in('id', campaignIds)
-            .eq('master_id', user.value.id)
+            .eq('master_id', currentUserId)
 
           const masterCampaignIds = new Set((masterCampaigns ?? []).map((campaign: any) => campaign.id))
 
@@ -237,7 +256,7 @@ export const useAuth = () => {
               }
 
               // Se for jogador, apenas remove da lista de ativos.
-              const updatedPlayers = (state.active_players ?? []).filter((playerId: string) => playerId !== user.value!.id)
+              const updatedPlayers = (state.active_players ?? []).filter((playerId: string) => playerId !== currentUserId)
               return supabase
                 .from('live_game_state')
                 .update({ active_players: updatedPlayers })
