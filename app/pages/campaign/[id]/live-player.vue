@@ -331,6 +331,7 @@ const currentHunger     = ref(1)
 let realtimeChannel: ReturnType<typeof supabase.channel> | null = null
 let playerSheetChannel: ReturnType<typeof supabase.channel> | null = null
 let presenceHeartbeatInterval: ReturnType<typeof setInterval> | null = null
+let visibilityLeaveTimeout: ReturnType<typeof setTimeout> | null = null
 let isDiceRolling = false
 const isLeavingPage    = ref(false)
 const coteriePlayers   = ref<CoteriePlayer[]>([])
@@ -729,6 +730,11 @@ const stopPresenceTracking = () => {
     presenceHeartbeatInterval = null
   }
 
+  if (visibilityLeaveTimeout) {
+    clearTimeout(visibilityLeaveTimeout)
+    visibilityLeaveTimeout = null
+  }
+
   if (process.client) {
     window.removeEventListener('beforeunload', handleBeforeUnload)
     document.removeEventListener('visibilitychange', handleVisibilityChange)
@@ -754,12 +760,26 @@ const handleVisibilityChange = () => {
   if (isLeavingPage.value || !isGameLive.value || !user.value) return
 
   if (document.visibilityState === 'visible') {
+    if (visibilityLeaveTimeout) {
+      clearTimeout(visibilityLeaveTimeout)
+      visibilityLeaveTimeout = null
+    }
     touchGamePresence(campaignId)
     return
   }
 
-  // Se a aba live ficar oculta, remove da presença para não manter "online" fantasma.
-  void leaveGame(campaignId)
+  // Evita "piscar" online/offline em mudancas transientes de visibilidade.
+  // So executa leave se permanecer oculto por algum tempo.
+  if (visibilityLeaveTimeout) {
+    clearTimeout(visibilityLeaveTimeout)
+  }
+
+  visibilityLeaveTimeout = setTimeout(() => {
+    if (!process.client || document.visibilityState !== 'visible') {
+      void leaveGame(campaignId)
+    }
+    visibilityLeaveTimeout = null
+  }, 15000)
 }
 
 // Remove player from active list when closing page/logging out
