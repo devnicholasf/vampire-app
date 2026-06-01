@@ -117,25 +117,21 @@
 
                 <div v-if="showPasswordFields" class="space-y-3 border border-border rounded-vampire p-3 bg-surface-dark/40">
                   <div>
-                    <label class="block text-text-secondary text-sm font-medium mb-2">
-                      Senha Atual
-                    </label>
-                    <input
+                    <BaseInput
                       v-model="passwordForm.currentPassword"
                       type="password"
+                      label="Senha Atual"
                       autocomplete="current-password"
-                      class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                      class="w-full"
                     />
                   </div>
                   <div>
-                    <label class="block text-text-secondary text-sm font-medium mb-2">
-                      Nova Senha
-                    </label>
-                    <input
+                    <BaseInput
                       v-model="passwordForm.newPassword"
                       type="password"
+                      label="Nova Senha"
                       autocomplete="new-password"
-                      class="w-full px-4 py-3 bg-surface-dark border border-border rounded-vampire text-text-primary placeholder:text-text-muted focus:outline-none focus:border-red-500 transition-colors"
+                      class="w-full"
                     />
                   </div>
                 </div>
@@ -219,7 +215,9 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue'
 import BaseButton from './BaseButton.vue'
+import BaseInput from './BaseInput.vue'
 import { useAuth } from '../../composables/useAuth'
+import { useToast } from '../../composables/useToast'
 
 interface UserData {
   id: string
@@ -239,6 +237,7 @@ const emit = defineEmits<{
 }>()
 
 const { updateUserProfile, updateUserPassword, uploadProfileAvatar } = useAuth()
+const toast = useToast()
 
 // State
 const showProfileModal = ref(false)
@@ -386,24 +385,39 @@ const confirmSaveProfile = async () => {
   
   try {
     formError.value = ''
+    let passwordUpdated = false
 
-    let avatarToSave: string | null | undefined = props.user?.avatar ?? null
-    if (selectedAvatarFile.value) {
-      avatarToSave = await uploadProfileAvatar(selectedAvatarFile.value)
-    }
+    const normalizedName = (profileForm.value.name || '').trim()
+    const normalizedEmail = (profileForm.value.email || '').trim()
+    const currentName = (props.user.username || props.user.name || '').trim()
+    const currentEmail = (props.user.email || '').trim()
 
-    // Chamar composable para atualizar no Supabase
-    const updatedUser = await updateUserProfile({
-      username: profileForm.value.name,
-      email: profileForm.value.email,
-      avatar: avatarToSave
-    })
+    const hasProfileChanges =
+      normalizedName !== currentName ||
+      normalizedEmail !== currentEmail ||
+      Boolean(selectedAvatarFile.value)
 
     if (showPasswordFields.value) {
       await updateUserPassword(
         passwordForm.value.currentPassword,
         passwordForm.value.newPassword
       )
+      passwordUpdated = true
+    }
+
+    let avatarToSave: string | null | undefined = props.user?.avatar ?? null
+    let updatedUser = props.user
+
+    if (selectedAvatarFile.value) {
+      avatarToSave = await uploadProfileAvatar(selectedAvatarFile.value)
+    }
+
+    if (hasProfileChanges) {
+      updatedUser = await updateUserProfile({
+        username: normalizedName,
+        email: normalizedEmail,
+        avatar: avatarToSave
+      })
     }
     
     // Emit updated user data
@@ -412,9 +426,14 @@ const confirmSaveProfile = async () => {
     // Fechar modals
     closeConfirmationModal()
     closeModal()
+
+    if (passwordUpdated) {
+      toast.success('Senha atualizada!', 'Sua senha foi atualizada com sucesso.')
+    }
     
   } catch (error: any) {
     console.error('Erro ao salvar perfil:', error)
+    closeConfirmationModal()
     formError.value = error?.message || 'Não foi possível salvar as alterações.'
   } finally {
     loading.value = false

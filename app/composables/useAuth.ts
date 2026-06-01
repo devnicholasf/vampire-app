@@ -50,9 +50,14 @@ export const useAuth = () => {
     const errorMap: Record<string, string> = {
       'Invalid login credentials': 'Email ou senha inválidos',
       'invalid_credentials': 'Email ou senha inválidos',
+      'Auth session missing!': 'Sua sessão expirou. Faça login novamente.',
+      'Invalid Refresh Token: Refresh Token Not Found': 'Sua sessão expirou. Faça login novamente.',
+      'refresh_token_not_found': 'Sua sessão expirou. Faça login novamente.',
+      'reauthentication_needed': 'Por segurança, confirme sua identidade e tente novamente.',
       'User not found': 'Usuário não encontrado',
       'Invalid email': 'Email inválido',
       'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres',
+      'New password should be different from the old password.': 'A nova senha deve ser diferente da senha atual.',
       'User already registered': 'Este email já está em uso',
       'Email not confirmed': 'Email não confirmado. Verifique sua caixa de entrada',
       'Invalid email or password': 'Email ou senha inválidos',
@@ -401,23 +406,71 @@ export const useAuth = () => {
         throw new Error('Preencha senha atual e nova senha')
       }
 
-      // Reautenticar antes de atualizar a senha
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.value.email,
+      if (currentPassword === newPassword) {
+        throw new Error('A nova senha deve ser diferente da senha atual')
+      }
+
+      const authEmail = String(user.value.email || '').trim()
+      if (!authEmail) {
+        throw new Error('Não foi possível validar o email da conta atual')
+      }
+
+      // Reautenticar em cliente temporario para nao sobrescrever a sessao ativa.
+      const verifyClient = createClient(config.public.supabaseUrl, config.public.supabaseKey, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      })
+
+      const { error: signInError } = await verifyClient.auth.signInWithPassword({
+        email: authEmail,
         password: currentPassword
       })
 
       if (signInError) {
-        throw new Error('Senha atual incorreta')
+        const translated = translateAuthError(signInError)
+        if (translated === 'Email ou senha inválidos') {
+          throw new Error('Senha atual incorreta')
+        }
+        throw new Error(translated)
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: updateError } = await verifyClient.auth.updateUser({
         password: newPassword
       })
 
       if (updateError) {
-        error.value = translateAuthError(updateError)
-        throw new Error(error.value)
+        const translated = translateAuthError(updateError)
+        if (translated === 'Erro na autenticação') {
+          throw new Error('Não foi possível atualizar a senha. Tente novamente.')
+        }
+        throw new Error(translated)
+      }
+
+      await verifyClient.auth.signOut()
+
+      // Reautentica automaticamente no cliente principal para evitar logout
+      // quando o provedor invalida sessoes antigas apos troca de senha.
+      const { data: refreshedLogin, error: refreshedLoginError } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: newPassword,
+      })
+
+      if (refreshedLoginError) {
+        throw new Error('Senha alterada, mas não foi possível manter a sessão ativa. Faça login novamente.')
+      }
+
+      if (refreshedLogin?.user) {
+        user.value = {
+          id: refreshedLogin.user.id,
+          email: refreshedLogin.user.email!,
+          username: refreshedLogin.user.user_metadata?.username || refreshedLogin.user.email!.split('@')[0],
+          avatar: refreshedLogin.user.user_metadata?.avatar || null,
+          createdAt: new Date(refreshedLogin.user.created_at),
+          updatedAt: new Date(refreshedLogin.user.updated_at || refreshedLogin.user.created_at)
+        }
       }
 
       return true
