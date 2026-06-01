@@ -33,11 +33,7 @@
     </BaseButton>
 
     <!-- Chat Modal -->
-    <ChatModal
-      ref="chatModal"
-      :conversations="[...conversations]"
-      :current-user-id="currentUserId"
-    />
+    <ChatModal ref="chatModal" />
   </div>
 </template>
 
@@ -48,7 +44,7 @@ import ChatModal from './ChatModal.vue'
 import { useChat } from '../../composables/useChat'
 
 // Usar composable para gerenciar estado do chat
-const { conversations, unreadCount, currentUserId, initialize } = useChat()
+const { unreadCount, initialize } = useChat()
 
 // Refs locais
 const chatModal = ref<InstanceType<typeof ChatModal>>()

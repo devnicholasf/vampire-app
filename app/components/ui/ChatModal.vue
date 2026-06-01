@@ -17,19 +17,7 @@
           class="flex items-center justify-between p-3 bg-surface-hover border-b border-border cursor-move"
         >
           <div class="flex items-center gap-3">
-            <!-- Active Conversation Info -->
-            <div v-if="activeConversation" class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
-                <span class="text-xs font-bold text-red-400">
-                  {{ getInitials(activeConversation.otherUser.name) }}
-                </span>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-text-primary">{{ activeConversation.otherUser.name }}</p>
-                <p class="text-xs text-text-muted">{{ activeConversation.campaign?.name }}</p>
-              </div>
-            </div>
-            <div v-else class="text-sm font-medium text-text-primary">Mensagens</div>
+            <div class="text-sm font-medium text-text-primary font-cinzel tracking-wide">Mensagens</div>
           </div>
           
           <div class="flex items-center gap-1">
@@ -59,25 +47,86 @@
         <div class="flex h-full">
           <!-- Conversations Sidebar -->
           <div v-if="!activeConversation || showConversationsList" class="w-64 border-r border-border flex flex-col">
-            <!-- Search -->
+            <!-- Friend Search -->
+            <div class="p-3 border-b border-border space-y-2">
+              <p class="text-[10px] uppercase tracking-wider text-text-muted font-semibold">Adicionar amigo</p>
+              <input
+                v-model="friendSearchQuery"
+                @input="handleFriendSearch"
+                placeholder="Buscar usuário..."
+                class="w-full px-3 py-2 bg-surface-input border border-border rounded text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-red-400"
+              >
+
+              <div v-if="userSearchResults.length > 0" class="space-y-1 max-h-24 overflow-y-auto pr-1">
+                <button
+                  v-for="result in userSearchResults"
+                  :key="result.id"
+                  type="button"
+                  :disabled="friendActionLoading"
+                  @click="handleSendFriendRequest(result.id)"
+                  class="w-full flex items-center justify-between px-2 py-1.5 rounded border border-border text-xs text-text-secondary hover:text-red-300 hover:border-red-800 transition-colors disabled:opacity-50"
+                >
+                  <span class="truncate">{{ result.name }}</span>
+                  <span class="text-red-400">Adicionar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Friend Requests -->
+            <div v-if="incomingFriendRequests.length > 0 || outgoingFriendRequests.length > 0" class="px-3 py-2 border-b border-border space-y-2">
+              <p class="text-[10px] uppercase tracking-wider text-text-muted font-semibold">Solicitações</p>
+
+              <div v-for="request in incomingFriendRequests" :key="request.id" class="rounded border border-border px-2 py-1.5">
+                <p class="text-xs text-text-primary truncate">{{ request.user.name }}</p>
+                <div class="mt-1 flex gap-1">
+                  <button
+                    type="button"
+                    :disabled="friendActionLoading"
+                    @click="handleRespondRequest(request.id, true)"
+                    class="flex-1 text-[11px] px-2 py-1 rounded bg-green-700/20 text-green-300 border border-green-700/50 hover:bg-green-700/30 disabled:opacity-50"
+                  >
+                    Aceitar
+                  </button>
+                  <button
+                    type="button"
+                    :disabled="friendActionLoading"
+                    @click="handleRespondRequest(request.id, false)"
+                    class="flex-1 text-[11px] px-2 py-1 rounded bg-red-700/20 text-red-300 border border-red-700/50 hover:bg-red-700/30 disabled:opacity-50"
+                  >
+                    Recusar
+                  </button>
+                </div>
+              </div>
+
+              <div v-for="request in outgoingFriendRequests" :key="request.id" class="rounded border border-border px-2 py-1.5">
+                <p class="text-xs text-text-primary truncate">{{ request.user.name }}</p>
+                <p class="text-[11px] text-text-muted mt-1">Aguardando confirmação</p>
+              </div>
+            </div>
+
+            <p v-if="friendActionError" class="px-3 py-2 text-[11px] text-red-400 border-b border-border">
+              {{ friendActionError }}
+            </p>
+
+            <!-- Conversation Search -->
             <div class="p-3 border-b border-border">
               <input
                 v-model="searchQuery"
-                placeholder="Buscar conversas..."
+                placeholder="Buscar amigos..."
                 class="w-full px-3 py-2 bg-surface-input border border-border rounded text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-red-400"
               >
             </div>
             
             <!-- Conversations List -->
             <div class="flex-1 overflow-y-auto">
-              <div v-if="filteredConversations.length === 0" class="p-4 text-center text-text-muted text-sm">
-                Nenhuma conversa
+              <div v-if="visibleConversations.length === 0" class="p-4 text-center text-text-muted text-sm">
+                Nenhum amigo para conversar
               </div>
               
               <div
-                v-for="conversation in filteredConversations"
+                v-for="conversation in visibleConversations"
                 :key="conversation.id"
-                @click="selectConversation(conversation)"
+                @click="handleSelectConversation(conversation)"
                 :class="[
                   'p-3 border-b border-border cursor-pointer hover:bg-surface-hover transition-colors',
                   { 'bg-red-500/10': activeConversation?.id === conversation.id }
@@ -190,13 +239,13 @@
           </div>
           
           <!-- Empty State -->
-          <div v-if="!activeConversation && filteredConversations.length > 0" class="flex-1 flex items-center justify-center p-8">
+          <div v-if="!activeConversation" class="flex-1 flex items-center justify-center p-8">
             <div class="text-center text-text-muted">
               <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
               </svg>
-              <p class="text-lg font-medium mb-2">Selecione uma conversa</p>
-              <p class="text-sm">Escolha uma conversa da lista para começar a chat</p>
+              <p class="text-lg font-medium mb-2">Selecione um amigo</p>
+              <p class="text-sm">A lista de amigos fica na coluna esquerda</p>
             </div>
           </div>
         </div>
@@ -241,28 +290,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import type { ChatUser, ChatMessage, ChatConversation } from '../../types/index'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import type { ChatConversation } from '../../types/index'
+import { useChat } from '../../composables/useChat'
 
-interface Props {
-  conversations?: ChatConversation[]
-  currentUserId?: string
-}
+const {
+  conversations,
+  activeConversation,
+  messages,
+  incomingFriendRequests,
+  outgoingFriendRequests,
+  userSearchResults,
+  currentUserId,
+  initialize,
+  filteredConversations,
+  selectConversation,
+  sendMessage: sendDmMessage,
+  searchUsers,
+  sendFriendRequest,
+  respondToFriendRequest,
+} = useChat()
 
-const props = withDefaults(defineProps<Props>(), {
-  conversations: () => [],
-  currentUserId: 'current-user'
-})
-
-// State
+// State local
 const isOpen = ref(false)
 const isMinimized = ref(false)
-const activeConversation = ref<ChatConversation | null>(null)
-const messages = ref<ChatMessage[]>([])
 const newMessageContent = ref('')
 const sendingMessage = ref(false)
 const searchQuery = ref('')
+const friendSearchQuery = ref('')
 const showConversationsList = ref(true)
+const friendActionError = ref('')
+const friendActionLoading = ref(false)
 
 // Window positioning and sizing
 const windowPosition = ref({ x: 20, y: 100 })
@@ -287,15 +345,12 @@ const windowStyle = computed(() => ({
   maxHeight: '90vh'
 }))
 
-const filteredConversations = computed(() => {
-  if (!searchQuery.value) return [...props.conversations]
-  return props.conversations.filter(conv =>
-    conv.otherUser.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
+const visibleConversations = computed(() => {
+  return filteredConversations.value(searchQuery.value)
 })
 
 const totalUnreadCount = computed(() => {
-  return props.conversations.reduce((total, conv) => total + conv.unreadCount, 0)
+  return conversations.value.reduce((total, conv) => total + conv.unreadCount, 0)
 })
 
 // Methods
@@ -335,15 +390,15 @@ const open = (conversation?: ChatConversation) => {
   
   isOpen.value = true
   isMinimized.value = false
+  initialize()
   if (conversation) {
-    selectConversation(conversation)
+    handleSelectConversation(conversation)
   }
 }
 
 const close = () => {
   isOpen.value = false
   isMinimized.value = false
-  activeConversation.value = null
 }
 
 const minimize = () => {
@@ -354,21 +409,9 @@ const restore = () => {
   isMinimized.value = false
 }
 
-const selectConversation = (conversation: ChatConversation) => {
-  activeConversation.value = conversation
+const handleSelectConversation = async (conversation: ChatConversation) => {
   showConversationsList.value = false
-  conversation.unreadCount = 0
-  
-  // Load messages for this conversation
-  // TODO: Load from API
-  messages.value = [
-    {
-      id: 'msg1',
-      content: conversation.lastMessage?.content || 'Olá!',
-      senderId: conversation.otherUser.id,
-      createdAt: conversation.lastMessage?.createdAt || new Date()
-    }
-  ]
+  await selectConversation(conversation)
 }
 
 const sendMessage = async () => {
@@ -377,21 +420,46 @@ const sendMessage = async () => {
   sendingMessage.value = true
   
   try {
-    const message: ChatMessage = {
-      id: Date.now().toString(),
-      content: newMessageContent.value.trim(),
-      senderId: props.currentUserId,
-      createdAt: new Date()
+    const sent = await sendDmMessage(newMessageContent.value)
+    if (sent) {
+      newMessageContent.value = ''
     }
-    
-    messages.value.push(message)
-    newMessageContent.value = ''
-    
-    // TODO: Send to API
-    await new Promise(resolve => setTimeout(resolve, 500))
     
   } finally {
     sendingMessage.value = false
+  }
+}
+
+const handleFriendSearch = async () => {
+  friendActionError.value = ''
+  await searchUsers(friendSearchQuery.value)
+}
+
+const handleSendFriendRequest = async (userId: string) => {
+  friendActionError.value = ''
+  friendActionLoading.value = true
+
+  try {
+    await sendFriendRequest(userId)
+    friendSearchQuery.value = ''
+    await searchUsers('')
+  } catch (error: any) {
+    friendActionError.value = error?.message || 'Não foi possível enviar solicitação.'
+  } finally {
+    friendActionLoading.value = false
+  }
+}
+
+const handleRespondRequest = async (requestId: string, accept: boolean) => {
+  friendActionError.value = ''
+  friendActionLoading.value = true
+
+  try {
+    await respondToFriendRequest(requestId, accept)
+  } catch (error: any) {
+    friendActionError.value = error?.message || 'Não foi possível atualizar solicitação.'
+  } finally {
+    friendActionLoading.value = false
   }
 }
 
@@ -435,6 +503,7 @@ const startResize = (direction: string) => {
 
 // Lifecycle
 onMounted(() => {
+  initialize()
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 })
