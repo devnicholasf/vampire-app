@@ -173,6 +173,20 @@
                     </div>
                   </div>
                   <div class="flex items-center gap-0.5 shrink-0">
+                    <!-- Open NPC Sheet -->
+                    <button
+                      class="p-1 rounded text-[#4a4a5a] hover:text-[#d4a647] transition-colors"
+                      title="Abrir ficha do NPC"
+                      @click.stop="openNpcSheet(npc)"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="9" y1="13" x2="15" y2="13"/>
+                        <line x1="9" y1="17" x2="15" y2="17"/>
+                        <line x1="9" y1="9" x2="10" y2="9"/>
+                      </svg>
+                    </button>
                     <!-- Visibility toggle -->
                     <button
                       class="p-1 rounded transition-colors"
@@ -721,6 +735,15 @@
       @roll="handleDiceRoll"
     />
 
+    <Teleport to="body">
+      <NPCSheet
+        v-if="viewingNpcSheet"
+        :npc="viewingNpcSheet"
+        @close="closeNpcSheet"
+        @save="saveNpcSheetFromLive"
+      />
+    </Teleport>
+
     <!-- Confirmação de evento narrativo -->
     <div
       v-if="showEventConfirmModal"
@@ -875,6 +898,7 @@ import TerritoryMapViewer from '~/components/campaign/TerritoryMapViewer.vue'
 import DiceFeed from '~/components/live/dice/DiceFeed.vue'
 import DiceRollModal from '~/components/live/dice/DiceRollModal.vue'
 import CoterieAvatars from '~/components/live/CoterieAvatars.vue'
+import NPCSheet from '~/components/campaign/master/NPCSheet.vue'
 import DirectMessages from '~/components/ui/DirectMessages.vue'
 import type { DiceRollConfig } from '~/types/dice'
 import type { CoteriePlayer } from '~/components/live/CoterieAvatars.vue'
@@ -969,6 +993,7 @@ const campaign         = ref<any>(null)
 const allNPCs          = ref<any[]>([])
 const playerCount      = ref(0)
 const selectedNPC      = ref<any>(null)
+const viewingNpcSheet  = ref<any | null>(null)
 const currentSceneName = ref('')
 const showNpcPicker    = ref(false)
 const npcSearch        = ref('')
@@ -1322,6 +1347,60 @@ const removeNPCInline = async (npc: any) => {
   } catch (e: any) {
     console.error('LIVE: Erro ao remover NPC:', e)
     toast.error('Erro ao remover NPC', e?.message ?? 'Tente novamente.')
+  }
+}
+
+const openNpcSheet = (npc: any) => {
+  viewingNpcSheet.value = npc
+}
+
+const closeNpcSheet = () => {
+  viewingNpcSheet.value = null
+}
+
+const saveNpcSheetFromLive = async (updatedNpc: any) => {
+  try {
+    const nextSheet = normalizeNpcSheet(updatedNpc.sheet ?? null)
+    const updatePayload = {
+      name: updatedNpc.name,
+      clan: updatedNpc.clan,
+      generation: updatedNpc.generation,
+      sect: updatedNpc.sect,
+      bio: updatedNpc.bio,
+      photo_url: updatedNpc.photo,
+      key_points: updatedNpc.keyPoints,
+      sheet_data: nextSheet,
+    }
+
+    const { error } = await supabase
+      .from('npcs')
+      .update(updatePayload)
+      .eq('id', updatedNpc.id)
+      .eq('campaign_id', campaignId)
+
+    if (error) throw error
+
+    allNPCs.value = allNPCs.value.map((npc: any) => {
+      if (npc.id !== updatedNpc.id) return npc
+
+      return {
+        ...npc,
+        ...updatedNpc,
+        sheet: nextSheet,
+        photo: updatedNpc.photo ?? npc.photo,
+        description: updatedNpc.bio ?? npc.description,
+      }
+    })
+
+    if (selectedNPC.value?.id === updatedNpc.id) {
+      selectedNPC.value = allNPCs.value.find((npc: any) => npc.id === updatedNpc.id) ?? selectedNPC.value
+    }
+
+    closeNpcSheet()
+    toast.success('Ficha do NPC atualizada', 'Alteracoes salvas com sucesso.')
+  } catch (e: any) {
+    console.error('LIVE: Erro ao salvar ficha do NPC:', e)
+    toast.error('Erro ao salvar ficha do NPC', e?.message ?? 'Tente novamente.')
   }
 }
 

@@ -152,6 +152,7 @@
           v-if="currentTab === 'overview'"
           :campaign="campaign"
           :campaign-id="campaignId"
+          @campaign-updated="handleCampaignUpdatedFromOverview"
         />
 
         <PlayersTab
@@ -417,6 +418,16 @@ const refreshCampaignData = async () => {
   } catch (err) {
     console.error('MASTER.VUE: Erro ao recarregar dados:', err)
   }
+}
+
+const handleCampaignUpdatedFromOverview = (payload: { name: string; description: string }) => {
+  if (!campaign.value) return
+
+  campaign.value = {
+    ...campaign.value,
+    name: payload.name,
+    description: payload.description,
+  } as any
 }
 
 const goBackToDashboard = () => {

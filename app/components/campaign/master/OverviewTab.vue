@@ -396,6 +396,10 @@ const props = defineProps<{
 	campaign: { id: string; name: string; description?: string } | null
 }>()
 
+const emit = defineEmits<{
+	(e: 'campaign-updated', payload: { name: string; description: string }): void
+}>()
+
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl as string, config.public.supabaseKey as string)
 const toast = useToast()
@@ -723,12 +727,24 @@ const saveOverview = async () => {
 			return
 		}
 
+		const normalizedName = (overview.value.name || '').trim() || (props.campaign?.name || '').trim()
+		const normalizedDescription = (overview.value.description || '').trim()
+
+		if (!normalizedName) {
+			toast.error('Nome obrigatório', 'Informe um nome para a crônica.')
+			return
+		}
+
+		overview.value.name = normalizedName
+		overview.value.description = normalizedDescription
+
 		// Salvar no Supabase
 		const { error } = await supabase
 			.from('campaigns')
 			.update({
+				name: normalizedName,
 				overview: overview.value,
-				description: overview.value.description || ''
+				description: normalizedDescription
 			})
 			.eq('id', props.campaignId)
 
@@ -740,6 +756,10 @@ const saveOverview = async () => {
 
 		savedSnapshot = JSON.stringify(overview.value)
 		editMode.value = false
+		emit('campaign-updated', {
+			name: normalizedName,
+			description: normalizedDescription
+		})
 		toast.success('Visão Geral salva!', 'As informações da crônica foram atualizadas.')
 	} catch (err: any) {
 		console.error('Erro ao salvar overview:', err)
