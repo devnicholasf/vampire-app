@@ -78,37 +78,55 @@ export const useCampaign = () => {
         updated_at
       `
 
-      // Buscar campanhas de mestre e jogador em paralelo para reduzir latencia.
-      const [masterResult, playerResult] = await Promise.all([
+      // Buscar campanhas de mestre e memberships em paralelo.
+      // Evita join RLS (campaign_players!inner), que pode ocultar dados no dashboard
+      // mesmo quando o usuário tem acesso válido.
+      const [masterResult, membershipResult] = await Promise.all([
         supabase
           .from('campaigns')
           .select(campaignFields)
           .eq('master_id', user.value.id)
           .order('created_at', { ascending: false }),
         supabase
-          .from('campaigns')
-          .select(`
-            ${campaignFields},
-            campaign_players!inner(user_id)
-          `)
-          .eq('campaign_players.user_id', user.value.id)
-          .order('created_at', { ascending: false })
+          .from('campaign_players')
+          .select('campaign_id')
+          .eq('user_id', user.value.id)
       ])
 
       const masterCampaigns = masterResult.data
       const masterError = masterResult.error
-      const playerCampaigns = playerResult.data
-      const playerError = playerResult.error
+      const playerMemberships = membershipResult.data
+      const membershipError = membershipResult.error
 
       if (masterError) {
         console.error('Erro ao buscar campanhas como mestre:', masterError)
         throw new Error(`Erro ao carregar campanhas: ${masterError.message}`)
       }
 
-      if (playerError) {
-        console.error('Erro ao buscar campanhas como jogador:', playerError)
+      if (membershipError) {
+        console.error('Erro ao buscar memberships de campanhas:', membershipError)
         // Não falhar se der erro nas campanhas como jogador
         console.warn('Continuando apenas com campanhas como mestre')
+      }
+
+      let playerCampaigns: any[] = []
+      const playerCampaignIds = Array.from(
+        new Set((playerMemberships || []).map((row: any) => row.campaign_id).filter(Boolean))
+      )
+
+      if (playerCampaignIds.length > 0) {
+        const { data: playerCampaignRows, error: playerCampaignError } = await supabase
+          .from('campaigns')
+          .select(campaignFields)
+          .in('id', playerCampaignIds)
+          .order('created_at', { ascending: false })
+
+        if (playerCampaignError) {
+          console.error('Erro ao buscar campanhas por membership:', playerCampaignError)
+          console.warn('Continuando apenas com campanhas como mestre')
+        } else {
+          playerCampaigns = playerCampaignRows || []
+        }
       }
 
       // Combinar as campanhas (mestre + jogador)
