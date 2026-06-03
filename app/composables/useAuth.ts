@@ -200,6 +200,47 @@ export const useAuth = () => {
       if (user.value?.id) {
         const currentUserId = user.value.id
 
+        // Resolve campaigns where this user is the master BEFORE presence cleanup,
+        // so signout can reliably stop those live sessions.
+        const { data: masterCampaigns } = await supabase
+          .from('campaigns')
+          .select('id')
+          .eq('master_id', currentUserId)
+
+        const masterCampaignIds = new Set((masterCampaigns ?? []).map((campaign: any) => campaign.id))
+
+        // Stop all live sessions owned by this master.
+        if (masterCampaignIds.size > 0) {
+          const { data: masterLiveStates } = await supabase
+            .from('live_game_state')
+            .select('campaign_id, current_npcs')
+            .eq('is_live', true)
+            .in('campaign_id', Array.from(masterCampaignIds))
+
+          if (masterLiveStates && masterLiveStates.length > 0) {
+            await Promise.allSettled(
+              masterLiveStates.map((state: any) => {
+                const hiddenNpcs = (state.current_npcs ?? []).map((npc: any) => ({
+                  ...npc,
+                  isVisible: false,
+                  isSpotlight: false,
+                }))
+
+                return supabase
+                  .from('live_game_state')
+                  .update({
+                    is_live: false,
+                    active_players: [],
+                    current_scene: '',
+                    current_npcs: hiddenNpcs,
+                    timeline_events: [],
+                  })
+                  .eq('campaign_id', state.campaign_id)
+              })
+            )
+          }
+        }
+
         // Remove heartbeat presence explicitly to avoid ghost online state.
         // If presence table/RPC is unavailable, flow continues with legacy cleanup.
         const { data: presenceRows } = await supabase
@@ -224,38 +265,9 @@ export const useAuth = () => {
           .contains('active_players', [currentUserId])
 
         if (liveStates && liveStates.length > 0) {
-          const campaignIds = liveStates.map((state: any) => state.campaign_id)
-          const { data: masterCampaigns } = await supabase
-            .from('campaigns')
-            .select('id')
-            .in('id', campaignIds)
-            .eq('master_id', currentUserId)
-
-          const masterCampaignIds = new Set((masterCampaigns ?? []).map((campaign: any) => campaign.id))
-
           await Promise.all(
             liveStates.map((state: any) => {
-              if (masterCampaignIds.has(state.campaign_id)) {
-                // Se for mestre da campanha, encerra a sessão ao vivo.
-                const hiddenNpcs = (state.current_npcs ?? []).map((npc: any) => ({
-                  ...npc,
-                  isVisible: false,
-                  isSpotlight: false,
-                }))
-
-                return supabase
-                  .from('live_game_state')
-                  .update({
-                    is_live: false,
-                    active_players: [],
-                    current_scene: '',
-                    current_npcs: hiddenNpcs,
-                    timeline_events: [],
-                  })
-                  .eq('campaign_id', state.campaign_id)
-              }
-
-              // Se for jogador, apenas remove da lista de ativos.
+              // Se for jogador (não-mestre), apenas remove da lista de ativos.
               const updatedPlayers = (state.active_players ?? []).filter((playerId: string) => playerId !== currentUserId)
               return supabase
                 .from('live_game_state')
