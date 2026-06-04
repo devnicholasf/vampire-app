@@ -1754,7 +1754,7 @@ const physicalAttributes = [
 const socialAttributes = [
   { key: 'charisma', name: 'Carisma' },
   { key: 'manipulation', name: 'Manipulação' },
-  { key: 'composure', name: 'Autocontrole' }
+  { key: 'composure', name: 'Prontidão' }
 ]
 
 const mentalAttributes = [
