@@ -1754,7 +1754,7 @@ const physicalAttributes = [
 const socialAttributes = [
   { key: 'charisma', name: 'Carisma' },
   { key: 'manipulation', name: 'Manipulação' },
-  { key: 'composure', name: 'Prontidão' }
+  { key: 'composure', name: 'Autocontrole' }
 ]
 
 const mentalAttributes = [
@@ -1765,7 +1765,7 @@ const mentalAttributes = [
 
 // Habilidades (ordem EXATA do print oficial V5)
 const talents = [
-  { key: 'melee', name: 'Armas Brancas' },
+  { key: 'melee', name: 'Corpo a Corpo' },
   { key: 'firearms', name: 'Armas de Fogo' },
   { key: 'athletics', name: 'Atletismo' },
   { key: 'brawl', name: 'Briga' },
@@ -1790,7 +1790,7 @@ const skills = [
 
 const knowledges = [
   { key: 'science', name: 'Ciência' },
-  { key: 'academics', name: 'Erudição' },
+  { key: 'academics', name: 'Acadêmicos' },
   { key: 'finance', name: 'Finanças' },
   { key: 'investigation', name: 'Investigação' },
   { key: 'medicine', name: 'Medicina' },
