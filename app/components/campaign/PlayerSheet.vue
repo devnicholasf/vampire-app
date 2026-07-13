@@ -3,134 +3,170 @@
     class="fixed inset-0 flex items-center justify-center z-[9999] p-2 sm:p-4 df-overlay"
   >
     <div class="relative w-full max-w-7xl max-h-[98vh]">
-      <!-- Ornamentos decorativos estilo dark fantasy nos cantos -->
-      <div class="df-corner df-corner-tl"></div>
-      <div class="df-corner df-corner-tr"></div>
-      <div class="df-corner df-corner-bl"></div>
-      <div class="df-corner df-corner-br"></div>
-      
       <!-- Container principal com scroll -->
-      <div class="df-main-panel p-3 w-full max-h-[98vh] overflow-y-auto">
+      <div class="df-main-panel df-modal-card p-3 w-full max-w-6xl max-h-[88vh] flex flex-col">
       
-      <!-- Header com Avatar e Nome -->
-      <div class="flex items-center justify-between mb-3 sticky top-0 z-10 pb-3 pt-1 df-header-bar">
-        <div class="flex items-center gap-3">
-          <!-- Botão Voltar -->
-          <button 
-            type="button"
-            @click="handleClose"
-            class="df-btn-back flex-shrink-0"
-            title="Voltar"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <!-- Avatar Circular com borda ornamental -->
-          <div class="df-avatar-frame flex-shrink-0">
-            <div class="df-avatar-inner rounded-full overflow-hidden bg-gradient-to-br from-red-950 via-red-900 to-gray-900 flex items-center justify-center">
-              <img 
-                v-if="player.sheet?.avatar" 
-                :src="player.sheet.avatar" 
-                :alt="player.characterName || player.character_name"
-                class="w-full h-full object-cover"
-              />
-              <span v-else class="text-red-200 font-bold text-xl sm:text-2xl md:text-3xl drop-shadow-lg">
-                {{ getInitials(player.characterName || player.character_name || 'P') }}
-              </span>
-            </div>
+      <!-- Header editorial no estilo Editar NPC -->
+      <div class="mb-0 sticky top-0 z-10 pb-2 pt-0 df-header-premium">
+        <div class="flex items-start gap-3">
+          <div class="df-header-icon">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 4C7 4 3 7.5 3 11c0 2 1.5 4 3 5l1 4 2-3h6l2 3 1-4c1.5-1 3-3 3-5 0-3.5-4-7-9-7z"/>
+            </svg>
           </div>
-          
-          <!-- Nome do Personagem -->
-          <h2 class="df-title text-xl sm:text-2xl md:text-4xl">
-            {{ sheetData.name || player.characterName || player.character_name || 'Personagem' }}
-          </h2>
-        </div>
-        
-        <div class="flex space-x-2">
-          <button 
-            v-if="canEdit"
-            type="button"
-            @click="saveSheet"
-            class="df-btn df-btn-save"
-          >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span class="hidden sm:inline ml-1">Salvar</span>
-          </button>
-          <button 
+          <div class="flex-1 min-w-0">
+            <h3 class="text-xl font-bold text-white tracking-wide">Editar Personagem</h3>
+            <p class="text-xs text-df-muted italic">Cada vampiro possui fome, ambicao e segredos.</p>
+          </div>
+          <button
             type="button"
             @click="handleClose"
-            class="df-btn df-btn-close"
+            class="df-close-btn"
             title="Fechar"
           >
-            <svg class="w-4 h-4" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
         </div>
       </div>
 
-      <form @submit.prevent="saveSheet" class="space-y-4">
+      <div class="df-modal-body flex-1 overflow-y-auto df-scrollbar min-h-0">
+      <form @submit.prevent="saveSheet" class="df-sheet-shell">
+        <div class="df-sheet-main">
         <!-- Header da Ficha -->
-        <div class="df-card">
-          <div class="grid grid-cols-3 gap-3">
-            <div>
-              <label class="df-label">Nome <span class="text-red-400">*</span></label>
-              <input v-model="sheetData.name" required :disabled="!canEdit" class="df-input">
+        <section class="df-card df-section-compact">
+          <h4 class="df-section-title-compact">Identidade</h4>
+          <div class="df-identity-grid">
+            <div class="df-identity-row-quick">
+              <div class="df-identity-group df-identity-span-name">
+                <label class="df-label">Nome <span class="text-red-400">*</span></label>
+                <input v-model="sheetData.name" required :disabled="!canEdit" class="df-input">
+              </div>
+
+              <div class="df-identity-group df-identity-span-concept">
+                <label class="df-label">Conceito <span class="text-red-400">*</span></label>
+                <input v-model="sheetData.concept" required :disabled="!canEdit" placeholder="Ex: Hacktivista Rebelde" class="df-input">
+              </div>
+
+              <div class="df-identity-group df-identity-group-clan df-identity-span-clan">
+                <NPCClanSelector v-model="sheetData.clan" />
+              </div>
             </div>
-            <div>
-              <label class="df-label">Conceito <span class="text-red-400">*</span></label>
-              <input v-model="sheetData.concept" required :disabled="!canEdit" placeholder="Ex: Hacktivista Rebelde" class="df-input">
+
+            <div class="df-identity-columns">
+              <div class="df-identity-column df-identity-column-left">
+                <div class="df-identity-group df-identity-group-generation">
+                  <NPCGenerationSelector v-model="sheetData.generation" />
+                </div>
+
+                <div class="df-identity-group">
+                  <label class="df-label">Seita</label>
+                  <div class="df-identity-sect-grid">
+                    <button
+                      v-for="sect in sectOptions"
+                      :key="sect"
+                      type="button"
+                      @click="if (canEdit) { sheetData.sect = sect; hasUnsavedChanges = true }"
+                      class="df-pill"
+                      :class="{ 'df-pill-active': sheetData.sect === sect }"
+                      :disabled="!canEdit"
+                    >
+                      {{ sect }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="df-identity-column df-identity-column-center">
+                <div class="df-identity-group relative">
+                  <label class="df-label">Tipo de Predador</label>
+                  <button
+                    type="button"
+                    @click="canEdit && (isPredatorOpen = !isPredatorOpen)"
+                    :disabled="!canEdit"
+                    class="w-full df-clan-trigger"
+                    :class="{ 'df-clan-trigger-active': sheetData.predator }"
+                  >
+                    <div class="flex items-center gap-3 min-w-0">
+                      <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
+                      <div class="flex-1 text-left min-w-0 leading-tight">
+                        <div class="text-sm font-semibold text-white truncate">{{ sheetData.predator || 'Selecione o predador' }}</div>
+                        <div v-if="sheetData.predator" class="text-xs text-df-muted truncate mt-0.5">{{ getPredatorSummary(sheetData.predator) }}</div>
+                      </div>
+                    </div>
+                    <svg
+                      class="w-5 h-5 text-df-muted transition-transform duration-200"
+                      :class="{ 'rotate-180': isPredatorOpen }"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </button>
+
+                  <Transition name="dropdown">
+                    <div
+                      v-if="isPredatorOpen && canEdit"
+                      class="absolute z-50 w-full mt-2 max-h-80 overflow-y-auto df-scrollbar rounded-lg border border-df-border-red/30 bg-df-card shadow-2xl"
+                    >
+                      <button
+                        v-for="predator in predatorTypeOptions"
+                        :key="predator.name"
+                        type="button"
+                        @click="selectPredatorType(predator.name)"
+                        class="df-clan-option"
+                        :class="{ 'df-clan-option-selected': sheetData.predator === predator.name }"
+                        :disabled="predator.blocked"
+                      >
+                        <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
+                        <div class="flex-1 text-left">
+                          <div class="text-sm font-semibold text-white">{{ predator.name }}</div>
+                          <div class="text-xs text-df-muted">{{ predator.description }}</div>
+                        </div>
+                        <svg
+                          v-if="sheetData.predator === predator.name"
+                          class="w-5 h-5 text-df-gold flex-shrink-0"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </Transition>
+                </div>
+
+                <div class="df-identity-group">
+                  <label class="df-label">Desejo</label>
+                  <input v-model="sheetData.desire" placeholder="Seu desejo" :disabled="!canEdit" class="df-input">
+                </div>
+              </div>
+
+              <div class="df-identity-column df-identity-column-right">
+                <div class="df-identity-group">
+                  <label class="df-label">Ambição</label>
+                  <input v-model="sheetData.ambition" placeholder="Sua ambição" :disabled="!canEdit" class="df-input">
+                </div>
+
+                <div class="df-identity-group">
+                  <label class="df-label">Senhor</label>
+                  <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="df-label">Clã <span class="text-red-400">*</span></label>
-              <select v-model="sheetData.clan" required :disabled="!canEdit" class="df-input">
-                <option value="">Selecionar</option>
-                <option v-for="clan in vampireClans" :key="clan" :value="clan">{{ clan }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-3 mt-3">
-            <div>
-              <label class="df-label">Geração <span class="text-red-400">*</span></label>
-              <input v-model.number="sheetData.generation" type="number" min="3" max="15" required :disabled="!canEdit" class="df-input">
-            </div>
-            <div>
-              <label class="df-label">Predador</label>
-              <select v-model="sheetData.predator" :disabled="!canEdit" class="df-input">
-                <option value="">Selecionar</option>
-                <option value="Consensualista">Consensualista</option>
-                <option value="Fazendeiro" :disabled="sheetData.clan === 'Ventrue'">
-                  Fazendeiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
-                </option>
-                <option value="Osiris">Osiris</option>
-                <option value="Sacoleiro" :disabled="sheetData.clan === 'Ventrue'">
-                  Sacoleiro{{ sheetData.clan === 'Ventrue' ? ' (Ventrue não pode escolher)' : '' }}
-                </option>
-                <option value="Sandman">Sandman</option>
-                <option value="Sanguessuga">Sanguessuga</option>
-                <option value="Scene Queen">Scene Queen</option>
-                <option value="Sereia">Sereia</option>
-                <option value="Trinchador">Trinchador</option>
-                <option value="Vira-Lata">Vira-Lata</option>
-              </select>
-            </div>
-            <div>
-              <label class="df-label">Ambição</label>
-              <input v-model="sheetData.ambition" placeholder="Sua ambição" :disabled="!canEdit" class="df-input">
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-3 mt-3">
-            <div>
-              <label class="df-label">Desejo</label>
-              <input v-model="sheetData.desire" placeholder="Seu desejo" :disabled="!canEdit" class="df-input">
-            </div>
-            <div>
-              <label class="df-label">Senhor</label>
-              <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
-            </div>
-            <div>
+
+            <div class="df-identity-row-player">
               <label class="df-label">Jogador</label>
               <input v-model="sheetData.player" :disabled="!canEdit" class="df-input">
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Atributos -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -141,9 +177,9 @@
               Físicos
             </h3>
             <div class="space-y-2">
-              <div v-for="attr in physicalAttributes" :key="attr.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ attr.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
+              <div v-for="attr in physicalAttributes" :key="attr.key" class="df-attribute-row">
+                <label class="df-attr-label df-attribute-name">{{ attr.name }}</label>
+                <div class="df-attribute-dots">
                   <button
                     v-for="n in 5"
                     :key="n"
@@ -151,7 +187,7 @@
                     @click="setAttributeValue('physical', attr.key, n)"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-md',
+                      'df-dot df-dot-md df-attribute-dot',
                       n <= getAttributeValue('physical', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
@@ -172,9 +208,9 @@
               Sociais
             </h3>
             <div class="space-y-2">
-              <div v-for="attr in socialAttributes" :key="attr.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ attr.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
+              <div v-for="attr in socialAttributes" :key="attr.key" class="df-attribute-row">
+                <label class="df-attr-label df-attribute-name">{{ attr.name }}</label>
+                <div class="df-attribute-dots">
                   <button
                     v-for="n in 5"
                     :key="n"
@@ -182,7 +218,7 @@
                     @click="setAttributeValue('social', attr.key, n)"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-md',
+                      'df-dot df-dot-md df-attribute-dot',
                       n <= getAttributeValue('social', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
@@ -203,9 +239,9 @@
               Mentais
             </h3>
             <div class="space-y-2">
-              <div v-for="attr in mentalAttributes" :key="attr.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ attr.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
+              <div v-for="attr in mentalAttributes" :key="attr.key" class="df-attribute-row">
+                <label class="df-attr-label df-attribute-name">{{ attr.name }}</label>
+                <div class="df-attribute-dots">
                   <button
                     v-for="n in 5"
                     :key="n"
@@ -213,7 +249,7 @@
                     @click="setAttributeValue('mental', attr.key, n)"
                     :disabled="!canEdit"
                     :class="[
-                      'df-dot df-dot-md',
+                      'df-dot df-dot-md df-attribute-dot',
                       n <= getAttributeValue('mental', attr.key)
                         ? 'df-dot-filled'
                         : 'df-dot-empty',
@@ -237,10 +273,9 @@
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div class="space-y-3">
-              <div v-for="skill in talents" :key="`talents-${skill.key}`" class="flex flex-col">
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-1.5">
-                    <label class="df-attr-label">{{ skill.name }}</label>
+              <div v-for="skill in talents" :key="`talents-${skill.key}`" class="df-skill-row">
+                <div class="df-skill-meta">
+                    <label class="df-attr-label df-skill-name">{{ skill.name }}</label>
                     <span
                       v-if="sheetData.skillSpecialties?.talents?.[skill.key]"
                       class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
@@ -248,7 +283,7 @@
                       {{ sheetData.skillSpecialties.talents[skill.key] }}
                     </span>
                   </div>
-                  <div class="flex space-x-0.5 sm:space-x-1">
+                  <div class="df-skill-dots">
                     <button
                       v-for="n in 5"
                       :key="n"
@@ -264,15 +299,13 @@
                       <span class="sr-only">{{ n }}</span>
                     </button>
                   </div>
-                </div>
               </div>
             </div>
 
             <div class="space-y-3 md:border-l md:border-df-border-red/35 md:pl-4">
-              <div v-for="skill in skills" :key="`skills-${skill.key}`" class="flex flex-col">
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-1.5">
-                    <label class="df-attr-label">{{ skill.name }}</label>
+              <div v-for="skill in skills" :key="`skills-${skill.key}`" class="df-skill-row">
+                <div class="df-skill-meta">
+                    <label class="df-attr-label df-skill-name">{{ skill.name }}</label>
                     <span
                       v-if="sheetData.skillSpecialties?.skills?.[skill.key]"
                       class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
@@ -280,7 +313,7 @@
                       {{ sheetData.skillSpecialties.skills[skill.key] }}
                     </span>
                   </div>
-                  <div class="flex space-x-0.5 sm:space-x-1">
+                  <div class="df-skill-dots">
                     <button
                       v-for="n in 5"
                       :key="n"
@@ -296,15 +329,13 @@
                       <span class="sr-only">{{ n }}</span>
                     </button>
                   </div>
-                </div>
               </div>
             </div>
 
             <div class="space-y-3 md:border-l md:border-df-border-red/35 md:pl-4">
-              <div v-for="skill in knowledges" :key="`knowledges-${skill.key}`" class="flex flex-col">
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-1.5">
-                    <label class="df-attr-label">{{ skill.name }}</label>
+              <div v-for="skill in knowledges" :key="`knowledges-${skill.key}`" class="df-skill-row">
+                <div class="df-skill-meta">
+                    <label class="df-attr-label df-skill-name">{{ skill.name }}</label>
                     <span
                       v-if="sheetData.skillSpecialties?.knowledges?.[skill.key]"
                       class="text-xs px-1.5 py-0.5 rounded bg-df-gold/10 text-df-gold border border-df-gold/20"
@@ -312,7 +343,7 @@
                       {{ sheetData.skillSpecialties.knowledges[skill.key] }}
                     </span>
                   </div>
-                  <div class="flex space-x-0.5 sm:space-x-1">
+                  <div class="df-skill-dots">
                     <button
                       v-for="n in 5"
                       :key="n"
@@ -328,7 +359,6 @@
                       <span class="sr-only">{{ n }}</span>
                     </button>
                   </div>
-                </div>
               </div>
             </div>
           </div>
@@ -1036,7 +1066,29 @@
             class="df-input"
           ></textarea>
         </div>
+        </div>
+
       </form>
+      </div>
+
+      <div class="df-footer-premium df-footer-actions">
+        <button
+          type="button"
+          class="df-btn df-btn-close"
+          @click="handleClose"
+        >
+          Cancelar
+        </button>
+        <button
+          v-if="canEdit"
+          type="button"
+          class="df-btn df-btn-save"
+          @click="saveSheet"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Salvar
+        </button>
+      </div>
 
 
     </div>
@@ -1531,6 +1583,8 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
 import BaseButton from '~/components/ui/BaseButton.vue'
+import NPCClanSelector from '~/components/ui/NPCClanSelector.vue'
+import NPCGenerationSelector from '~/components/ui/NPCGenerationSelector.vue'
 import { useToast } from '~/composables/useToast'
 import { clanBanes } from '~/config/clanBanes'
 import { vantagensDados, vampireClans } from '~/config/advantagesData'
@@ -1567,6 +1621,9 @@ let campaignSubscription: any = null
 // Confirmation modal
 const showConfirmModal = ref(false)
 const showSaveConfirmModal = ref(false)
+const isPredatorOpen = ref(false)
+
+const sectOptions = ['Camarilla', 'Sabá', 'Anarquistas', 'Independente']
 
 // Verificar se uma vantagem é válida para exibição
 const isValidAdvantage = (adv: any): boolean => {
@@ -1606,6 +1663,33 @@ const predatorDescriptions: Record<string, string> = {
   'Sereia': 'Você seduz e atrai vítimas através de charme sobrenatural, criando relacionamentos íntimos que mascaram sua natureza predatória.',
   'Trinchador': 'Você caça violentamente nas ruas, atacando vítimas aleatórias com ferocidade brutal e selvagem.',
   'Vira-Lata': 'Você se alimenta dos marginalizados da sociedade – sem-teto, viciados e esquecidos – caçando nas sombras da miséria urbana.'
+}
+
+const predatorTypeOptions = computed(() => ([
+  { name: 'Consensualista', description: 'Alimenta-se com consentimento.' },
+  { name: 'Fazendeiro', description: sheetData.value.clan === 'Ventrue' ? 'Ventrue não pode escolher.' : 'Prefere sangue animal.', blocked: sheetData.value.clan === 'Ventrue' },
+  { name: 'Osiris', description: 'Cultiva devotos para se alimentar.' },
+  { name: 'Sacoleiro', description: sheetData.value.clan === 'Ventrue' ? 'Ventrue não pode escolher.' : 'Rouba sangue de bancos/hospitais.', blocked: sheetData.value.clan === 'Ventrue' },
+  { name: 'Sandman', description: 'Caça vítimas adormecidas.' },
+  { name: 'Sanguessuga', description: 'Alimenta-se de outros vampiros.' },
+  { name: 'Scene Queen', description: 'Predação em cenas sociais noturnas.' },
+  { name: 'Sereia', description: 'Seduz suas vítimas para se alimentar.' },
+  { name: 'Trinchador', description: 'Predação violenta e brutal.' },
+  { name: 'Vira-Lata', description: 'Caça entre os marginalizados.' }
+]))
+
+const getPredatorSummary = (predatorName: string) => {
+  if (!predatorName) return ''
+  return predatorTypeOptions.value.find(p => p.name === predatorName)?.description || predatorDescriptions[predatorName] || ''
+}
+
+const selectPredatorType = (predatorName: string) => {
+  const selected = predatorTypeOptions.value.find(p => p.name === predatorName)
+  if (!selected || selected.blocked) return
+
+  sheetData.value.predator = predatorName
+  hasUnsavedChanges.value = true
+  isPredatorOpen.value = false
 }
 
 // Descrições narrativas das Disciplinas
@@ -1830,6 +1914,7 @@ const sheetData = ref({
   concept: props.player.sheet?.concept || '',
   clan: props.player.sheet?.clan || '',
   generation: props.player.sheet?.generation || 13,
+  sect: props.player.sheet?.sect || '',
   predator: props.player.sheet?.predator || '',
   ambition: props.player.sheet?.ambition || '',
   desire: props.player.sheet?.desire || '',
@@ -2488,14 +2573,55 @@ const cancelClose = () => {
 .df-main-panel {
   background: var(--df-bg-deep);
   background-image: radial-gradient(ellipse at 50% 30%, rgba(127, 29, 29, 0.08) 0%, transparent 70%);
-  border: 2px solid var(--df-border-red);
+  border: 1px solid rgba(220, 38, 38, 0.4);
   box-shadow:
-    0 0 0 1px var(--df-border-silver),
-    0 0 40px rgba(220, 38, 38, 0.12),
-    inset 0 0 80px rgba(0, 0, 0, 0.6);
-  border-radius: 0.75rem;
-  overflow-y: auto;
-  max-height: 98vh;
+    0 0 60px rgba(220, 38, 38, 0.25),
+    inset 0 1px 10px rgba(0, 0, 0, 0.8);
+  border-radius: 1rem;
+  overflow: hidden;
+  max-height: 88vh;
+}
+
+.df-modal-card {
+  position: relative;
+}
+
+.df-header-premium {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
+  background: linear-gradient(to bottom, rgba(220, 38, 38, 0.05), transparent);
+  flex-shrink: 0;
+}
+
+.df-modal-body {
+  padding: 1rem 1.5rem;
+}
+
+.df-footer-premium {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(220, 38, 38, 0.2);
+  background: linear-gradient(to top, rgba(220, 38, 38, 0.05), transparent);
+  flex-shrink: 0;
+}
+
+.df-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.df-scrollbar::-webkit-scrollbar-track {
+  background: rgba(13, 13, 32, 0.6);
+}
+
+.df-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(220, 38, 38, 0.35);
+  border-radius: 999px;
+}
+
+.df-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(220, 38, 38, 0.55);
 }
 
 /* ─── Scrollbar ─── */
@@ -2545,6 +2671,97 @@ const cancelClose = () => {
   margin-right: -12px;
   padding-left: 12px;
   padding-right: 12px;
+}
+
+.df-editor-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--df-border-red);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--df-text-gold);
+  background: linear-gradient(180deg, rgba(185, 28, 28, 0.2) 0%, rgba(10, 10, 26, 0.95) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.df-editor-title {
+  margin: 0;
+  color: #f0f0f5;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.df-editor-subtitle {
+  margin: 2px 0 0;
+  color: #8b8ba8;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+.df-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(220, 38, 38, 0.15);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 0.5rem;
+  color: var(--df-text-gold, #d4a647);
+  box-shadow: 0 0 12px rgba(212, 168, 71, 0.2);
+  flex-shrink: 0;
+}
+
+.df-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--df-border-silver, #4a4a5a);
+  border-radius: 0.5rem;
+  color: var(--df-muted, #6b6b80);
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.df-close-btn:hover {
+  border-color: var(--df-red, #dc2626);
+  background: rgba(220, 38, 38, 0.1);
+  color: #ffffff;
+}
+
+.df-sheet-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.df-sheet-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+.df-footer-actions {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border-top: none;
+  background: transparent;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 /* ─── Back Button ─── */
@@ -2598,13 +2815,44 @@ const cancelClose = () => {
 
 /* ─── Card Panel ─── */
 .df-card {
-  background: var(--df-bg-card);
-  border: 1px solid var(--df-border-red);
-  box-shadow:
-    0 0 0 1px var(--df-border-silver),
-    inset 0 1px 6px rgba(0, 0, 0, 0.5);
+  background: rgba(18, 18, 26, 0.5);
+  border: 1px solid rgba(74, 74, 90, 0.3);
+  box-shadow: none;
   border-radius: 0.5rem;
-  padding: 16px;
+  padding: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.df-card:hover {
+  border-color: rgba(220, 38, 38, 0.3);
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.1);
+}
+
+.df-section-compact {
+  padding: 1rem;
+  background: rgba(18, 18, 26, 0.5);
+  border: 1px solid rgba(74, 74, 90, 0.3);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.df-section-title-compact {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--df-text-gold, #d4a647);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.df-section-title-compact::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(to bottom, var(--df-text-gold, #d4a647), transparent);
+  border-radius: 2px;
 }
 
 /* ─── Modal Panel ─── */
@@ -2621,50 +2869,58 @@ const cancelClose = () => {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 .df-modal-text {
   color: var(--df-text-silver);
   opacity: 0.85;
   margin-bottom: 1.5rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 /* ─── Section Title ─── */
 .df-section-title {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   color: var(--df-text-gold);
-  font-size: 0.875rem;
+  font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0;
   position: relative;
 }
 .df-section-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, var(--df-text-gold), var(--df-border-silver) 50%, transparent);
+  display: none;
 }
-@media (min-width: 640px)  { .df-section-title { font-size: 1rem; } }
-@media (min-width: 768px)  { .df-section-title { font-size: 1.125rem; } }
+
+.df-section-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(to bottom, var(--df-text-gold), transparent);
+  border-radius: 2px;
+}
+@media (min-width: 640px)  { .df-section-title { font-size: 0.82rem; } }
+@media (min-width: 768px)  { .df-section-title { font-size: 0.88rem; } }
 
 /* ─── Labels ─── */
 .df-label {
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--df-text-silver);
+  color: var(--df-text-gold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  text-shadow: none;
 }
 .df-sub-label {
   display: block;
@@ -2684,18 +2940,306 @@ const cancelClose = () => {
 /* ─── Input / Select / Textarea ─── */
 .df-input {
   width: 100%;
-  padding: 6px 8px;
-  font-size: 0.875rem;
-  border: 1px solid var(--df-border-red);
-  border-radius: 0.375rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--df-border-silver, #4a4a5a);
+  border-radius: 0.5rem;
   background: var(--df-bg-input);
-  color: var(--df-text-silver);
+  color: #ffffff;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .df-input:focus {
-  border-color: var(--df-accent-red);
-  box-shadow: 0 0 10px var(--df-glow-red);
+  border-color: var(--df-red, #dc2626);
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.2);
+}
+
+.df-pill {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(74, 74, 90, 0.55);
+  background: rgba(18, 18, 26, 0.9);
+  color: #d1d1dc;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.df-pill:hover:not(:disabled) {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(23, 23, 34, 1);
+}
+
+.df-pill-active {
+  border-color: rgba(220, 38, 38, 0.75);
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.35), rgba(127, 29, 29, 0.2));
+  color: #f1f1f6;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.18);
+}
+
+.df-clan-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--df-bg-input, #0d0d20);
+  border: 1px solid var(--df-border-silver, #4a4a5a);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.df-clan-trigger:hover:not(:disabled) {
+  border-color: var(--df-red, #dc2626);
+  background: var(--df-bg-card, #0a0a1a);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.15);
+}
+
+.df-clan-trigger-active {
+  border-color: var(--df-red, #dc2626);
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.2);
+}
+
+.df-clan-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(74, 74, 90, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.df-clan-option:last-child {
+  border-bottom: none;
+}
+
+.df-clan-option:hover:not(:disabled) {
+  background: rgba(127, 29, 29, 0.15);
+}
+
+.df-clan-option-selected {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.df-clan-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.df-identity-grid {
+  display: grid;
+  row-gap: 32px;
+}
+
+.df-identity-row-quick {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.df-identity-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.df-identity-column {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+.df-identity-group {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.df-identity-row-player {
+  display: grid;
+  gap: 16px;
+}
+
+.df-identity-sect-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.df-identity-grid .df-label {
+  margin-bottom: 0;
+}
+
+.df-identity-grid .df-input,
+.df-identity-grid .df-clan-trigger {
+  height: 48px;
+}
+
+.df-identity-grid .df-input {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.df-identity-grid .df-clan-trigger {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.df-identity-group-clan :deep(.df-label) {
+  margin-bottom: 16px;
+}
+
+.df-identity-group-clan :deep(.df-clan-trigger) {
+  height: 48px;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.df-identity-group-clan :deep(.df-clan-trigger .text-xs) {
+  margin-top: 2px;
+  line-height: 1.15;
+}
+
+.df-identity-group-generation :deep(.space-y-1\.5 > :not([hidden]) ~ :not([hidden])) {
+  margin-top: 0 !important;
+}
+
+.df-identity-group-generation :deep(label) {
+  margin: 0;
+}
+
+.df-identity-group-generation :deep(.flex.flex-wrap.gap-2) {
+  margin-top: 16px;
+  gap: 12px;
+}
+
+.df-identity-group-generation :deep(p) {
+  margin-top: 6px;
+}
+
+@media (min-width: 768px) {
+  .df-identity-row-quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .df-identity-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .df-identity-column-right {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .df-identity-row-quick {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .df-identity-columns {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .df-identity-span-name {
+    grid-column: span 4;
+  }
+
+  .df-identity-span-concept {
+    grid-column: span 3;
+  }
+
+  .df-identity-span-clan {
+    grid-column: span 5;
+  }
+
+  .df-identity-column-left {
+    grid-column: span 5;
+  }
+
+  .df-identity-column-center {
+    grid-column: span 4;
+  }
+
+  .df-identity-column-right {
+    grid-column: span 3;
+  }
+}
+
+.df-skill-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+.df-skill-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.df-skill-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.df-skill-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  justify-self: end;
+}
+
+.df-attribute-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.df-attribute-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.df-attribute-dots {
+  display: grid;
+  grid-template-columns: repeat(5, max-content);
+  align-items: center;
+  column-gap: 0.25rem;
+  justify-content: end;
+}
+
+.df-attribute-dot {
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 640px) {
+  .df-attribute-dots {
+    column-gap: 0.3rem;
+  }
+
+  .df-attribute-dot {
+    width: 18px;
+    height: 18px;
+  }
 }
 .df-input:disabled {
   opacity: 0.6;
@@ -2704,7 +3248,24 @@ const cancelClose = () => {
 .df-input::placeholder {
   color: var(--df-border-silver);
 }
+select.df-input {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--df-text-gold) 50%),
+    linear-gradient(135deg, var(--df-text-gold) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% - 3px),
+    calc(100% - 10px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
 @media (min-width: 640px) { .df-input { padding: 8px 12px; } }
+
+.df-sheet-main > .df-card,
+.df-sheet-main > .grid {
+  animation: fade-in 0.18s ease-out;
+}
 
 /* ─── Dots — Base ─── */
 .df-dot {
@@ -2800,6 +3361,16 @@ const cancelClose = () => {
   transition: all 0.2s ease;
   border: 1px solid;
   cursor: pointer;
+}
+.df-btn-edit {
+  background: var(--df-bg-card);
+  border-color: var(--df-border-red);
+  color: var(--df-text-silver);
+}
+.df-btn-edit:hover {
+  border-color: var(--df-accent-red);
+  color: var(--df-accent-red);
+  box-shadow: 0 0 10px var(--df-glow-red);
 }
 .df-btn-save {
   background: linear-gradient(135deg, #15803d, #166534);
