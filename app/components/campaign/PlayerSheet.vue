@@ -1948,11 +1948,11 @@ const resonanceBonus = computed(() => {
   }
   
   const bonuses: Record<string, string> = {
-    'Colérica': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Rapidez e Potência.',
-    'Melancólica': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Auspícios e Fortitude.',
-    'Flegmática': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Dominação e Ofuscação.',
-    'Sanguínea': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Feitiçaria de Sangue e Presença.',
-    'Animal': '🩸 Bônus Ativo: +1 dado em paradas de dados das Disciplinas Animalismo e Metamorfose.'
+    'Colérica': ' Bônus Ativo: +1 dado em paradas de dados das Disciplinas Rapidez e Potência.',
+    'Melancólica': ' Bônus Ativo: +1 dado em paradas de dados das Disciplinas Auspícios e Fortitude.',
+    'Flegmática': ' Bônus Ativo: +1 dado em paradas de dados das Disciplinas Dominação e Ofuscação.',
+    'Sanguínea': ' Bônus Ativo: +1 dado em paradas de dados das Disciplinas Feitiçaria de Sangue e Presença.',
+    'Animal': ' Bônus Ativo: +1 dado em paradas de dados das Disciplinas Animalismo e Metamorfose.'
   }
   
   return bonuses[type] || null

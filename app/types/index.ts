@@ -152,6 +152,7 @@ export interface NPC {
   generation?: number
   sect?: string // Seita (Camarilla, Sabbat, Anarquistas, etc.)
   status?: 'active' | 'dead' | 'missing' | 'traitor' // Status do NPC
+  threat?: string // Nível de ameaça do NPC
   role?: string // Papel na crônica
   motivation?: string // Motivação
   secret?: string // Segredo

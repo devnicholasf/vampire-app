@@ -972,6 +972,7 @@ export const useCampaign = () => {
     generation: raw.generation,
     sect: raw.sect,
     status: raw.status,
+    threat: raw.threat,
     role: raw.role,
     motivation: raw.motivation,
     secret: raw.secret,
@@ -1025,6 +1026,7 @@ export const useCampaign = () => {
           generation: npcData.generation,
           sect: npcData.sect,
           status: npcData.status,
+          threat: npcData.threat,
           role: npcData.role,
           motivation: npcData.motivation,
           secret: npcData.secret,
@@ -1068,6 +1070,7 @@ export const useCampaign = () => {
       if (npcData.generation !== undefined) updateData.generation = npcData.generation
       if (npcData.sect !== undefined) updateData.sect = npcData.sect
       if (npcData.status !== undefined) updateData.status = npcData.status
+      if (npcData.threat !== undefined) updateData.threat = npcData.threat
       if (npcData.role !== undefined) updateData.role = npcData.role
       if (npcData.motivation !== undefined) updateData.motivation = npcData.motivation
       if (npcData.secret !== undefined) updateData.secret = npcData.secret

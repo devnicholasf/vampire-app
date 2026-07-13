@@ -31,6 +31,11 @@
               <p v-if="npc.generation" class="text-sm text-df-muted">{{ npc.generation }}ª Geração</p>
               <p v-if="npc.sect" class="text-sm text-df-gold font-medium">{{ npc.sect }}</p>
               <span v-if="npc.status" class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide" :class="statusBadgeClass(npc.status)">{{ statusLabel(npc.status) }}</span>
+              <div v-if="npc.threat" class="mt-3 flex items-center gap-2 text-sm">
+                <span class="inline-flex w-4 h-4" :class="getThreatColor(npc.threat)" v-html="getThreatIcon(npc.threat)"></span>
+                <span class="text-df-muted uppercase tracking-wide">Ameaça:</span>
+                <span class="font-semibold" :class="getThreatColor(npc.threat)">{{ getThreatLabel(npc.threat) }}</span>
+              </div>
             </div>
           </div>
 
@@ -125,6 +130,45 @@ const statusBadgeClass = (s: string) => ({
   traitor: 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20',
   'Traidor': 'bg-rose-600/20 text-rose-400 border border-rose-500/50 shadow-lg shadow-rose-600/20'
 }[s] || 'bg-df-deep text-df-muted border border-df-border-silver')
+
+const getThreatIcon = (threat: string) => {
+  const icons: Record<string, string> = {
+    fraco: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+    moderado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/></svg>',
+    perigoso: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    letal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a8 8 0 00-8 8c0 3.5 2 6 4 7.5V20h8v-2.5c2-1.5 4-4 4-7.5a8 8 0 00-8-8z"/><circle cx="9" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/></svg>',
+    anciao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+    narrativo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>'
+  }
+
+  return icons[threat] || '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>'
+}
+
+const getThreatColor = (threat: string) => {
+  const colors: Record<string, string> = {
+    fraco: 'text-emerald-400',
+    moderado: 'text-blue-400',
+    perigoso: 'text-orange-400',
+    letal: 'text-red-400',
+    anciao: 'text-purple-400',
+    narrativo: 'text-amber-400'
+  }
+
+  return colors[threat] || 'text-zinc-400'
+}
+
+const getThreatLabel = (threat: string) => {
+  const labels: Record<string, string> = {
+    fraco: 'Fraco',
+    moderado: 'Moderado',
+    perigoso: 'Perigoso',
+    letal: 'Letal',
+    anciao: 'Ancião',
+    narrativo: 'Narrativo'
+  }
+
+  return labels[threat] || 'N/A'
+}
 
 </script>
 
