@@ -56,114 +56,108 @@
             </div>
 
             <div class="df-identity-columns">
-              <div class="df-identity-column df-identity-column-left">
-                <div class="df-identity-group df-identity-group-generation">
-                  <NPCGenerationSelector v-model="sheetData.generation" />
-                </div>
+              <div class="df-identity-group df-identity-group-generation df-identity-area-generation">
+                <NPCGenerationSelector v-model="sheetData.generation" />
+              </div>
 
-                <div class="df-identity-group">
-                  <label class="df-label">Seita</label>
-                  <div class="df-identity-sect-grid">
+              <div class="df-identity-group relative df-identity-area-predator">
+                <label class="df-label">Tipo de Predador</label>
+                <button
+                  type="button"
+                  @click="canEdit && (isPredatorOpen = !isPredatorOpen)"
+                  :disabled="!canEdit"
+                  class="w-full df-clan-trigger"
+                  :class="{ 'df-clan-trigger-active': sheetData.predator }"
+                >
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
+                    <div class="flex-1 text-left min-w-0 leading-tight">
+                      <div class="text-sm font-semibold text-white truncate">{{ sheetData.predator || 'Selecione o predador' }}</div>
+                      <div v-if="sheetData.predator" class="text-xs text-df-muted truncate mt-0.5">{{ getPredatorSummary(sheetData.predator) }}</div>
+                    </div>
+                  </div>
+                  <svg
+                    class="w-5 h-5 text-df-muted transition-transform duration-200"
+                    :class="{ 'rotate-180': isPredatorOpen }"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
+                </button>
+
+                <Transition name="dropdown">
+                  <div
+                    v-if="isPredatorOpen && canEdit"
+                    class="absolute z-50 w-full mt-2 max-h-80 overflow-y-auto df-scrollbar rounded-lg border border-df-border-red/30 bg-df-card shadow-2xl"
+                  >
                     <button
-                      v-for="sect in sectOptions"
-                      :key="sect"
+                      v-for="predator in predatorTypeOptions"
+                      :key="predator.name"
                       type="button"
-                      @click="if (canEdit) { sheetData.sect = sect; hasUnsavedChanges = true }"
-                      class="df-pill"
-                      :class="{ 'df-pill-active': sheetData.sect === sect }"
-                      :disabled="!canEdit"
+                      @click="selectPredatorType(predator.name)"
+                      class="df-clan-option"
+                      :class="{ 'df-clan-option-selected': sheetData.predator === predator.name }"
+                      :disabled="predator.blocked"
                     >
-                      {{ sect }}
+                      <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
+                      <div class="flex-1 text-left">
+                        <div class="text-sm font-semibold text-white">{{ predator.name }}</div>
+                        <div class="text-xs text-df-muted">{{ predator.description }}</div>
+                      </div>
+                      <svg
+                        v-if="sheetData.predator === predator.name"
+                        class="w-5 h-5 text-df-gold flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                     </button>
                   </div>
-                </div>
+                </Transition>
               </div>
 
-              <div class="df-identity-column df-identity-column-center">
-                <div class="df-identity-group relative">
-                  <label class="df-label">Tipo de Predador</label>
+              <div class="df-identity-group df-identity-area-ambition">
+                <label class="df-label">Ambição</label>
+                <input v-model="sheetData.ambition" placeholder="Sua ambição" :disabled="!canEdit" class="df-input">
+              </div>
+
+              <div class="df-identity-group df-identity-group-sect df-identity-area-sect">
+                <label class="df-label">Seita</label>
+                <div class="df-identity-sect-grid">
                   <button
+                    v-for="sect in sectOptions"
+                    :key="sect"
                     type="button"
-                    @click="canEdit && (isPredatorOpen = !isPredatorOpen)"
+                    @click="if (canEdit) { sheetData.sect = sect; hasUnsavedChanges = true }"
+                    class="df-pill"
+                    :class="{ 'df-pill-active': sheetData.sect === sect }"
                     :disabled="!canEdit"
-                    class="w-full df-clan-trigger"
-                    :class="{ 'df-clan-trigger-active': sheetData.predator }"
                   >
-                    <div class="flex items-center gap-3 min-w-0">
-                      <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
-                      <div class="flex-1 text-left min-w-0 leading-tight">
-                        <div class="text-sm font-semibold text-white truncate">{{ sheetData.predator || 'Selecione o predador' }}</div>
-                        <div v-if="sheetData.predator" class="text-xs text-df-muted truncate mt-0.5">{{ getPredatorSummary(sheetData.predator) }}</div>
-                      </div>
-                    </div>
-                    <svg
-                      class="w-5 h-5 text-df-muted transition-transform duration-200"
-                      :class="{ 'rotate-180': isPredatorOpen }"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
+                    {{ sect }}
                   </button>
-
-                  <Transition name="dropdown">
-                    <div
-                      v-if="isPredatorOpen && canEdit"
-                      class="absolute z-50 w-full mt-2 max-h-80 overflow-y-auto df-scrollbar rounded-lg border border-df-border-red/30 bg-df-card shadow-2xl"
-                    >
-                      <button
-                        v-for="predator in predatorTypeOptions"
-                        :key="predator.name"
-                        type="button"
-                        @click="selectPredatorType(predator.name)"
-                        class="df-clan-option"
-                        :class="{ 'df-clan-option-selected': sheetData.predator === predator.name }"
-                        :disabled="predator.blocked"
-                      >
-                        <span class="w-6 h-6 text-df-gold flex items-center justify-center">🩸</span>
-                        <div class="flex-1 text-left">
-                          <div class="text-sm font-semibold text-white">{{ predator.name }}</div>
-                          <div class="text-xs text-df-muted">{{ predator.description }}</div>
-                        </div>
-                        <svg
-                          v-if="sheetData.predator === predator.name"
-                          class="w-5 h-5 text-df-gold flex-shrink-0"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </Transition>
-                </div>
-
-                <div class="df-identity-group">
-                  <label class="df-label">Desejo</label>
-                  <input v-model="sheetData.desire" placeholder="Seu desejo" :disabled="!canEdit" class="df-input">
                 </div>
               </div>
 
-              <div class="df-identity-column df-identity-column-right">
-                <div class="df-identity-group">
-                  <label class="df-label">Ambição</label>
-                  <input v-model="sheetData.ambition" placeholder="Sua ambição" :disabled="!canEdit" class="df-input">
-                </div>
-
-                <div class="df-identity-group">
-                  <label class="df-label">Senhor</label>
-                  <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
-                </div>
+              <div class="df-identity-group df-identity-area-desire">
+                <label class="df-label">Desejo</label>
+                <input v-model="sheetData.desire" placeholder="Seu desejo" :disabled="!canEdit" class="df-input">
               </div>
-            </div>
 
-            <div class="df-identity-row-player">
-              <label class="df-label">Jogador</label>
-              <input v-model="sheetData.player" :disabled="!canEdit" class="df-input">
+              <div class="df-identity-group df-identity-area-sire">
+                <label class="df-label">Senhor</label>
+                <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
+              </div>
+
+              <div class="df-identity-group df-identity-player-group df-identity-area-player">
+                <label class="df-label">Jogador</label>
+                <input v-model="sheetData.player" :disabled="!canEdit" class="df-input">
+              </div>
             </div>
           </div>
         </section>
@@ -3050,13 +3044,8 @@ const cancelClose = () => {
 .df-identity-columns {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
-}
-
-.df-identity-column {
-  display: grid;
-  gap: 24px;
-  align-content: start;
+  row-gap: 24px;
+  column-gap: 24px;
 }
 
 .df-identity-group {
@@ -3066,9 +3055,8 @@ const cancelClose = () => {
   align-content: start;
 }
 
-.df-identity-row-player {
-  display: grid;
-  gap: 16px;
+.df-identity-player-group {
+  width: 100%;
 }
 
 .df-identity-sect-grid {
@@ -3135,10 +3123,7 @@ const cancelClose = () => {
 
   .df-identity-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .df-identity-column-right {
-    grid-column: span 2;
+    align-items: start;
   }
 }
 
@@ -3163,16 +3148,39 @@ const cancelClose = () => {
     grid-column: span 5;
   }
 
-  .df-identity-column-left {
+  .df-identity-area-generation {
     grid-column: span 5;
+    grid-row: 1;
   }
 
-  .df-identity-column-center {
-    grid-column: span 4;
+  .df-identity-area-predator {
+    grid-column: 6 / span 4;
+    grid-row: 1;
   }
 
-  .df-identity-column-right {
-    grid-column: span 3;
+  .df-identity-area-ambition {
+    grid-column: 10 / span 3;
+    grid-row: 1;
+  }
+
+  .df-identity-area-sect {
+    grid-column: span 5;
+    grid-row: 2;
+  }
+
+  .df-identity-area-desire {
+    grid-column: 6 / span 4;
+    grid-row: 2;
+  }
+
+  .df-identity-area-sire {
+    grid-column: 10 / span 3;
+    grid-row: 2;
+  }
+
+  .df-identity-area-player {
+    grid-column: 6 / span 4;
+    grid-row: 3;
   }
 }
 
