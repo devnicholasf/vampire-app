@@ -4,7 +4,8 @@
 // ============================================
 // MATEMÁTICA CORRIGIDA:
 // - rollD10(): Math.floor(Math.random() * 10) + 1 = 1~10 ✓
-// - Sucesso: 6~10 = 50% de chance ✓
+// - Sucesso: valor >= dificuldade do teste (normal/oculta/resistida) ✓
+// - Frenesi/Despertar: mantém regra 6+ ✓
 // - Par de 10: 4 sucessos TOTAIS (2 dos 10s + 2 extras) ✓
 // - Fome SUBSTITUI dados normais, não soma ✓
 // ============================================
@@ -38,13 +39,24 @@ function rolarPoolDados(count: number): number[] {
 // ============================================
 
 /**
- * Calcula sucessos básicos (6, 7, 8, 9, 10 = sucesso)
- * 1~5 = falha
- * 6~9 = 1 sucesso
+ * Calcula sucessos básicos usando limiar configurável
+ * Ex.: dificuldade 9 => apenas 9 e 10 contam como sucesso
  * 10 = 1 sucesso (críticos são calculados separadamente)
  */
-function calcularSucessos(dice: number[]): number {
-  return dice.filter(d => d >= 6).length
+function calcularSucessos(dice: number[], successThreshold: number): number {
+  return dice.filter(d => d >= successThreshold).length
+}
+
+function clampDifficulty(difficulty: number | undefined): number {
+  if (!Number.isFinite(difficulty)) return 6
+  return Math.min(10, Math.max(2, Number(difficulty)))
+}
+
+function resolveSuccessThreshold(rollType: DiceRollConfig['rollType'], difficulty: number): number {
+  if (rollType === 'frenesi' || rollType === 'despertar') {
+    return 6
+  }
+  return clampDifficulty(difficulty)
 }
 
 /**
@@ -114,6 +126,7 @@ export function performRoll(config: DiceRollConfig): {
   description: string
 } {
   const { hunger, modifier } = config
+  const successThreshold = resolveSuccessThreshold(config.rollType, config.difficulty)
   
   // 🎯 PASSO 1: Calcular pool total
   const basePool = calculatePoolSize(
@@ -151,10 +164,11 @@ export function performRoll(config: DiceRollConfig): {
   })
   
   // 🎯 PASSO 4: Calcular sucessos básicos
-  const normalSuccesses = calcularSucessos(normalDice)
-  const hungerSuccesses = calcularSucessos(hungerDice)
+  const normalSuccesses = calcularSucessos(normalDice, successThreshold)
+  const hungerSuccesses = calcularSucessos(hungerDice, successThreshold)
   
   console.log('✓ Sucessos básicos:', {
+    limiar: successThreshold,
     normais: normalSuccesses,
     fome: hungerSuccesses,
     subtotal: normalSuccesses + hungerSuccesses
@@ -262,14 +276,17 @@ export function performRouseCheck(currentHunger: number): RouseCheckResult {
 export function testeEstatistico(config: {
   pool?: number
   hunger?: number
+  difficulty?: number
+  rollType?: DiceRollConfig['rollType']
   iterations?: number
 } = {}) {
-  const { pool = 5, hunger = 2, iterations = 10000 } = config
+  const { pool = 5, hunger = 2, difficulty = 6, rollType = 'normal', iterations = 10000 } = config
+  const successThreshold = resolveSuccessThreshold(rollType, difficulty)
   
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('📊 TESTE ESTATÍSTICO DO RNG')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log(`🎲 Pool: ${pool} | Fome: ${hunger} | Iterações: ${iterations}`)
+  console.log(`🎲 Pool: ${pool} | Fome: ${hunger} | Dif: ${difficulty} | Limiar: ${successThreshold} | Iterações: ${iterations}`)
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
   
   const results = {
@@ -304,8 +321,8 @@ export function testeEstatistico(config: {
     })
     
     // Calcular resultado
-    const normalSuccesses = calcularSucessos(normalDice)
-    const hungerSuccesses = calcularSucessos(hungerDice)
+    const normalSuccesses = calcularSucessos(normalDice, successThreshold)
+    const hungerSuccesses = calcularSucessos(hungerDice, successThreshold)
     const { pares } = detectarCriticos(allDice)
     const totalSuccesses = calcularResultadoFinal({
       normalSuccesses,
@@ -339,9 +356,11 @@ export function testeEstatistico(config: {
   const messyRate = (results.messyCriticals / iterations) * 100
   const bestialRate = (results.bestialFailures / iterations) * 100
   
-  // Calcular % teórica de sucesso por dado (deveria ser 50%)
+  // Calcular % teórica de sucesso por dado com limiar atual
   const totalDiceRolled = iterations * pool
-  const totalDiceSuccesses = results.diceDistribution.slice(5).reduce((a, b) => a + b, 0)
+  const totalDiceSuccesses = results.diceDistribution
+    .slice(Math.max(0, successThreshold - 1))
+    .reduce((a, b) => a + b, 0)
   const actualSuccessChance = (totalDiceSuccesses / totalDiceRolled) * 100
   
   // Mostrar resultados
@@ -358,7 +377,7 @@ export function testeEstatistico(config: {
   console.log('🎲 VALIDAÇÃO DO RNG:')
   console.log('─────────────────────────────────────────')
   console.log(`🎯 Chance de sucesso por dado: ${actualSuccessChance.toFixed(2)}%`)
-  console.log(`   Esperado: 50% (valores 6-10)`)
+  console.log(`   Esperado: valores ${successThreshold}-10`)
   
   const deviation = Math.abs(actualSuccessChance - 50)
   if (deviation < 1) {
@@ -379,7 +398,7 @@ export function testeEstatistico(config: {
     const value = index + 1
     const percentage = (count / totalDiceRolled) * 100
     const bar = '█'.repeat(Math.round(percentage * 2))
-    const status = value >= 6 ? '✓' : '✗'
+    const status = value >= successThreshold ? '✓' : '✗'
     console.log(`${status} ${value.toString().padStart(2)}: ${bar} ${percentage.toFixed(1)}% (${count})`)
   })
   console.log(`   Esperado: ~${expectedPerValue.toFixed(1)}% por valor`)
@@ -478,7 +497,7 @@ export function formatDiceDisplay(dice: number[]): string {
     .sort((a, b) => b - a)
     .map(d => {
       if (d === 10) return '⑩'
-      if (d >= 6) return `⑥`
+      if (d >= 6) return `✓`
       return `①`
     })
     .join(' • ')

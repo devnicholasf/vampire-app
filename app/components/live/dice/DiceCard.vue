@@ -211,6 +211,16 @@ const formattedTime = computed(() => {
 })
 
 const isFrenzyRoll = computed(() => props.result.rollType === 'frenesi')
+const successThreshold = computed(() => {
+  if (props.result.rollType === 'frenesi' || props.result.rollType === 'despertar') {
+    return 6
+  }
+
+  const parsedDifficulty = Number(props.result.difficulty)
+  if (!Number.isFinite(parsedDifficulty)) return 6
+  return Math.min(10, Math.max(2, parsedDifficulty))
+})
+
 const hasAnySuccess = computed(() => props.result.successes > 0)
 const isFrenzyFailure = computed(() => isFrenzyRoll.value && props.result.successes < props.result.difficulty)
 
@@ -232,12 +242,12 @@ const getDiceClass = (value: number, isHunger: boolean) => {
   if (isHunger) {
     if (value === 10) return 'dice-ten-hunger'
     if (value === 1) return 'dice-one-hunger'
-    if (value >= 6) return 'dice-success-hunger'
+    if (value >= successThreshold.value) return 'dice-success-hunger'
     return 'dice-fail-hunger'
   }
   
   if (value === 10) return 'dice-ten'
-  if (value >= 6) return 'dice-success'
+  if (value >= successThreshold.value) return 'dice-success'
   return 'dice-fail'
 }
 
