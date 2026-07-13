@@ -357,7 +357,7 @@ export const useCampaign = () => {
         chronicleTenets: '',
         touchstonesConvictions: [],
         clanBane: '',
-        advantages: [{ name: '', level: 0 }],
+        advantages: [],
         bloodPotency: 0,
         bloodSurge: '+2',
         powerBonus: '0',
@@ -379,7 +379,7 @@ export const useCampaign = () => {
           skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
           knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
         },
-        disciplines: [{ name: '', level: 0 }],
+        disciplines: [],
         humanity: 1,
         willpower: 1,
         vitality: 1,
@@ -716,7 +716,7 @@ export const useCampaign = () => {
             skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
             knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
           },
-          disciplines: [{ name: '', level: 0 }],
+          disciplines: [],
           vitality: 1,
           conditions: [''],
           touchstonesConvictions: [],

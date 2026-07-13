@@ -646,6 +646,19 @@ const normalizeAdvantage = (adv: any) => ({
   maxLevel: typeof adv?.maxLevel === 'number' ? adv.maxLevel : 5
 })
 
+const hasMeaningfulAdvantage = (adv: any): boolean => {
+  if (!adv) return false
+  if (adv.fixo) return Boolean(String(adv.name || '').trim())
+
+  return (
+    Boolean(String(adv.category || '').trim()) ||
+    Boolean(String(adv.type || '').trim()) ||
+    Boolean(String(adv.name || '').trim()) ||
+    Boolean(String(adv.details || '').trim()) ||
+    Number(adv.level || 0) > 0
+  )
+}
+
 const isValidAdvantage = (adv: any): boolean => {
   if (!adv.fixo) return true
   if (!adv.name || adv.name.trim() === '') return false
@@ -662,6 +675,11 @@ const normalizeDiscipline = (discipline: any) => ({
   level: typeof discipline?.level === 'number' ? discipline.level : 0
 })
 
+const hasMeaningfulDiscipline = (discipline: any): boolean => {
+  if (!discipline) return false
+  return Boolean(String(discipline.name || '').trim()) || Number(discipline.level || 0) > 0
+}
+
 const buildSheetData = () => ({
   name: existingSheet?.name || props.npc.name || '',
   concept: existingSheet?.concept || '',
@@ -675,8 +693,8 @@ const buildSheetData = () => ({
   avatar: existingSheet?.avatar || props.npc.photo || '',
   keyPoints: (props.npc.keyPoints && props.npc.keyPoints.length > 0) ? [...props.npc.keyPoints] : [''],
   advantages: Array.isArray(existingSheet?.advantages) && existingSheet.advantages.length > 0
-    ? existingSheet.advantages.map(normalizeAdvantage)
-    : [normalizeAdvantage({})],
+    ? existingSheet.advantages.map(normalizeAdvantage).filter(hasMeaningfulAdvantage)
+    : [],
   bloodPotency: existingSheet?.bloodPotency || 0,
   bloodSurge: existingSheet?.bloodSurge || '+2',
   powerBonus: existingSheet?.powerBonus || '0',
@@ -695,8 +713,8 @@ const buildSheetData = () => ({
     knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
   }),
   disciplines: Array.isArray(existingSheet?.disciplines) && existingSheet.disciplines.length > 0
-    ? existingSheet.disciplines.map(normalizeDiscipline)
-    : [normalizeDiscipline({})],
+    ? existingSheet.disciplines.map(normalizeDiscipline).filter(hasMeaningfulDiscipline)
+    : [],
   humanity: existingSheet?.humanity || 1,
   willpower: existingSheet?.willpower || 1,
   vitality: existingSheet?.vitality || 1,
@@ -882,7 +900,12 @@ const saveSheet = () => {
 const confirmSave = () => {
   showSaveConfirmModal.value = false
   const cleanedKeyPoints = sheetData.value.keyPoints.filter((p: string) => p && p.trim())
-  const cleanedDisciplines = sheetData.value.disciplines.filter((d: any) => d.name && d.name.trim())
+  const cleanedDisciplines = sheetData.value.disciplines
+    .map(normalizeDiscipline)
+    .filter(hasMeaningfulDiscipline)
+  const cleanedAdvantages = sheetData.value.advantages
+    .map(normalizeAdvantage)
+    .filter(hasMeaningfulAdvantage)
   emit('save', {
     ...props.npc,
     name: sheetData.value.name,
@@ -892,9 +915,9 @@ const confirmSave = () => {
     bio: sheetData.value.history,
     photo: sheetData.value.avatar,
     keyPoints: cleanedKeyPoints,
-    sheet: { ...sheetData.value, disciplines: cleanedDisciplines }
+    sheet: { ...sheetData.value, disciplines: cleanedDisciplines, advantages: cleanedAdvantages }
   })
-  pristineSheetData.value = cloneValue({ ...sheetData.value, disciplines: cleanedDisciplines })
+  pristineSheetData.value = cloneValue({ ...sheetData.value, disciplines: cleanedDisciplines, advantages: cleanedAdvantages })
   hasUnsavedChanges.value = false
   editMode.value = false
   toast.success('Ficha salva!', 'As alterações foram registradas.')

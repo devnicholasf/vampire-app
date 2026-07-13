@@ -1805,6 +1805,39 @@ const normalizeSheetAttributes = (attributes: any) => {
   }
 }
 
+const normalizeDisciplineEntry = (discipline: any) => ({
+  name: discipline?.name || '',
+  level: typeof discipline?.level === 'number' ? discipline.level : 0
+})
+
+const hasMeaningfulDiscipline = (discipline: any): boolean => {
+  if (!discipline) return false
+  return Boolean(String(discipline.name || '').trim()) || Number(discipline.level || 0) > 0
+}
+
+const normalizeAdvantageEntry = (adv: any) => ({
+  category: adv?.category || '',
+  type: adv?.type || '',
+  name: adv?.name || '',
+  level: typeof adv?.level === 'number' ? adv.level : 0,
+  details: adv?.details || '',
+  fixo: Boolean(adv?.fixo),
+  maxLevel: typeof adv?.maxLevel === 'number' ? adv.maxLevel : 5
+})
+
+const hasMeaningfulAdvantage = (adv: any): boolean => {
+  if (!adv) return false
+  if (adv.fixo) return Boolean(String(adv.name || '').trim())
+
+  return (
+    Boolean(String(adv.category || '').trim()) ||
+    Boolean(String(adv.type || '').trim()) ||
+    Boolean(String(adv.name || '').trim()) ||
+    Boolean(String(adv.details || '').trim()) ||
+    Number(adv.level || 0) > 0
+  )
+}
+
 // Sheet data structure
 const sheetData = ref({
   name: props.player.character_name || props.player.characterName || '',
@@ -1826,7 +1859,9 @@ const sheetData = ref({
     ? props.player.sheet.touchstonesConvictions 
     : (props.player.sheet?.touchstonesConvictions ? [{ conviction: props.player.sheet.touchstonesConvictions, pillar: '' }] : []),
   clanBane: props.player.sheet?.clanBane || (props.player.sheet?.clan && clanBanes[props.player.sheet.clan]) || '',
-  advantages: props.player.sheet?.advantages || [],
+  advantages: Array.isArray(props.player.sheet?.advantages)
+    ? props.player.sheet.advantages.map(normalizeAdvantageEntry).filter(hasMeaningfulAdvantage)
+    : [],
   bloodPotency: props.player.sheet?.bloodPotency || 0,
   bloodSurge: props.player.sheet?.bloodSurge || '+2',
   powerBonus: props.player.sheet?.powerBonus || '0',
@@ -1850,7 +1885,9 @@ const sheetData = ref({
     skills: {},
     knowledges: {}
   },
-  disciplines: props.player.sheet?.disciplines || [],
+  disciplines: Array.isArray(props.player.sheet?.disciplines)
+    ? props.player.sheet.disciplines.map(normalizeDisciplineEntry).filter(hasMeaningfulDiscipline)
+    : [],
   humanity: props.player.sheet?.humanity || 1,
   willpower: props.player.sheet?.willpower || 1,
   vitality: props.player.sheet?.vitality || 1,
@@ -2371,11 +2408,20 @@ const confirmSave = () => {
     // Filtrar condições vazias antes de salvar
     const cleanedConditions = sheetData.value.conditions.filter((c: string) => c && c.trim())
     
+    const cleanedDisciplines = sheetData.value.disciplines
+      .map(normalizeDisciplineEntry)
+      .filter(hasMeaningfulDiscipline)
+    const cleanedAdvantages = sheetData.value.advantages
+      .map(normalizeAdvantageEntry)
+      .filter(hasMeaningfulAdvantage)
+
     const dataToSave = {
       ...props.player,
       characterName: sheetData.value.name,
       sheet: {
         ...sheetData.value,
+        advantages: cleanedAdvantages,
+        disciplines: cleanedDisciplines,
         conditions: cleanedConditions
       }
     }
