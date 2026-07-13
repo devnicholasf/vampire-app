@@ -198,7 +198,8 @@ export function performRoll(config: DiceRollConfig): {
     isCritical,
     isMessyCritical,
     isBestialFailure,
-    difficulty: config.difficulty
+    difficulty: config.difficulty,
+    poolTotal: totalPool
   })
   
   return {
@@ -423,8 +424,10 @@ function generateDescription(params: {
   isMessyCritical: boolean
   isBestialFailure: boolean
   difficulty: number
+  poolTotal: number
 }): string {
-  const { rollType, totalSuccesses, isCritical, isMessyCritical, isBestialFailure, difficulty } = params
+  const { rollType, totalSuccesses, isCritical, isMessyCritical, isBestialFailure, difficulty, poolTotal } = params
+  const successSummary = `${totalSuccesses} sucesso(s), de ${poolTotal} dados.`
 
   if (rollType === 'frenesi') {
     if (totalSuccesses >= difficulty) {
@@ -435,36 +438,22 @@ function generateDescription(params: {
   }
   
   if (isBestialFailure) {
-    return '🩸 A Besta assume o controle. Falha total com consequências terríveis.'
+    return `🩸 Falha bestial. ${successSummary}`
   }
   
   if (isMessyCritical) {
-    return '⚠️ Sucesso extraordinário, mas a Fome cobra seu preço. Algo sai do controle...'
+    return `⚠️ Sucesso extraordinário, mas a Fome cobra seu preço. ${successSummary}`
   }
   
   if (isCritical) {
-    return '✨ Sucesso crítico! Execução perfeita e magistral.'
+    return `✨ Sucesso crítico! ${successSummary}`
   }
-  
-  const margin = totalSuccesses - difficulty
   
   if (totalSuccesses === 0) {
-    return '❌ Falha total. Nenhum sucesso obtido.'
+    return `❌ Falha. ${successSummary}`
   }
-  
-  if (margin < 0) {
-    return `❌ Falha. ${totalSuccesses} sucesso(s), mas precisava de ${difficulty}.`
-  }
-  
-  if (margin === 0) {
-    return `✓ Sucesso marginal. Conseguiu exatamente o necessário.`
-  }
-  
-  if (margin <= 2) {
-    return `✓ Sucesso. ${totalSuccesses} sucesso(s) obtidos.`
-  }
-  
-  return `✓✓ Sucesso excepcional! ${totalSuccesses} sucessos — muito além do necessário.`
+
+  return `✓ Sucesso. ${successSummary}`
 }
 
 /**

@@ -156,7 +156,7 @@
             :class="summaryStatusClass"
             class="font-semibold"
           >
-            {{ result.successes >= result.difficulty ? '✓ SUCESSO' : '✗ FALHA' }}
+            {{ isFrenzyRoll ? (result.successes >= result.difficulty ? '✓ SUCESSO' : '✗ FALHA') : (hasAnySuccess ? '✓ SUCESSO' : '✗ FALHA') }}
           </span>
         </div>
         </template>
@@ -211,6 +211,7 @@ const formattedTime = computed(() => {
 })
 
 const isFrenzyRoll = computed(() => props.result.rollType === 'frenesi')
+const hasAnySuccess = computed(() => props.result.successes > 0)
 const isFrenzyFailure = computed(() => isFrenzyRoll.value && props.result.successes < props.result.difficulty)
 
 const cardStyle = computed(() => {
@@ -283,7 +284,7 @@ const resultTitle = computed(() => {
   if (props.result.isMessyCritical) return '⚠️ Crítico Descontrolado'
   if (props.result.isBestialFailure) return '🩸 Falha Bestial'
   if (props.result.isCritical) return '✨ Crítico'
-  if (props.result.successes >= props.result.difficulty) return '✓ Sucesso'
+  if (hasAnySuccess.value) return '✓ Sucesso'
   return '✗ Falha'
 })
 
@@ -301,7 +302,7 @@ const resultBannerClass = computed(() => {
   if (props.result.isMessyCritical) return 'bg-red-950/40 border border-red-900/60'
   if (props.result.isBestialFailure) return 'bg-red-950/60 border border-red-800'
   if (props.result.isCritical) return 'bg-yellow-950/30 border border-yellow-900/40'
-  if (props.result.successes >= props.result.difficulty) return 'bg-green-950/30 border border-green-900/40'
+  if (hasAnySuccess.value) return 'bg-green-950/30 border border-green-900/40'
   return 'bg-red-950/20 border border-red-900/40'
 })
 
@@ -315,7 +316,7 @@ const resultTextClass = computed(() => {
   if (props.result.isMessyCritical) return 'text-red-400'
   if (props.result.isBestialFailure) return 'text-red-500'
   if (props.result.isCritical) return 'text-yellow-400'
-  if (props.result.successes >= props.result.difficulty) return 'text-green-400'
+  if (hasAnySuccess.value) return 'text-green-400'
   return 'text-red-300'
 })
 
@@ -327,7 +328,7 @@ const resultDescriptionClass = computed(() => {
   }
   if (props.result.isMessyCritical || props.result.isBestialFailure) return 'text-red-200/80'
   if (props.result.isCritical) return 'text-yellow-200/70'
-  if (props.result.successes >= props.result.difficulty) return 'text-[#c4c4d4]/70'
+  if (hasAnySuccess.value) return 'text-[#c4c4d4]/70'
   return 'text-red-200/65'
 })
 
@@ -336,7 +337,7 @@ const summaryStatusClass = computed(() => {
     return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-500'
   }
 
-  return props.result.successes >= props.result.difficulty ? 'text-green-400' : 'text-red-400'
+  return hasAnySuccess.value ? 'text-green-400' : 'text-red-400'
 })
 </script>
 

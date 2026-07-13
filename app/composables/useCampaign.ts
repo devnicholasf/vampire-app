@@ -162,12 +162,25 @@ export const useCampaign = () => {
     name: string
     description: string
   }) => {
-    if (!user.value) throw new Error('Usuário não autenticado')
+    if (!user.value) {
+      await restoreSession()
+    }
 
     loading.value = true
     error.value = null
 
     try {
+      // Garantir sessão/auth real no cliente Supabase antes de inserir com RLS.
+      const { data: authData, error: authError } = await supabase.auth.getUser()
+      if (authError) {
+        throw new Error('Sessão inválida. Faça login novamente.')
+      }
+
+      const authenticatedUserId = authData.user?.id || user.value?.id
+      if (!authenticatedUserId) {
+        throw new Error('Usuário não autenticado. Faça login novamente.')
+      }
+
       // Gerar código de convite único
       let inviteCode = generateInviteCode()
       let attempts = 0
@@ -194,7 +207,7 @@ export const useCampaign = () => {
       console.log('Criando campanha com dados:', {
         name: campaignData.name,
         description: campaignData.description,
-        master_id: user.value.id,
+        master_id: authenticatedUserId,
         invite_code: inviteCode
       })
 
@@ -202,7 +215,7 @@ export const useCampaign = () => {
       const insertData = {
         name: campaignData.name,
         description: campaignData.description,
-        master_id: user.value.id,
+        master_id: authenticatedUserId,
         invite_code: inviteCode
       }
 
@@ -218,6 +231,9 @@ export const useCampaign = () => {
 
       if (campaignError) {
         console.error('Erro do Supabase:', campaignError)
+        if (campaignError.code === '42501') {
+          throw new Error('Sem permissão para criar campanha (RLS). Faça logout/login e tente novamente.')
+        }
         throw new Error(`Erro ao criar campanha: ${campaignError.message}`)
       }
 
