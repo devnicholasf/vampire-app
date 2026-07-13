@@ -395,7 +395,6 @@ const skillValuesForDice = computed<Record<string, number>>(() => {
   const talents = sheetSkills.talents || {}
   const skills = sheetSkills.skills || {}
   const knowledges = sheetSkills.knowledges || {}
-  const virtues = myCharacter.value?.sheet?.virtues || {}
 
   return {
     'Persuasão': Number(skills.persuasion ?? 0),
@@ -417,7 +416,6 @@ const skillValuesForDice = computed<Record<string, number>>(() => {
     'Medicina': Number(knowledges.medicine ?? 0),
     'Ocultismo': Number(knowledges.occult ?? 0),
     'Tecnologia': Number(knowledges.technology ?? 0),
-    'Consciência': Number(virtues.conscience ?? 0),
     'Manha': Number(skills.streetwise ?? 0),
     'Empatia': Number(skills.animalKen ?? 0),
     'Intuição': Number(skills.awareness ?? 0),

@@ -34,7 +34,7 @@
             </h2>
           </div>
           <div class="flex space-x-2">
-            <button v-if="!editMode" type="button" @click="editMode = true" class="df-btn df-btn-edit">
+            <button v-if="!editMode" type="button" @click="startEditing" class="df-btn df-btn-edit">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               <span class="hidden sm:inline ml-1">Editar</span>
             </button>
@@ -221,7 +221,10 @@
                   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
                   Disciplinas
                 </h3>
-                <div class="space-y-2">
+                <div
+                  class="space-y-2 pr-2 scrollbar-thin scrollbar-thumb-df-border-red/50 scrollbar-track-transparent"
+                  :class="sheetData.disciplines.length >= 4 ? 'max-h-[165px] overflow-y-auto' : ''"
+                >
                   <div v-for="(discipline, index) in sheetData.disciplines" :key="index" class="flex items-center space-x-2 sm:space-x-3">
                     <select v-model="discipline.name" :disabled="!editMode" class="df-input flex-1">
                       <option value="">Selecione uma disciplina</option>
@@ -234,7 +237,7 @@
                       <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
                     </button>
                   </div>
-                  <button v-if="editMode" type="button" @click="addDiscipline" class="w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-red hover:text-df-silver transition-colors bg-transparent cursor-pointer">
+                  <button v-if="editMode" type="button" @click="addDiscipline" class="w-full py-2 mt-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-red hover:text-df-silver transition-colors bg-transparent cursor-pointer">
                     + Disciplina
                   </button>
                 </div>
@@ -246,20 +249,97 @@
                   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   Vantagens &amp; Defeitos
                 </h3>
-                <div class="space-y-2">
-                  <div v-for="(adv, idx) in sheetData.advantages" :key="idx" class="flex items-center gap-2">
-                    <input v-model="adv.name" type="text" placeholder="Nome da vantagem/defeito" :disabled="!editMode" class="df-input flex-1" />
-                    <div class="flex gap-1">
-                      <button v-for="level in 5" :key="level" type="button" @click="setAdvantageLevel(Number(idx), level)" :disabled="!editMode" :class="['df-dot df-dot-md', adv.level >= level ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ level }}</span></button>
+                <div v-if="sheetData.advantages.length > 0" class="space-y-3">
+                  <template v-for="(adv, idx) in sheetData.advantages" :key="idx">
+                    <div v-if="isValidAdvantage(adv)" class="space-y-2 p-3 rounded-lg border border-df-border-silver/20 bg-black/10">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="text-xs text-df-muted mb-1 block">Categoria</label>
+                          <select
+                            v-model="adv.category"
+                            @change="onCategoryChange(Number(idx))"
+                            :disabled="!editMode || adv.fixo"
+                            class="df-input w-full"
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="Antecedente">Antecedente</option>
+                            <option value="Mérito">Mérito</option>
+                            <option value="Defeito">Defeito</option>
+                            <option value="Folha de Lore">Folha de Lore</option>
+                          </select>
+                        </div>
+
+                        <div v-if="shouldShowTypeDropdown(adv.category)">
+                          <label class="text-xs text-df-muted mb-1 block">Tipo</label>
+                          <select
+                            v-model="adv.type"
+                            @change="onTypeChange(Number(idx))"
+                            :disabled="!editMode || adv.fixo"
+                            class="df-input w-full"
+                          >
+                            <option value="">Selecione...</option>
+                            <option v-for="opt in getSubcategoryOptions(adv.category)" :key="opt" :value="opt">
+                              {{ opt }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                          <label class="text-xs text-df-muted mb-1 block">Nome</label>
+                          <select
+                            v-model="adv.name"
+                            @change="onNameChange(Number(idx))"
+                            :disabled="!editMode || adv.fixo || !adv.category || (shouldShowTypeDropdown(adv.category) && !adv.type)"
+                            class="df-input w-full"
+                          >
+                            <option value="">Selecione...</option>
+                            <option v-for="opt in getNameOptions(adv)" :key="opt" :value="opt">
+                              {{ opt }}
+                            </option>
+                          </select>
+                        </div>
+
+                        <div class="flex gap-1 pb-0.5">
+                          <button
+                            v-for="level in (adv.maxLevel || 5)"
+                            :key="level"
+                            type="button"
+                            @click="setAdvantageLevel(Number(idx), level)"
+                            :disabled="!editMode || adv.fixo"
+                            :class="['df-dot df-dot-md', adv.level >= level ? 'df-dot-filled' : 'df-dot-empty', adv.fixo ? 'opacity-60 cursor-not-allowed' : '']"
+                          >
+                            <span class="sr-only">{{ level }}</span>
+                          </button>
+                        </div>
+
+                        <button
+                          v-if="editMode && !adv.fixo"
+                          type="button"
+                          @click="removeAdvantage(Number(idx))"
+                          class="df-btn-remove pb-0.5"
+                        >
+                          <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                        </button>
+                      </div>
+
+                      <div>
+                        <label class="text-xs text-df-muted mb-1 block">Detalhes/Especificação</label>
+                        <input
+                          v-model="adv.details"
+                          type="text"
+                          placeholder="Ex: Nome do contato, descrição do refúgio, etc..."
+                          :disabled="!editMode"
+                          class="df-input w-full"
+                        />
+                      </div>
                     </div>
-                    <button v-if="editMode && Number(idx) > 0" type="button" @click="removeAdvantage(Number(idx))" class="df-btn-remove">
-                      <svg class="w-5 h-5" viewBox="0 0 12 12" fill="none"><path d="M1 1L11 11M1 11L11 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </button>
-                  </div>
-                  <button v-if="editMode && sheetData.advantages.length < 10" type="button" @click="addAdvantage" class="w-full py-2 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-red hover:text-df-silver transition-colors bg-transparent cursor-pointer">
-                    + Adicionar Vantagem/Defeito
-                  </button>
+                  </template>
                 </div>
+                <button v-if="editMode && sheetData.advantages.length < 10" type="button" @click="addAdvantage" class="w-full py-2 mt-3 border border-dashed border-df-border-silver rounded-lg text-df-muted text-sm hover:border-df-red hover:text-df-silver transition-colors bg-transparent cursor-pointer">
+                  + Adicionar Vantagem/Defeito ({{ sheetData.advantages.length }}/10)
+                </button>
               </div>
 
               <!-- Hunger -->
@@ -310,22 +390,8 @@
             </div>
           </div>
 
-          <!-- Virtues & Humanity/Willpower/Vitality -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <div class="df-card">
-              <h3 class="df-section-title">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Virtudes
-              </h3>
-              <div class="space-y-2">
-                <div v-for="virtue in virtues" :key="virtue.key" class="flex justify-between items-center">
-                  <label class="df-attr-label">{{ virtue.name }}</label>
-                  <div class="flex space-x-0.5 sm:space-x-1">
-                    <button v-for="n in 5" :key="n" type="button" @click="setVirtueValue(virtue.key, n)" :disabled="!editMode" :class="['df-dot df-dot-md df-dot-gold', n <= (sheetData.virtues as any)[virtue.key] ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <!-- Humanity/Willpower/Vitality -->
+          <div class="grid grid-cols-1 gap-3">
             <div class="df-card">
               <h3 class="df-section-title">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -398,15 +464,81 @@
           </div>
         </form>
 
+        <div
+          v-if="showConfirmModal"
+          class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10001]"
+          @click.self="cancelClose"
+        >
+          <div class="df-card df-modal-panel max-w-md mx-4">
+            <h3 class="df-modal-title text-red-400">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Alterações não salvas
+            </h3>
+            <p class="df-modal-text">
+              Você tem alterações não salvas. Se sair agora, todas as mudanças serão perdidas.
+            </p>
+            <div class="flex justify-end space-x-3">
+              <BaseButton
+                variant="ghost"
+                @click="cancelClose"
+                class="hover:bg-surface-hover"
+              >
+                Continuar Editando
+              </BaseButton>
+              <BaseButton
+                variant="primary"
+                @click="confirmClose"
+                class="bg-red-600 hover:bg-red-500 text-white"
+              >
+                Sair Sem Salvar
+              </BaseButton>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="showSaveConfirmModal"
+          class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[10001]"
+          @click.self="cancelSave"
+        >
+          <div class="df-card df-modal-panel max-w-md mx-4">
+            <h3 class="df-modal-title text-green-400">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Deseja salvar alterações?
+            </h3>
+            <p class="df-modal-text">
+              Suas alterações serão salvas permanentemente no banco de dados.
+            </p>
+            <div class="flex justify-end space-x-3">
+              <BaseButton
+                variant="ghost"
+                @click="cancelSave"
+                class="hover:bg-surface-hover"
+              >
+                Continuar Editando
+              </BaseButton>
+              <button
+                type="button"
+                @click="confirmSave"
+                class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-900/50"
+              >
+                Sim, Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { NPC } from '~/types'
 import { useToast } from '~/composables/useToast'
+import { vantagensDados } from '~/config/advantagesData'
+import BaseButton from '~/components/ui/BaseButton.vue'
 
 interface Props { npc: NPC }
 const props = defineProps<Props>()
@@ -415,6 +547,9 @@ const toast = useToast()
 
 const editMode = ref(false)
 const avatarInput = ref<HTMLInputElement | null>(null)
+const hasUnsavedChanges = ref(false)
+const showConfirmModal = ref(false)
+const showSaveConfirmModal = ref(false)
 
 const onAvatarChange = (event: Event) => {
   const file = (event.target as HTMLInputElement)?.files?.[0]
@@ -427,6 +562,7 @@ const onAvatarChange = (event: Event) => {
   reader.onload = (e) => {
     sheetData.value.avatar = e.target?.result as string
     editMode.value = true
+    hasUnsavedChanges.value = true
   }
   reader.readAsDataURL(file)
 }
@@ -500,26 +636,47 @@ const knowledges = [
   { key: 'technology', name: 'Tecnologia' }
 ]
 
-const virtues = [
-  { key: 'conscience', name: 'Consciência' },
-  { key: 'selfControl', name: 'Autocontrole' },
-  { key: 'courage', name: 'Coragem' }
-]
+const normalizeAdvantage = (adv: any) => ({
+  category: adv?.category || '',
+  type: adv?.type || '',
+  name: adv?.name || '',
+  level: typeof adv?.level === 'number' ? adv.level : 0,
+  details: adv?.details || '',
+  fixo: Boolean(adv?.fixo),
+  maxLevel: typeof adv?.maxLevel === 'number' ? adv.maxLevel : 5
+})
 
-// Initialize sheet data from NPC's existing sheet or defaults
-const existingSheet = props.npc.sheet
-const sheetData = ref({
+const isValidAdvantage = (adv: any): boolean => {
+  if (!adv.fixo) return true
+  if (!adv.name || adv.name.trim() === '') return false
+  if (adv.name === 'Especialidade' && adv.details && adv.details.includes('(') && adv.details.includes(')')) {
+    return false
+  }
+  return true
+}
+
+const cloneValue = <T,>(value: T): T => JSON.parse(JSON.stringify(value))
+
+const normalizeDiscipline = (discipline: any) => ({
+  name: discipline?.name || '',
+  level: typeof discipline?.level === 'number' ? discipline.level : 0
+})
+
+const buildSheetData = () => ({
   name: existingSheet?.name || props.npc.name || '',
   concept: existingSheet?.concept || '',
   clan: existingSheet?.clan || props.npc.clan || '',
-  generation: existingSheet?.generation || props.npc.generation || 13,
-  sect: existingSheet?.sect || '',
+  // Keep generation/sect in sync with NPC modal edits (top-level fields are canonical).
+  generation: props.npc.generation || existingSheet?.generation || 13,
+  sect: props.npc.sect || existingSheet?.sect || '',
   predator: existingSheet?.predator || '',
   ambition: existingSheet?.ambition || '',
   desire: existingSheet?.desire || '',
   avatar: existingSheet?.avatar || props.npc.photo || '',
   keyPoints: (props.npc.keyPoints && props.npc.keyPoints.length > 0) ? [...props.npc.keyPoints] : [''],
-  advantages: existingSheet?.advantages || [{ name: '', level: 0 }],
+  advantages: Array.isArray(existingSheet?.advantages) && existingSheet.advantages.length > 0
+    ? existingSheet.advantages.map(normalizeAdvantage)
+    : [normalizeAdvantage({})],
   bloodPotency: existingSheet?.bloodPotency || 0,
   bloodSurge: existingSheet?.bloodSurge || '+2',
   powerBonus: existingSheet?.powerBonus || '0',
@@ -527,23 +684,35 @@ const sheetData = ref({
   baneSeverity: existingSheet?.baneSeverity || '0',
   embraceGeneration: existingSheet?.embraceGeneration || '',
   history: existingSheet?.history || props.npc.bio || '',
-  attributes: existingSheet?.attributes || {
+  attributes: cloneValue(existingSheet?.attributes || {
     physical: { strength: 1, dexterity: 1, stamina: 1 },
     social: { charisma: 1, manipulation: 1, composure: 1 },
     mental: { intelligence: 1, wits: 1, resolve: 1 }
-  },
-  skills: existingSheet?.skills || {
+  }),
+  skills: cloneValue(existingSheet?.skills || {
     talents: { melee: 1, firearms: 1, athletics: 1, brawl: 1, drive: 1, stealth: 1, larceny: 1, craft: 1, survival: 1 },
     skills: { animalKen: 1, etiquette: 1, intimidation: 1, leadership: 1, streetwise: 1, performance: 1, persuasion: 1, awareness: 1, subterfuge: 1 },
     knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
-  },
-  disciplines: existingSheet?.disciplines || [{ name: '', level: 0 }],
-  virtues: existingSheet?.virtues || { conscience: 1, selfControl: 1, courage: 1 },
+  }),
+  disciplines: Array.isArray(existingSheet?.disciplines) && existingSheet.disciplines.length > 0
+    ? existingSheet.disciplines.map(normalizeDiscipline)
+    : [normalizeDiscipline({})],
   humanity: existingSheet?.humanity || 1,
   willpower: existingSheet?.willpower || 1,
   vitality: existingSheet?.vitality || 1,
   hunger: existingSheet?.hunger ?? 1
 })
+
+// Initialize sheet data from NPC's existing sheet or defaults
+const existingSheet = props.npc.sheet
+const pristineSheetData = ref(buildSheetData())
+const sheetData = ref(cloneValue(pristineSheetData.value))
+
+watch(sheetData, () => {
+  if (editMode.value) {
+    hasUnsavedChanges.value = true
+  }
+}, { deep: true })
 
 // Methods
 const setVal = (group: string, category: string, key: string, value: number) => {
@@ -558,19 +727,142 @@ const setDisciplineValue = (index: number, value: number) => {
   if (!editMode.value || !sheetData.value.disciplines[index]) return
   sheetData.value.disciplines[index].level = value
 }
-const setVirtueValue = (virtue: string, value: number) => {
+const addDiscipline = () => {
   if (!editMode.value) return
-  ;(sheetData.value.virtues as any)[virtue] = value
+  sheetData.value.disciplines.push(normalizeDiscipline({}))
 }
-const addDiscipline = () => { sheetData.value.disciplines.push({ name: '', level: 0 }) }
-const removeDiscipline = (index: number) => { sheetData.value.disciplines.splice(index, 1) }
+const removeDiscipline = (index: number) => {
+  if (!editMode.value) return
+  sheetData.value.disciplines.splice(index, 1)
+}
 const setAdvantageLevel = (index: number, level: number) => {
   if (!editMode.value) return
   const adv = sheetData.value.advantages[index]
   if (adv) adv.level = adv.level === level ? 0 : level
 }
-const addAdvantage = () => { if (sheetData.value.advantages.length < 10) sheetData.value.advantages.push({ name: '', level: 0 }) }
-const removeAdvantage = (index: number) => { sheetData.value.advantages.splice(index, 1) }
+const addAdvantage = () => {
+  if (!editMode.value) return
+  if (sheetData.value.advantages.length >= 10) {
+    toast.warning('Limite máximo de 10 vantagens/defeitos atingido')
+    return
+  }
+  sheetData.value.advantages.push(normalizeAdvantage({}))
+}
+const removeAdvantage = (index: number) => {
+  if (!editMode.value) return
+  if (sheetData.value.advantages[index]?.fixo) {
+    toast.warning('Vantagens fixas não podem ser removidas')
+    return
+  }
+  sheetData.value.advantages.splice(index, 1)
+}
+
+const getSubcategoryOptions = (category: string) => {
+  if (category === 'Mérito' || category === 'Defeito') {
+    const options = ['Físico', 'Mental', 'Social', 'Sobrenatural']
+    if (sheetData.value.generation >= 14 && sheetData.value.generation <= 16) {
+      options.push('Sangue Ralo')
+    }
+    return options
+  }
+  return []
+  return []
+}
+
+const normalizeCategoryKey = (category: string): string => {
+  const map: Record<string, string> = {
+    'Antecedente': 'antecedentes',
+    'Folha de Lore': 'loresheets',
+    'Mérito': 'meritos',
+    'Defeito': 'defeitos'
+  }
+  return map[category] || ''
+}
+
+const normalizeTypeKey = (type: string): string => {
+  const map: Record<string, string> = {
+    'Físico': 'fisicos',
+    'Mental': 'mentais',
+    'Social': 'sociais',
+    'Sobrenatural': 'sobrenaturais',
+    'Sangue Ralo': 'sangue_ralo'
+  }
+  return map[type] || ''
+}
+
+const getNameOptions = (adv: any) => {
+  const category = adv.category
+  const type = adv.type
+
+  if (!category) return []
+
+  const categoryKey = normalizeCategoryKey(category)
+
+  if (categoryKey === 'antecedentes') return vantagensDados.antecedentes
+  if (categoryKey === 'loresheets') return vantagensDados.loresheets
+
+  if (categoryKey === 'meritos' && type) {
+    const typeKey = normalizeTypeKey(type) as keyof typeof vantagensDados.meritos
+    return (vantagensDados.meritos[typeKey] || []).map((item: any) => item.nome)
+  }
+
+  if (categoryKey === 'defeitos' && type) {
+    const typeKey = normalizeTypeKey(type) as keyof typeof vantagensDados.defeitos
+    return (vantagensDados.defeitos[typeKey] || []).map((item: any) => item.nome)
+  }
+
+  return []
+}
+
+const shouldShowTypeDropdown = (category: string) => category === 'Mérito' || category === 'Defeito'
+
+const onCategoryChange = (index: number) => {
+  const advantage = sheetData.value.advantages[index]
+  if (!advantage) return
+
+  advantage.type = ''
+  advantage.name = ''
+  advantage.level = 0
+  advantage.maxLevel = 5
+}
+
+const onTypeChange = (index: number) => {
+  const advantage = sheetData.value.advantages[index]
+  if (!advantage) return
+
+  advantage.name = ''
+  advantage.level = 0
+  advantage.maxLevel = 5
+}
+
+const onNameChange = (index: number) => {
+  const adv = sheetData.value.advantages[index]
+  if (!adv) return
+
+  const categoryKey = normalizeCategoryKey(adv.category)
+
+  if (categoryKey === 'antecedentes' || categoryKey === 'loresheets') {
+    adv.level = 1
+    adv.fixo = false
+    adv.maxLevel = 5
+    return
+  }
+
+  if ((categoryKey === 'meritos' || categoryKey === 'defeitos') && adv.type && adv.name) {
+    const typeKey = normalizeTypeKey(adv.type)
+    const items = categoryKey === 'meritos'
+      ? vantagensDados.meritos[typeKey as keyof typeof vantagensDados.meritos]
+      : vantagensDados.defeitos[typeKey as keyof typeof vantagensDados.defeitos]
+
+    const selectedItem = (items || []).find((item: any) => item.nome === adv.name)
+
+    if (selectedItem) {
+      adv.level = selectedItem.pontos
+      adv.fixo = false
+      adv.maxLevel = (selectedItem as any).max || 5
+    }
+  }
+}
 const addKeyPoint = () => { if (sheetData.value.keyPoints.length < 20) sheetData.value.keyPoints.push('') }
 const removeKeyPoint = (index: number) => { sheetData.value.keyPoints.splice(index, 1) }
 const setBloodPotency = (level: number) => {
@@ -578,8 +870,19 @@ const setBloodPotency = (level: number) => {
   sheetData.value.bloodPotency = sheetData.value.bloodPotency === level ? level - 1 : level
 }
 
+const startEditing = () => {
+  editMode.value = true
+  hasUnsavedChanges.value = false
+}
+
 const saveSheet = () => {
+  showSaveConfirmModal.value = true
+}
+
+const confirmSave = () => {
+  showSaveConfirmModal.value = false
   const cleanedKeyPoints = sheetData.value.keyPoints.filter((p: string) => p && p.trim())
+  const cleanedDisciplines = sheetData.value.disciplines.filter((d: any) => d.name && d.name.trim())
   emit('save', {
     ...props.npc,
     name: sheetData.value.name,
@@ -589,14 +892,47 @@ const saveSheet = () => {
     bio: sheetData.value.history,
     photo: sheetData.value.avatar,
     keyPoints: cleanedKeyPoints,
-    sheet: { ...sheetData.value }
+    sheet: { ...sheetData.value, disciplines: cleanedDisciplines }
   })
+  pristineSheetData.value = cloneValue({ ...sheetData.value, disciplines: cleanedDisciplines })
+  hasUnsavedChanges.value = false
   editMode.value = false
   toast.success('Ficha salva!', 'As alterações foram registradas.')
 }
 
-const cancelEdit = () => { editMode.value = false }
-const handleClose = () => { emit('close') }
+const cancelSave = () => {
+  showSaveConfirmModal.value = false
+}
+
+const restorePristineData = () => {
+  sheetData.value = cloneValue(pristineSheetData.value)
+}
+
+const cancelEdit = () => {
+  handleClose()
+}
+
+const handleClose = () => {
+  if (editMode.value && hasUnsavedChanges.value) {
+    showConfirmModal.value = true
+    return
+  }
+
+  emit('close')
+}
+
+const confirmClose = () => {
+  showConfirmModal.value = false
+  showSaveConfirmModal.value = false
+  restorePristineData()
+  hasUnsavedChanges.value = false
+  editMode.value = false
+  emit('close')
+}
+
+const cancelClose = () => {
+  showConfirmModal.value = false
+}
 </script>
 
 <style scoped>
@@ -690,6 +1026,35 @@ const handleClose = () => { emit('close') }
   background: var(--df-bg-card); border: 1px solid var(--df-border-red);
   box-shadow: 0 0 0 1px var(--df-border-silver), inset 0 1px 6px rgba(0, 0, 0, 0.5);
   border-radius: 0.5rem; padding: 16px;
+}
+
+.df-modal-panel {
+  border-width: 2px;
+  box-shadow:
+    0 0 40px var(--df-glow-red),
+    0 0 0 1px var(--df-border-silver);
+}
+
+.df-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.df-modal-text {
+  color: var(--df-text-silver);
+  opacity: 0.85;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  text-transform: none;
 }
 
 .df-section-title {

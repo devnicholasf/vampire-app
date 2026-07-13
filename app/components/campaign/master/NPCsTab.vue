@@ -316,9 +316,14 @@ const closeSheet = () => { viewingSheet.value = null }
 const saveNPC = async (npcData: any) => {
   try {
     if (editingNPC.value) {
-      // Sync photo → sheet.avatar and sect so both stay in sync
+      // Sync photo, generation and sect so modal and sheet stay aligned.
       if (editingNPC.value.sheet) {
-        npcData.sheet = { ...editingNPC.value.sheet, avatar: npcData.photo, sect: npcData.sect }
+        npcData.sheet = {
+          ...editingNPC.value.sheet,
+          avatar: npcData.photo,
+          generation: npcData.generation,
+          sect: npcData.sect
+        }
       }
       await updateNPC(editingNPC.value.id, npcData); toast.success('NPC atualizado!', `${npcData.name} foi atualizado com sucesso`)
     }

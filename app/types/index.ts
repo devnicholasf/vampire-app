@@ -216,7 +216,6 @@ export interface CharacterSheet {
     knowledges: Record<string, number>
   }
   disciplines: Array<{ name: string; level: number }>
-  virtues: { conscience: number; selfControl: number; courage: number }
   humanity: number
   willpower: number
   vitality?: number // Vitalidade (V5)

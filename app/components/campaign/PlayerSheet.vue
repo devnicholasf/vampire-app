@@ -712,39 +712,8 @@
           </div>
         </div>
 
-        <!-- Virtudes e Humanidade -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <!-- Virtudes -->
-          <div class="df-card">
-            <h3 class="df-section-title">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              Virtudes
-            </h3>
-            <div class="space-y-2">
-              <div v-for="virtue in virtues" :key="virtue.key" class="flex justify-between items-center">
-                <label class="df-attr-label">{{ virtue.name }}</label>
-                <div class="flex space-x-0.5 sm:space-x-1">
-                  <button
-                    v-for="n in 5"
-                    :key="n"
-                    type="button"
-                    @click="setVirtueValue(virtue.key, n)"
-                    :disabled="!canEdit"
-                    :class="[
-                      'df-dot df-dot-md df-dot-gold',
-                      n <= (sheetData.virtues as any)[virtue.key]
-                        ? 'df-dot-filled'
-                        : 'df-dot-empty'
-                    ]"
-                  >
-                    <span class="sr-only">{{ n }}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Humanidade, Vontade & Vitalidade -->
+        <!-- Humanidade, Vontade & Vitalidade -->
+        <div class="grid grid-cols-1 gap-3">
           <div class="df-card">
             <h3 class="df-section-title">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -1800,13 +1769,6 @@ const knowledges = [
   { key: 'technology', name: 'Tecnologia' }
 ]
 
-// Virtudes
-const virtues = [
-  { key: 'conscience', name: 'Consciência' },
-  { key: 'selfControl', name: 'Autocontrole' },
-  { key: 'courage', name: 'Coragem' }
-]
-
 const normalizeSheetAttributes = (attributes: any) => {
   const physical = attributes?.physical || {}
   const social = attributes?.social || {}
@@ -1889,7 +1851,6 @@ const sheetData = ref({
     knowledges: {}
   },
   disciplines: props.player.sheet?.disciplines || [],
-  virtues: props.player.sheet?.virtues || { conscience: 1, selfControl: 1, courage: 1 },
   humanity: props.player.sheet?.humanity || 1,
   willpower: props.player.sheet?.willpower || 1,
   vitality: props.player.sheet?.vitality || 1,
@@ -2148,12 +2109,6 @@ const setDisciplineValue = (index: string | number, value: number) => {
   const idx = typeof index === 'string' ? parseInt(index) : index
   if (!sheetData.value.disciplines[idx]) return
   sheetData.value.disciplines[idx].level = value
-  hasUnsavedChanges.value = true
-}
-
-const setVirtueValue = (virtue: string, value: number) => {
-  if (!props.canEdit) return
-  ;(sheetData.value.virtues as any)[virtue] = value
   hasUnsavedChanges.value = true
 }
 
@@ -2757,7 +2712,7 @@ const cancelClose = () => {
   box-shadow: 0 0 6px rgba(220, 38, 38, 0.2);
 }
 
-/* ─── Dots — Gold Variant (Virtues) ─── */
+/* ─── Dots — Gold Variant ─── */
 .df-dot-gold.df-dot-filled {
   background: linear-gradient(135deg, #eab308, #a16207);
   border-color: #ca8a04;

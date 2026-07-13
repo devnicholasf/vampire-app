@@ -380,7 +380,6 @@ export const useCampaign = () => {
           knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
         },
         disciplines: [{ name: '', level: 0 }],
-        virtues: { conscience: 1, selfControl: 1, courage: 1 },
         humanity: 1,
         willpower: 1,
         vitality: 1,
@@ -718,7 +717,6 @@ export const useCampaign = () => {
             knowledges: { science: 1, academics: 1, finance: 1, investigation: 1, medicine: 1, occult: 1, perception: 1, politics: 1, technology: 1 }
           },
           disciplines: [{ name: '', level: 0 }],
-          virtues: { conscience: 1, selfControl: 1, courage: 1 },
           vitality: 1,
           conditions: [''],
           touchstonesConvictions: [],
