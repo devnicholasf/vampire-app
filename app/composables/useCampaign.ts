@@ -221,6 +221,36 @@ export const useCampaign = () => {
 
       console.log('Dados para inserção:', insertData)
 
+      // Caminho preferencial: RPC SECURITY DEFINER para blindar criação contra drift de policy RLS.
+      const { data: rpcCampaignId, error: rpcError } = await supabase.rpc('create_campaign_secure', {
+        campaign_name_param: campaignData.name,
+        campaign_description_param: campaignData.description,
+        invite_code_param: inviteCode
+      })
+
+      if (!rpcError && rpcCampaignId) {
+        const { data: rpcCampaignRow, error: rpcCampaignFetchError } = await supabase
+          .from('campaigns')
+          .select('*')
+          .eq('id', rpcCampaignId)
+          .single()
+
+        if (rpcCampaignFetchError) {
+          throw new Error(`Campanha criada, mas falhou ao carregar dados: ${rpcCampaignFetchError.message}`)
+        }
+
+        const mappedCampaign = mapSupabaseCampaign(rpcCampaignRow)
+        campaigns.value.push(mappedCampaign)
+        console.log('Campanha criada com sucesso via RPC:', mappedCampaign)
+        return mappedCampaign
+      }
+
+      // Se a função RPC ainda não existir no banco, usa caminho legado.
+      const rpcFunctionMissing = rpcError?.code === 'PGRST202' || String(rpcError?.message || '').includes('create_campaign_secure')
+      if (rpcError && !rpcFunctionMissing) {
+        console.error('Erro no RPC create_campaign_secure:', rpcError)
+      }
+
       const { data: campaign, error: campaignError } = await supabase
         .from('campaigns')
         .insert(insertData)
