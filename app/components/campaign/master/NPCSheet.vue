@@ -166,43 +166,34 @@
             </div>
           </div>
 
-          <!-- Skills -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="df-card">
-              <h3 class="df-section-title">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                Talentos
-              </h3>
+          <!-- Habilidades -->
+          <div class="df-card">
+            <h3 class="df-section-title justify-center text-center">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Habilidades
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div class="space-y-3">
-                <div v-for="skill in talents" :key="skill.key" class="flex justify-between items-center">
+                <div v-for="skill in talents" :key="`talents-${skill.key}`" class="flex justify-between items-center">
                   <label class="df-attr-label">{{ skill.name }}</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
                     <button v-for="n in 5" :key="n" type="button" @click="setSkill('talents', skill.key, n)" :class="['df-dot df-dot-sm', n <= (sheetData.skills.talents as any)[skill.key] ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="df-card">
-              <h3 class="df-section-title">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-                Perícias
-              </h3>
-              <div class="space-y-3">
-                <div v-for="skill in skillsList" :key="skill.key" class="flex justify-between items-center">
+
+              <div class="space-y-3 md:border-l md:border-df-border-red/35 md:pl-4">
+                <div v-for="skill in skillsList" :key="`skills-${skill.key}`" class="flex justify-between items-center">
                   <label class="df-attr-label">{{ skill.name }}</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
                     <button v-for="n in 5" :key="n" type="button" @click="setSkill('skills', skill.key, n)" :class="['df-dot df-dot-sm', n <= (sheetData.skills.skills as any)[skill.key] ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="df-card">
-              <h3 class="df-section-title">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                Conhecimentos
-              </h3>
-              <div class="space-y-3">
-                <div v-for="skill in knowledges" :key="skill.key" class="flex justify-between items-center">
+
+              <div class="space-y-3 md:border-l md:border-df-border-red/35 md:pl-4">
+                <div v-for="skill in knowledges" :key="`knowledges-${skill.key}`" class="flex justify-between items-center">
                   <label class="df-attr-label">{{ skill.name }}</label>
                   <div class="flex space-x-0.5 sm:space-x-1">
                     <button v-for="n in 5" :key="n" type="button" @click="setSkill('knowledges', skill.key, n)" :class="['df-dot df-dot-sm', n <= (sheetData.skills.knowledges as any)[skill.key] ? 'df-dot-filled' : 'df-dot-empty']"><span class="sr-only">{{ n }}</span></button>
