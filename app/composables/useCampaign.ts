@@ -232,7 +232,8 @@ export const useCampaign = () => {
       if (campaignError) {
         console.error('Erro do Supabase:', campaignError)
         if (campaignError.code === '42501') {
-          throw new Error('Sem permissão para criar campanha (RLS). Faça logout/login e tente novamente.')
+          const currentProject = String(config.public.supabaseUrl || '').replace('https://', '').replace('.supabase.co', '')
+          throw new Error(`Sem permissão para criar campanha (RLS na tabela campaigns). Verifique se o SQL foi aplicado no mesmo projeto Supabase em uso agora: ${currentProject}`)
         }
         throw new Error(`Erro ao criar campanha: ${campaignError.message}`)
       }
