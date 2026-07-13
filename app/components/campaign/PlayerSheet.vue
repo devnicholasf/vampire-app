@@ -154,7 +154,10 @@
                 <input v-model="sheetData.sire" placeholder="Nome do senhor" :disabled="!canEdit" class="df-input">
               </div>
 
-              <div class="df-identity-group df-identity-player-group df-identity-area-player">
+            </div>
+
+            <div class="df-identity-row-player">
+              <div class="df-identity-group df-identity-player-group">
                 <label class="df-label">Jogador</label>
                 <input v-model="sheetData.player" :disabled="!canEdit" class="df-input">
               </div>
@@ -3055,6 +3058,11 @@ const cancelClose = () => {
   align-content: start;
 }
 
+.df-identity-row-player {
+  display: grid;
+  gap: 16px;
+}
+
 .df-identity-player-group {
   width: 100%;
 }
@@ -3178,10 +3186,6 @@ const cancelClose = () => {
     grid-row: 2;
   }
 
-  .df-identity-area-player {
-    grid-column: 6 / span 4;
-    grid-row: 3;
-  }
 }
 
 .df-skill-row {
